@@ -1,0 +1,114 @@
+{
+  "summary": {
+    "run_at": "2026-11-12T14:01:39-05:00",
+    "provider": "vertex",
+    "model": "gemini-3.5-flash-lite",
+    "calls": 3,
+    "answered": 3,
+    "valid": 3,
+    "equals_rule": 0,
+    "latency_p50_s": 1.627,
+    "latency_p95_s": 2.131,
+    "latency_max_s": 2.131,
+    "input_tokens_mean": 877,
+    "output_tokens_mean": 99,
+    "thinking_tokens_mean": null,
+    "price_in_per_mtok": 0.3,
+    "price_out_per_mtok": 2.5,
+    "cost_per_call_usd": 0.000511,
+    "cost_per_5_call_session_usd": 0.00255
+  },
+  "rows": [
+    {
+      "i": 0,
+      "latency_s": 2.131,
+      "model": "gemini-3.5-flash-lite",
+      "input_tokens": 877,
+      "output_tokens": 84,
+      "thinking_tokens": null,
+      "stop_reason": null,
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_dog",
+            "defense": "dog",
+            "to": "kennel_orchard"
+          }
+        ],
+        "line": "They took a gnome from the pond and tracked mud all over my roses!",
+        "inspected": [
+          "ped_pond",
+          "area_rosebed_east"
+        ]
+      },
+      "errors": [],
+      "equals_rule": false
+    },
+    {
+      "i": 1,
+      "latency_s": 1.627,
+      "model": "gemini-3.5-flash-lite",
+      "input_tokens": 877,
+      "output_tokens": 81,
+      "thinking_tokens": null,
+      "stop_reason": null,
+      "output": {
+        "moves": [
+          {
+            "type": "move_lamp",
+            "defense": "lamp_a",
+            "to": "post_rose_east"
+          },
+          {
+            "type": "move_dog",
+            "defense": "dog",
+            "to": "kennel_orchard"
+          }
+        ],
+        "line": "Someone left the eastern gate wide open again!",
+        "inspected": [
+          "ped_pond",
+          "gate_east"
+        ]
+      },
+      "errors": [],
+      "equals_rule": false
+    },
+    {
+      "i": 2,
+      "latency_s": 1.504,
+      "model": "gemini-3.5-flash-lite",
+      "input_tokens": 877,
+      "output_tokens": 132,
+      "thinking_tokens": null,
+      "stop_reason": null,
+      "output": {
+        "moves": [
+          {
+            "type": "move_lamp",
+            "defense": "lamp_b",
+            "to": "post_rose_east"
+          },
+          {
+            "type": "move_dog",
+            "defense": "dog",
+            "to": "kennel_maze_center"
+          }
+        ],
+        "line": "They took a gnome from the pond and left mud everywhere.",
+        "inspected": [
+          "ped_pond",
+          "area_rosebed_east",
+          "area_tulips_west"
+        ]
+      },
+      "errors": [],
+      "equals_rule": false
+    }
+  ]
+}

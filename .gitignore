@@ -10,3 +10,4 @@ dist/
 *.m4a
 .DS_Store
 spike/results/raw/
+__pycache__/

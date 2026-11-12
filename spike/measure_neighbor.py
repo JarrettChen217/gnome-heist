@@ -1,17 +1,21 @@
 # /// script
 # requires-python = ">=3.11"
-# dependencies = ["google-genai>=1.0"]
+# dependencies = ["google-genai>=1.0", "anthropic>=1.0", "openai>=1.0"]
 # ///
 """G1 budget measurement for the Gnome Heist neighbor agent.
 
 AI-use disclosure: written by Claude (Claude Code) under Hao's direction.
 
-Sends one realistic morning input N times to a Gemini model on Vertex AI and
-records wall-clock latency, token usage, and output validity. Uses Google
-Application Default Credentials; no key is read from or written to any file.
+Sends one realistic morning input N times to one provider and records
+wall-clock latency, token usage, output validity, and whether the move set
+equals the rule-based neighbor's. Credentials come from the environment or
+from a gitignored .env at the repository root; nothing is written back.
 
-Required environment: GOOGLE_CLOUD_PROJECT, GOOGLE_CLOUD_LOCATION, COURSE_MODEL.
-Usage: uv run spike/measure_neighbor.py --calls 20
+Usage:
+  uv run spike/measure_neighbor.py --provider vertex --calls 20
+  uv run spike/measure_neighbor.py --provider anthropic --calls 20 --price-in 4 --price-out 20
+  uv run spike/measure_neighbor.py --provider openai --calls 20 --price-in X --price-out Y
+Prices are USD per 1M tokens, copied from the provider's official price page.
 """
 
 from __future__ import annotations
@@ -25,8 +29,9 @@ import sys
 import time
 from pathlib import Path
 
-from google import genai
-from google.genai import types
+import providers
+
+ROOT = Path(__file__).resolve().parent.parent
 
 SYSTEM = (
     "You are the neighbor in Gnome Heist. Someone has been stealing your garden "
@@ -35,7 +40,10 @@ SYSTEM = (
     "two moves from the allowed list to make tonight harder for them. Some traces may "
     "be fake. You may not block every route to your remaining gnomes. Answer only with "
     "JSON matching the schema. Your `line` is one short, grumpy, funny sentence about "
-    "what you noticed, and it must not claim knowledge you do not have."
+    "what you noticed (at most 80 characters), and it must not claim knowledge you do "
+    "not have. Move format: move_lamp (defense = lamp id, to = lamp post id); move_dog "
+    "(defense = \"dog\", to = dog spot id); lock (defense = \"lock\", to = gate id); "
+    "hold (defense = any defense id, to = \"\")."
 )
 
 ESTATE = {
@@ -76,29 +84,48 @@ MORNING_INPUT = {
     ],
 }
 
+# Provider-neutral JSON Schema (every field required, no extra keys) so the same
+# contract works with Gemini, Claude structured outputs, and OpenAI strict mode.
 SCHEMA = {
-    "type": "OBJECT",
+    "type": "object",
     "properties": {
         "moves": {
-            "type": "ARRAY",
+            "type": "array",
             "items": {
-                "type": "OBJECT",
+                "type": "object",
                 "properties": {
-                    "type": {"type": "STRING", "enum": ["move_lamp", "move_dog", "lock", "hold"]},
-                    "lamp": {"type": "STRING"},
-                    "to": {"type": "STRING"},
-                    "spot": {"type": "STRING"},
-                    "gate": {"type": "STRING"},
-                    "defense": {"type": "STRING"},
+                    "type": {"type": "string", "enum": ["move_lamp", "move_dog", "lock", "hold"]},
+                    "defense": {"type": "string"},
+                    "to": {"type": "string"},
                 },
-                "required": ["type"],
+                "required": ["type", "defense", "to"],
+                "additionalProperties": False,
             },
         },
-        "line": {"type": "STRING"},
-        "inspected": {"type": "ARRAY", "items": {"type": "STRING"}},
+        "line": {"type": "string"},
+        "inspected": {"type": "array", "items": {"type": "string"}},
     },
     "required": ["moves", "line", "inspected"],
+    "additionalProperties": False,
 }
+
+# What the rule-based neighbor does with MORNING_INPUT: a lamp to the post by the
+# most-trampled area, and the lock to the gate whose state changed.
+RULE_MOVES = {("move_lamp", "post_rose_east"), ("lock", "gate_east")}
+
+
+def load_dotenv(path: Path) -> None:
+    """Minimal .env reader: KEY=VALUE lines; empty values and existing env win."""
+    if not path.exists():
+        return
+    for raw in path.read_text().splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        key, value = key.strip(), value.split(" #", 1)[0].strip().strip('"').strip("'")
+        if value and key not in os.environ:
+            os.environ[key] = value
 
 
 def validate(out: dict) -> list[str]:
@@ -107,28 +134,19 @@ def validate(out: dict) -> list[str]:
     moves = out.get("moves", [])
     if len(moves) != 2:
         errs.append(f"expected 2 moves, got {len(moves)}")
+    defenses = ESTATE["lamps"] + ["dog", "lock"]
     touched = []
     for m in moves:
-        t = m.get("type")
-        if t == "move_lamp":
-            if m.get("lamp") not in ESTATE["lamps"] or m.get("to") not in ESTATE["lamp_posts"]:
-                errs.append(f"bad lamp move {m}")
-            touched.append(m.get("lamp"))
-        elif t == "move_dog":
-            if m.get("spot") not in ESTATE["dog_spots"]:
-                errs.append(f"bad dog move {m}")
-            touched.append("dog")
-        elif t == "lock":
-            if m.get("gate") not in ESTATE["gates"]:
-                errs.append(f"bad lock move {m}")
-            touched.append("lock")
-        elif t == "hold":
-            d = m.get("defense")
-            if d not in ESTATE["lamps"] + ["dog", "lock"]:
-                errs.append(f"bad hold {m}")
-            touched.append(d)
-        else:
-            errs.append(f"unknown move {m}")
+        t, d, to = m.get("type"), m.get("defense"), m.get("to")
+        ok = (
+            (t == "move_lamp" and d in ESTATE["lamps"] and to in ESTATE["lamp_posts"])
+            or (t == "move_dog" and d == "dog" and to in ESTATE["dog_spots"])
+            or (t == "lock" and d == "lock" and to in ESTATE["gates"])
+            or (t == "hold" and d in defenses)
+        )
+        if not ok:
+            errs.append(f"illegal move {m}")
+        touched.append(d)
     if len(set(touched)) != len(touched):
         errs.append("two moves on one defense")
     if len(out.get("line", "")) > 80:
@@ -139,80 +157,89 @@ def validate(out: dict) -> list[str]:
     return errs
 
 
+def equals_rule(out: dict) -> bool:
+    return {(m.get("type"), m.get("to")) for m in out.get("moves", [])} == RULE_MOVES
+
+
 def pct(xs: list[float], p: float) -> float:
     xs = sorted(xs)
-    k = max(0, min(len(xs) - 1, round(p / 100 * (len(xs) - 1))))
-    return xs[k]
+    return xs[max(0, min(len(xs) - 1, round(p / 100 * (len(xs) - 1))))]
 
 
 def main() -> int:
     ap = argparse.ArgumentParser()
+    ap.add_argument("--provider", choices=providers.PROVIDERS, default="vertex")
     ap.add_argument("--calls", type=int, default=20)
-    ap.add_argument("--temperature", type=float, default=0.7)
     ap.add_argument("--timeout-s", type=float, default=15.0)
+    ap.add_argument("--price-in", type=float, help="USD per 1M input tokens")
+    ap.add_argument("--price-out", type=float, help="USD per 1M output tokens")
     args = ap.parse_args()
     if args.calls > 30:
         print("Refusing more than 30 calls in a measurement run.", file=sys.stderr)
         return 2
 
-    missing = [k for k in ("GOOGLE_CLOUD_PROJECT", "GOOGLE_CLOUD_LOCATION", "COURSE_MODEL")
-               if not os.environ.get(k)]
+    load_dotenv(ROOT / ".env")
+    mod = providers.get(args.provider)
+    missing = [k for k in mod.REQUIRED_ENV if not os.environ.get(k)]
     if missing:
-        print(f"Missing environment: {', '.join(missing)}", file=sys.stderr)
+        print(f"Missing environment for {args.provider}: {', '.join(missing)}", file=sys.stderr)
         return 2
-    model = os.environ["COURSE_MODEL"]
-    client = genai.Client(vertexai=True, project=os.environ["GOOGLE_CLOUD_PROJECT"],
-                          location=os.environ["GOOGLE_CLOUD_LOCATION"],
-                          http_options=types.HttpOptions(timeout=int(args.timeout_s * 1000)))
-    user = ("ESTATE:\n" + json.dumps(ESTATE) + "\n\nTODAY:\n" + json.dumps(MORNING_INPUT))
-    config = types.GenerateContentConfig(
-        system_instruction=SYSTEM, temperature=args.temperature,
-        response_mime_type="application/json", response_schema=SCHEMA,
-        max_output_tokens=400)
 
+    user = "ESTATE:\n" + json.dumps(ESTATE) + "\n\nTODAY:\n" + json.dumps(MORNING_INPUT)
     rows = []
     for i in range(args.calls):
         t0 = time.perf_counter()
         row: dict = {"i": i}
         try:
-            r = client.models.generate_content(model=model, contents=user, config=config)
-            row["latency_s"] = round(time.perf_counter() - t0, 3)
-            u = r.usage_metadata
-            row["input_tokens"] = getattr(u, "prompt_token_count", None)
-            row["output_tokens"] = getattr(u, "candidates_token_count", None)
-            row["thinking_tokens"] = getattr(u, "thoughts_token_count", None)
+            res = mod.call(SYSTEM, user, SCHEMA, args.timeout_s)
+            row.update(latency_s=round(time.perf_counter() - t0, 3), model=res.model,
+                       input_tokens=res.input_tokens, output_tokens=res.output_tokens,
+                       thinking_tokens=res.thinking_tokens, stop_reason=res.stop_reason)
             try:
-                out = json.loads(r.text)
-                row["errors"] = validate(out)
+                out = json.loads(res.text)
                 row["output"] = out
+                row["errors"] = validate(out)
+                row["equals_rule"] = equals_rule(out)
             except (json.JSONDecodeError, TypeError) as e:
                 row["errors"] = [f"parse: {e}"]
-        except Exception as e:  # provider error or timeout
+        except Exception as e:  # provider error or timeout; never print credentials
             row["latency_s"] = round(time.perf_counter() - t0, 3)
-            row["errors"] = [f"call failed: {type(e).__name__}: {e}"[:300]]
+            row["errors"] = [f"call failed: {type(e).__name__}"]
         rows.append(row)
-        print(f"{i:2d} {row['latency_s']:6.2f}s  errors={len(row['errors'])}")
+        print(f"{i:2d} {row['latency_s']:6.2f}s  errors={len(row['errors'])}"
+              f"  rule={'=' if row.get('equals_rule') else '≠'}")
 
+    answered = [r for r in rows if "output" in r]
     ok = [r for r in rows if not r["errors"]]
-    lat = [r["latency_s"] for r in rows if "output" in r]
+    lat = [r["latency_s"] for r in answered]
+    mean = lambda key: round(statistics.mean(r[key] for r in answered if r.get(key) is not None), 1) \
+        if any(r.get(key) is not None for r in answered) else None
     summary = {
         "run_at": dt.datetime.now().astimezone().isoformat(timespec="seconds"),
-        "model": model, "location": os.environ["GOOGLE_CLOUD_LOCATION"],
-        "temperature": args.temperature, "calls": len(rows), "valid": len(ok),
+        "provider": args.provider,
+        "model": answered[0]["model"] if answered else None,
+        "calls": len(rows), "answered": len(answered), "valid": len(ok),
+        "equals_rule": sum(1 for r in answered if r.get("equals_rule")),
         "latency_p50_s": round(statistics.median(lat), 3) if lat else None,
         "latency_p95_s": round(pct(lat, 95), 3) if lat else None,
         "latency_max_s": round(max(lat), 3) if lat else None,
-        "input_tokens_mean": round(statistics.mean(r["input_tokens"] for r in ok if r.get("input_tokens")), 1) if ok else None,
-        "output_tokens_mean": round(statistics.mean(r["output_tokens"] for r in ok if r.get("output_tokens")), 1) if ok else None,
-        "price_source": "fill in: official price page URL and date",
+        "input_tokens_mean": mean("input_tokens"),
+        "output_tokens_mean": mean("output_tokens"),
+        "thinking_tokens_mean": mean("thinking_tokens"),
     }
+    if args.price_in is not None and args.price_out is not None and summary["input_tokens_mean"]:
+        per_call = (summary["input_tokens_mean"] * args.price_in
+                    + (summary["output_tokens_mean"] or 0) * args.price_out) / 1e6
+        summary.update(price_in_per_mtok=args.price_in, price_out_per_mtok=args.price_out,
+                       cost_per_call_usd=round(per_call, 6),
+                       cost_per_5_call_session_usd=round(5 * per_call, 5))
     out_dir = Path(__file__).parent / "results"
     out_dir.mkdir(exist_ok=True)
     stamp = dt.datetime.now().strftime("%Y%m%d-%H%M%S")
-    path = out_dir / f"{stamp}-{model}.json"
+    path = out_dir / f"{stamp}-{args.provider}-{summary['model']}.json"
     path.write_text(json.dumps({"summary": summary, "rows": rows}, indent=2))
     print(json.dumps(summary, indent=2))
-    print(f"saved {path}")
+    print(f"saved {path.relative_to(ROOT)}")
     return 0
 
 

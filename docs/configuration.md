@@ -97,11 +97,12 @@ Retrieval: none planned. The whole context is small enough to send each time.
 
 | Setting | Value |
 | --- | --- |
-| Provider | Gemini via Vertex AI, the course-funded default. [Hao, on agent proposal] |
+| Provider | **Switchable** between Gemini on Vertex AI (course-funded default), Anthropic, and OpenAI (or an OpenAI-compatible endpoint), chosen by `NEIGHBOR_PROVIDER`. Unified interface in the Worker: Vercel AI SDK, one structured-output call. [Hao, 2026-11-12, for multiple providers; library on agent proposal] Anthropic and OpenAI are paid by me; course credits cover only Vertex. Names of all settings: [`.env.example`](../.env.example). |
 | Model identifier | `gemini-3.5-flash-lite`, global endpoint (measured 2026-11-12; see [spike results](../spike/README.md)). |
 | Temperature | 0.7 in the measured run. Revisit after evaluation: 14 of 20 runs matched the rule-based neighbor (Section A8). [Proposed] |
 | Output | JSON with a response schema; max output about 200 tokens. |
-| Where it runs | A Cloudflare Worker; one Durable Object per play session holds state. The API credential stays in Worker secrets and never reaches the browser or the repository. |
+| Where it runs | A Cloudflare Worker; one Durable Object per play session holds state. API keys and endpoints stay in Worker secrets (`wrangler secret put`; locally a gitignored `.dev.vars`) and never reach the browser or the repository. |
+| Provider switching rules | The provider and model are fixed for a whole session and logged with every morning, so comparisons never mix providers silently. One output schema for all providers (every field required, no extra keys). A provider failure goes to the rule-based fallback, not to another provider, to stay inside the 4 s timeout. [Proposed] |
 
 Draft system instruction (v0, not yet tested):
 
@@ -199,6 +200,8 @@ G1 plans the team; working roles and gaps are shown at G2/G3. My accountability 
 | --- | --- | --- |
 | C1 | ~~Which Gemini model and timeout pass the measurement?~~ Answered 2026-11-12: `gemini-3.5-flash-lite`, 4 s. | Done |
 | C2 | ~~Is Vertex AI access working?~~ Answered 2026-11-12: yes, 20 of 20 calls returned. | Done |
+| C7 | Vertex from a Cloudflare Worker cannot use my laptop's Application Default Credentials; it needs a service-account credential stored as a Worker secret. Is that allowed for the course project, or does the deployed game default to Anthropic or OpenAI? | Before T11 (Nov 23 checkpoint) |
+| C8 | Which provider and model become the default after a same-input comparison (latency, cost, validity, agent-equals-rule rate)? | After keys are set and the comparison runs |
 | C6 | How do I make the agent differ from the rule where it matters (fake trails, repeated routes) without hard-coding the answer? 14 of 20 measured runs matched the rule. | Before T13 |
 | C3 | Does the morning line need a separate cheaper call, or is one call enough? | First live evaluation |
 | C4 | How large a live suite per change is affordable (trials × sessions)? | After C1 |

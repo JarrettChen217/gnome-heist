@@ -4,12 +4,21 @@ AI-use disclosure: Claude (Claude Code) wrote the measurement script and this su
 
 **Run:** 2026-11-12 13:51 EST, `gemini-3.5-flash-lite`, Vertex AI global endpoint, temperature 0.7, 20 calls, one realistic night-3 input (2 memory entries, 2 footprint areas, 1 changed gate, 1 empty pedestal). Called from my laptop, not yet from the Worker.
 
-Raw rows: [`results/20261112-135109-gemini-3.5-flash-lite.json`](results/20261112-135109-gemini-3.5-flash-lite.json). Reproduce:
+Raw rows: [`results/20261112-135109-gemini-3.5-flash-lite.json`](results/20261112-135109-gemini-3.5-flash-lite.json). That run used prompt v0 and an earlier, Gemini-only version of the script.
+
+## Running it now (any provider)
+
+Copy `.env.example` to `.env` (gitignored) and fill in the provider you want. Then:
 
 ```bash
-GOOGLE_CLOUD_PROJECT=<project> GOOGLE_CLOUD_LOCATION=global COURSE_MODEL=gemini-3.5-flash-lite \
-  uv run spike/measure_neighbor.py --calls 20
+uv run spike/measure_neighbor.py --provider vertex    --calls 20 --price-in 0.30 --price-out 2.50
+uv run spike/measure_neighbor.py --provider anthropic --calls 20 --price-in <USD/1M in> --price-out <USD/1M out>
+uv run spike/measure_neighbor.py --provider openai    --calls 20 --price-in <USD/1M in> --price-out <USD/1M out>
 ```
+
+Each provider has its own adapter in [`providers/`](providers/), and all share one output schema, so results are comparable. Copy prices from each provider's official price page on the day of the run. The script also counts how often the agent's move set equals the rule-based neighbor's.
+
+A 3-call check after the refactor (2026-11-12 14:01, prompt v0.1, which states the 80-character limit and the move format) returned 3 of 3 valid outputs, none equal to the rule. Three calls are too few to compare with the v0 run.
 
 | Measure | Result |
 | --- | --- |
