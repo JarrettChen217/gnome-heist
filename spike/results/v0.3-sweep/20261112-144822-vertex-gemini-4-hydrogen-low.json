@@ -1,0 +1,660 @@
+{
+  "summary": {
+    "run_at": "2026-11-12T14:48:22-05:00",
+    "provider": "vertex",
+    "model": "gemini-4-hydrogen",
+    "think": "low",
+    "prompt_version": "v0.3",
+    "calls": 20,
+    "answered": 20,
+    "valid": 20,
+    "equals_rule": 12,
+    "latency_p50_s": 5.63,
+    "latency_p95_s": 23.534,
+    "latency_max_s": 35.665,
+    "input_tokens_mean": 1227,
+    "output_tokens_mean": 148.1,
+    "thinking_tokens_mean": 519.6,
+    "price_in_per_mtok": 1.5,
+    "price_out_per_mtok": 7.5,
+    "cost_per_call_usd": 0.006848,
+    "cost_per_5_call_session_usd": 0.03424
+  },
+  "rows": [
+    {
+      "i": 0,
+      "latency_s": 23.534,
+      "model": "gemini-4-hydrogen",
+      "input_tokens": 1227,
+      "output_tokens": 152,
+      "thinking_tokens": 497,
+      "stop_reason": null,
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_b",
+            "to": "post_pond"
+          }
+        ],
+        "line": "Gate east wide open and a pond gnome gone. Time to lock it down.",
+        "inspected": [
+          "gate_east",
+          "area_rosebed_east",
+          "ped_pond"
+        ]
+      },
+      "errors": [],
+      "equals_rule": false
+    },
+    {
+      "i": 1,
+      "latency_s": 10.679,
+      "model": "gemini-4-hydrogen",
+      "input_tokens": 1227,
+      "output_tokens": 161,
+      "thinking_tokens": 562,
+      "stop_reason": null,
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_b",
+            "to": "post_pond"
+          }
+        ],
+        "line": "East gate wide open, roses trampled, and my pond gnome vanished!",
+        "inspected": [
+          "area_rosebed_east",
+          "area_tulips_west",
+          "gate_east",
+          "ped_pond"
+        ]
+      },
+      "errors": [],
+      "equals_rule": false
+    },
+    {
+      "i": 2,
+      "latency_s": 35.665,
+      "model": "gemini-4-hydrogen",
+      "input_tokens": 1227,
+      "output_tokens": 160,
+      "thinking_tokens": 608,
+      "stop_reason": null,
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_b",
+            "to": "post_pond"
+          }
+        ],
+        "line": "East gate wide open, roses crushed, and my pond gnome vanished!",
+        "inspected": [
+          "area_rosebed_east",
+          "area_tulips_west",
+          "gate_east",
+          "ped_pond"
+        ]
+      },
+      "errors": [],
+      "equals_rule": false
+    },
+    {
+      "i": 3,
+      "latency_s": 17.063,
+      "model": "gemini-4-hydrogen",
+      "input_tokens": 1227,
+      "output_tokens": 161,
+      "thinking_tokens": 460,
+      "stop_reason": null,
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_b",
+            "to": "post_rose_east"
+          }
+        ],
+        "line": "East gate opened again and my pond gnome vanished. Unbelievable.",
+        "inspected": [
+          "area_rosebed_east",
+          "area_tulips_west",
+          "gate_east",
+          "ped_pond"
+        ]
+      },
+      "errors": [],
+      "equals_rule": true
+    },
+    {
+      "i": 4,
+      "latency_s": 4.908,
+      "model": "gemini-4-hydrogen",
+      "input_tokens": 1227,
+      "output_tokens": 108,
+      "thinking_tokens": 468,
+      "stop_reason": null,
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_b",
+            "to": "post_rose_east"
+          }
+        ],
+        "line": "East gate open, roses trampled, pond gnome gone. My patience is next.",
+        "inspected": [
+          "area_rosebed_east",
+          "gate_east",
+          "ped_pond"
+        ]
+      },
+      "errors": [],
+      "equals_rule": true
+    },
+    {
+      "i": 5,
+      "latency_s": 6.265,
+      "model": "gemini-4-hydrogen",
+      "input_tokens": 1227,
+      "output_tokens": 162,
+      "thinking_tokens": 624,
+      "stop_reason": null,
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_b",
+            "to": "post_rose_east"
+          }
+        ],
+        "line": "My east gate is open again and my pond gnome is gone!",
+        "inspected": [
+          "area_rosebed_east",
+          "area_tulips_west",
+          "gate_east",
+          "ped_pond"
+        ]
+      },
+      "errors": [],
+      "equals_rule": true
+    },
+    {
+      "i": 6,
+      "latency_s": 4.687,
+      "model": "gemini-4-hydrogen",
+      "input_tokens": 1227,
+      "output_tokens": 162,
+      "thinking_tokens": 420,
+      "stop_reason": null,
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_b",
+            "to": "post_rose_east"
+          }
+        ],
+        "line": "East gate open, roses trampled, pond gnome gone. Enough!",
+        "inspected": [
+          "gate_east",
+          "area_rosebed_east",
+          "area_tulips_west",
+          "ped_pond"
+        ]
+      },
+      "errors": [],
+      "equals_rule": true
+    },
+    {
+      "i": 7,
+      "latency_s": 5.649,
+      "model": "gemini-4-hydrogen",
+      "input_tokens": 1227,
+      "output_tokens": 108,
+      "thinking_tokens": 585,
+      "stop_reason": null,
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_b",
+            "to": "post_pond"
+          }
+        ],
+        "line": "East gate again, and my pond gnome is gone! I'm locking that gate.",
+        "inspected": [
+          "area_rosebed_east",
+          "gate_east",
+          "ped_pond"
+        ]
+      },
+      "errors": [],
+      "equals_rule": false
+    },
+    {
+      "i": 8,
+      "latency_s": 4.755,
+      "model": "gemini-4-hydrogen",
+      "input_tokens": 1227,
+      "output_tokens": 153,
+      "thinking_tokens": 451,
+      "stop_reason": null,
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_b",
+            "to": "post_rose_east"
+          }
+        ],
+        "line": "East gate wide open, roses trampled, and my pond gnome vanished!",
+        "inspected": [
+          "area_rosebed_east",
+          "gate_east",
+          "ped_pond"
+        ]
+      },
+      "errors": [],
+      "equals_rule": true
+    },
+    {
+      "i": 9,
+      "latency_s": 4.893,
+      "model": "gemini-4-hydrogen",
+      "input_tokens": 1227,
+      "output_tokens": 114,
+      "thinking_tokens": 513,
+      "stop_reason": null,
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_b",
+            "to": "post_rose_east"
+          }
+        ],
+        "line": "East gate opened again, roses stomped, and my pond gnome vanished!",
+        "inspected": [
+          "area_rosebed_east",
+          "area_tulips_west",
+          "gate_east",
+          "ped_pond"
+        ]
+      },
+      "errors": [],
+      "equals_rule": true
+    },
+    {
+      "i": 10,
+      "latency_s": 5.732,
+      "model": "gemini-4-hydrogen",
+      "input_tokens": 1227,
+      "output_tokens": 156,
+      "thinking_tokens": 570,
+      "stop_reason": null,
+      "output": {
+        "moves": [
+          {
+            "type": "move_lamp",
+            "defense": "lamp_b",
+            "to": "post_gate_east"
+          },
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          }
+        ],
+        "line": "East gate again, and my pond gnome is gone! I'm locking that gate.",
+        "inspected": [
+          "area_rosebed_east",
+          "gate_east",
+          "ped_pond"
+        ]
+      },
+      "errors": [],
+      "equals_rule": false
+    },
+    {
+      "i": 11,
+      "latency_s": 5.611,
+      "model": "gemini-4-hydrogen",
+      "input_tokens": 1227,
+      "output_tokens": 114,
+      "thinking_tokens": 570,
+      "stop_reason": null,
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_b",
+            "to": "post_rose_east"
+          }
+        ],
+        "line": "My pond gnome is gone and the east gate is wide open. Again!",
+        "inspected": [
+          "area_rosebed_east",
+          "area_tulips_west",
+          "gate_east",
+          "ped_pond"
+        ]
+      },
+      "errors": [],
+      "equals_rule": true
+    },
+    {
+      "i": 12,
+      "latency_s": 5.268,
+      "model": "gemini-4-hydrogen",
+      "input_tokens": 1227,
+      "output_tokens": 160,
+      "thinking_tokens": 471,
+      "stop_reason": null,
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_b",
+            "to": "post_pond"
+          }
+        ],
+        "line": "East gate open again and my pond gnome is gone! Unbelievable.",
+        "inspected": [
+          "area_rosebed_east",
+          "area_tulips_west",
+          "gate_east",
+          "ped_pond"
+        ]
+      },
+      "errors": [],
+      "equals_rule": false
+    },
+    {
+      "i": 13,
+      "latency_s": 5.492,
+      "model": "gemini-4-hydrogen",
+      "input_tokens": 1227,
+      "output_tokens": 164,
+      "thinking_tokens": 521,
+      "stop_reason": null,
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_b",
+            "to": "post_rose_east"
+          }
+        ],
+        "line": "East gate opened again, roses stomped, and my pond gnome is gone!",
+        "inspected": [
+          "area_rosebed_east",
+          "area_tulips_west",
+          "gate_east",
+          "ped_pond"
+        ]
+      },
+      "errors": [],
+      "equals_rule": true
+    },
+    {
+      "i": 14,
+      "latency_s": 5.719,
+      "model": "gemini-4-hydrogen",
+      "input_tokens": 1227,
+      "output_tokens": 164,
+      "thinking_tokens": 588,
+      "stop_reason": null,
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_b",
+            "to": "post_rose_east"
+          }
+        ],
+        "line": "East gate left open, roses trampled, and my pond gnome is gone!",
+        "inspected": [
+          "area_rosebed_east",
+          "area_tulips_west",
+          "gate_east",
+          "ped_pond"
+        ]
+      },
+      "errors": [],
+      "equals_rule": true
+    },
+    {
+      "i": 15,
+      "latency_s": 5.202,
+      "model": "gemini-4-hydrogen",
+      "input_tokens": 1227,
+      "output_tokens": 162,
+      "thinking_tokens": 504,
+      "stop_reason": null,
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_b",
+            "to": "post_pond"
+          }
+        ],
+        "line": "East gate again, and now my pond gnome's gone. Locking up!",
+        "inspected": [
+          "area_rosebed_east",
+          "area_tulips_west",
+          "gate_east",
+          "ped_pond"
+        ]
+      },
+      "errors": [],
+      "equals_rule": false
+    },
+    {
+      "i": 16,
+      "latency_s": 4.219,
+      "model": "gemini-4-hydrogen",
+      "input_tokens": 1227,
+      "output_tokens": 112,
+      "thinking_tokens": 378,
+      "stop_reason": null,
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_b",
+            "to": "post_pond"
+          }
+        ],
+        "line": "East gate opened again, roses flattened, and my pond gnome is gone!",
+        "inspected": [
+          "area_rosebed_east",
+          "area_tulips_west",
+          "gate_east",
+          "ped_pond"
+        ]
+      },
+      "errors": [],
+      "equals_rule": false
+    },
+    {
+      "i": 17,
+      "latency_s": 5.701,
+      "model": "gemini-4-hydrogen",
+      "input_tokens": 1227,
+      "output_tokens": 163,
+      "thinking_tokens": 583,
+      "stop_reason": null,
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_b",
+            "to": "post_rose_east"
+          }
+        ],
+        "line": "East gate wide open, roses trampled, and my pond gnome vanished!",
+        "inspected": [
+          "area_rosebed_east",
+          "area_tulips_west",
+          "gate_east",
+          "ped_pond"
+        ]
+      },
+      "errors": [],
+      "equals_rule": true
+    },
+    {
+      "i": 18,
+      "latency_s": 4.67,
+      "model": "gemini-4-hydrogen",
+      "input_tokens": 1227,
+      "output_tokens": 162,
+      "thinking_tokens": 433,
+      "stop_reason": null,
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_b",
+            "to": "post_rose_east"
+          }
+        ],
+        "line": "East gate wide open, roses crushed, and my pond gnome vanished!",
+        "inspected": [
+          "gate_east",
+          "area_rosebed_east",
+          "area_tulips_west",
+          "ped_pond"
+        ]
+      },
+      "errors": [],
+      "equals_rule": true
+    },
+    {
+      "i": 19,
+      "latency_s": 5.831,
+      "model": "gemini-4-hydrogen",
+      "input_tokens": 1227,
+      "output_tokens": 164,
+      "thinking_tokens": 587,
+      "stop_reason": null,
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_b",
+            "to": "post_rose_east"
+          }
+        ],
+        "line": "East gate left open, roses trampled, and my pond gnome is gone!",
+        "inspected": [
+          "area_rosebed_east",
+          "area_tulips_west",
+          "gate_east",
+          "ped_pond"
+        ]
+      },
+      "errors": [],
+      "equals_rule": true
+    }
+  ]
+}

@@ -1,0 +1,696 @@
+{
+  "summary": {
+    "run_at": "2026-11-12T14:21:59-05:00",
+    "provider": "anthropic",
+    "model": "claude-sonnet-5-5",
+    "think": "medium",
+    "prompt_version": "v0.1",
+    "calls": 20,
+    "answered": 20,
+    "valid": 2,
+    "equals_rule": 0,
+    "latency_p50_s": 2.192,
+    "latency_p95_s": 2.893,
+    "latency_max_s": 3.34,
+    "input_tokens_mean": 1343,
+    "output_tokens_mean": 122.8,
+    "thinking_tokens_mean": null,
+    "price_in_per_mtok": 2.0,
+    "price_out_per_mtok": 10.0,
+    "cost_per_call_usd": 0.003914,
+    "cost_per_5_call_session_usd": 0.01957
+  },
+  "rows": [
+    {
+      "i": 0,
+      "latency_s": 3.34,
+      "model": "claude-sonnet-5-5",
+      "input_tokens": 1343,
+      "output_tokens": 129,
+      "thinking_tokens": null,
+      "stop_reason": "end_turn",
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_a",
+            "to": "post_pond"
+          }
+        ],
+        "line": "Gate east opened, pond gnome gone, roses trampled again. I saw nothing, naturally.",
+        "inspected": [
+          "footprints",
+          "gates_changed",
+          "empty_pedestals",
+          "memory"
+        ]
+      },
+      "errors": [
+        "line longer than 80 characters",
+        "inspected an unknown place"
+      ],
+      "equals_rule": false
+    },
+    {
+      "i": 1,
+      "latency_s": 2.212,
+      "model": "claude-sonnet-5-5",
+      "input_tokens": 1343,
+      "output_tokens": 119,
+      "thinking_tokens": null,
+      "stop_reason": "end_turn",
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_a",
+            "to": "post_pond"
+          }
+        ],
+        "line": "Roses trampled again and the east gate was opened; the pond gnome is gone.",
+        "inspected": [
+          "footprints",
+          "gates_changed",
+          "empty_pedestals"
+        ]
+      },
+      "errors": [
+        "inspected an unknown place"
+      ],
+      "equals_rule": false
+    },
+    {
+      "i": 2,
+      "latency_s": 2.788,
+      "model": "claude-sonnet-5-5",
+      "input_tokens": 1343,
+      "output_tokens": 123,
+      "thinking_tokens": null,
+      "stop_reason": "end_turn",
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_a",
+            "to": "post_pond"
+          }
+        ],
+        "line": "Gate east opened, pond gnome gone, roses stomped again. Rude and consistent.",
+        "inspected": [
+          "footprints",
+          "gates_changed",
+          "empty_pedestals"
+        ]
+      },
+      "errors": [
+        "inspected an unknown place"
+      ],
+      "equals_rule": false
+    },
+    {
+      "i": 3,
+      "latency_s": 2.034,
+      "model": "claude-sonnet-5-5",
+      "input_tokens": 1343,
+      "output_tokens": 116,
+      "thinking_tokens": null,
+      "stop_reason": "end_turn",
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_a",
+            "to": "post_pond"
+          }
+        ],
+        "line": "Roses trampled again and the east gate opened itself. Sure it did.",
+        "inspected": [
+          "footprints",
+          "gates_changed",
+          "empty_pedestals"
+        ]
+      },
+      "errors": [
+        "inspected an unknown place"
+      ],
+      "equals_rule": false
+    },
+    {
+      "i": 4,
+      "latency_s": 2.252,
+      "model": "claude-sonnet-5-5",
+      "input_tokens": 1343,
+      "output_tokens": 117,
+      "thinking_tokens": null,
+      "stop_reason": "end_turn",
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_a",
+            "to": "post_pond"
+          }
+        ],
+        "line": "Roses trampled again and the east gate open; the pond gnome is gone.",
+        "inspected": [
+          "footprints",
+          "gates_changed",
+          "empty_pedestals"
+        ]
+      },
+      "errors": [
+        "inspected an unknown place"
+      ],
+      "equals_rule": false
+    },
+    {
+      "i": 5,
+      "latency_s": 2.244,
+      "model": "claude-sonnet-5-5",
+      "input_tokens": 1343,
+      "output_tokens": 128,
+      "thinking_tokens": null,
+      "stop_reason": "end_turn",
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_a",
+            "to": "post_pond"
+          }
+        ],
+        "line": "Roses trampled again and the pond gnome is gone; the east gate was open.",
+        "inspected": [
+          "area_rosebed_east",
+          "area_tulips_west",
+          "gate_east",
+          "ped_pond"
+        ]
+      },
+      "errors": [],
+      "equals_rule": false
+    },
+    {
+      "i": 6,
+      "latency_s": 2.158,
+      "model": "claude-sonnet-5-5",
+      "input_tokens": 1343,
+      "output_tokens": 119,
+      "thinking_tokens": null,
+      "stop_reason": "end_turn",
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_a",
+            "to": "post_pond"
+          }
+        ],
+        "line": "Roses trampled again and the east gate opened itself. Sure it did.",
+        "inspected": [
+          "footprints",
+          "gates_changed",
+          "empty_pedestals",
+          "memory"
+        ]
+      },
+      "errors": [
+        "inspected an unknown place"
+      ],
+      "equals_rule": false
+    },
+    {
+      "i": 7,
+      "latency_s": 2.893,
+      "model": "claude-sonnet-5-5",
+      "input_tokens": 1343,
+      "output_tokens": 128,
+      "thinking_tokens": null,
+      "stop_reason": "end_turn",
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_a",
+            "to": "post_pond"
+          }
+        ],
+        "line": "Roses trampled again and the east gate flapped open. Rude, and the pond gnome's gone.",
+        "inspected": [
+          "footprints",
+          "gates_changed",
+          "empty_pedestals",
+          "memory"
+        ]
+      },
+      "errors": [
+        "line longer than 80 characters",
+        "inspected an unknown place"
+      ],
+      "equals_rule": false
+    },
+    {
+      "i": 8,
+      "latency_s": 1.959,
+      "model": "claude-sonnet-5-5",
+      "input_tokens": 1343,
+      "output_tokens": 116,
+      "thinking_tokens": null,
+      "stop_reason": "end_turn",
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_a",
+            "to": "post_pond"
+          }
+        ],
+        "line": "Roses trampled again and the east gate opened itself? Sure it did.",
+        "inspected": [
+          "footprints",
+          "gates_changed",
+          "empty_pedestals"
+        ]
+      },
+      "errors": [
+        "inspected an unknown place"
+      ],
+      "equals_rule": false
+    },
+    {
+      "i": 9,
+      "latency_s": 2.274,
+      "model": "claude-sonnet-5-5",
+      "input_tokens": 1343,
+      "output_tokens": 126,
+      "thinking_tokens": null,
+      "stop_reason": "end_turn",
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_a",
+            "to": "post_pond"
+          }
+        ],
+        "line": "Roses trampled again and the east gate opened itself. Sure it did.",
+        "inspected": [
+          "area_rosebed_east",
+          "area_tulips_west",
+          "gate_east",
+          "ped_pond"
+        ]
+      },
+      "errors": [],
+      "equals_rule": false
+    },
+    {
+      "i": 10,
+      "latency_s": 2.768,
+      "model": "claude-sonnet-5-5",
+      "input_tokens": 1343,
+      "output_tokens": 121,
+      "thinking_tokens": null,
+      "stop_reason": "end_turn",
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_a",
+            "to": "post_pond"
+          }
+        ],
+        "line": "Roses trampled again and the east gate opened; someone took the pond gnome.",
+        "inspected": [
+          "footprints",
+          "gates_changed",
+          "empty_pedestals",
+          "memory"
+        ]
+      },
+      "errors": [
+        "inspected an unknown place"
+      ],
+      "equals_rule": false
+    },
+    {
+      "i": 11,
+      "latency_s": 2.166,
+      "model": "claude-sonnet-5-5",
+      "input_tokens": 1343,
+      "output_tokens": 129,
+      "thinking_tokens": null,
+      "stop_reason": "end_turn",
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_a",
+            "to": "post_pond"
+          }
+        ],
+        "line": "Gate east opened, roses stomped, pond gnome gone. Rude, and I saw none of it.",
+        "inspected": [
+          "footprints",
+          "gates_changed",
+          "empty_pedestals",
+          "memory"
+        ]
+      },
+      "errors": [
+        "inspected an unknown place"
+      ],
+      "equals_rule": false
+    },
+    {
+      "i": 12,
+      "latency_s": 2.056,
+      "model": "claude-sonnet-5-5",
+      "input_tokens": 1343,
+      "output_tokens": 122,
+      "thinking_tokens": null,
+      "stop_reason": "end_turn",
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_a",
+            "to": "post_pond"
+          }
+        ],
+        "line": "Roses stomped again and the east gate swung open; the pond gnome is gone.",
+        "inspected": [
+          "footprints",
+          "gates_changed",
+          "empty_pedestals",
+          "memory"
+        ]
+      },
+      "errors": [
+        "inspected an unknown place"
+      ],
+      "equals_rule": false
+    },
+    {
+      "i": 13,
+      "latency_s": 2.023,
+      "model": "claude-sonnet-5-5",
+      "input_tokens": 1343,
+      "output_tokens": 125,
+      "thinking_tokens": null,
+      "stop_reason": "end_turn",
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_a",
+            "to": "post_pond"
+          }
+        ],
+        "line": "Roses trampled again, gate_east open, pond gnome gone. Rude, whoever you are.",
+        "inspected": [
+          "footprints",
+          "gates_changed",
+          "empty_pedestals"
+        ]
+      },
+      "errors": [
+        "inspected an unknown place"
+      ],
+      "equals_rule": false
+    },
+    {
+      "i": 14,
+      "latency_s": 2.841,
+      "model": "claude-sonnet-5-5",
+      "input_tokens": 1343,
+      "output_tokens": 127,
+      "thinking_tokens": null,
+      "stop_reason": "end_turn",
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_a",
+            "to": "post_pond"
+          }
+        ],
+        "line": "Gate east opened, pond gnome gone, roses stomped again. Rude, and predictable.",
+        "inspected": [
+          "footprints",
+          "gates_changed",
+          "empty_pedestals",
+          "memory"
+        ]
+      },
+      "errors": [
+        "inspected an unknown place"
+      ],
+      "equals_rule": false
+    },
+    {
+      "i": 15,
+      "latency_s": 2.052,
+      "model": "claude-sonnet-5-5",
+      "input_tokens": 1343,
+      "output_tokens": 119,
+      "thinking_tokens": null,
+      "stop_reason": "end_turn",
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_a",
+            "to": "post_pond"
+          }
+        ],
+        "line": "Roses trampled again, gate_east open, pond gnome gone. Rude.",
+        "inspected": [
+          "footprints",
+          "gates_changed",
+          "empty_pedestals"
+        ]
+      },
+      "errors": [
+        "inspected an unknown place"
+      ],
+      "equals_rule": false
+    },
+    {
+      "i": 16,
+      "latency_s": 2.171,
+      "model": "claude-sonnet-5-5",
+      "input_tokens": 1343,
+      "output_tokens": 122,
+      "thinking_tokens": null,
+      "stop_reason": "end_turn",
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_a",
+            "to": "post_pond"
+          }
+        ],
+        "line": "Roses trampled again and the east gate flung open; the pond gnome is gone.",
+        "inspected": [
+          "footprints",
+          "gates_changed",
+          "empty_pedestals",
+          "memory"
+        ]
+      },
+      "errors": [
+        "inspected an unknown place"
+      ],
+      "equals_rule": false
+    },
+    {
+      "i": 17,
+      "latency_s": 2.765,
+      "model": "claude-sonnet-5-5",
+      "input_tokens": 1343,
+      "output_tokens": 129,
+      "thinking_tokens": null,
+      "stop_reason": "end_turn",
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_a",
+            "to": "post_pond"
+          }
+        ],
+        "line": "Gate east opened, pond gnome gone, roses trampled again. I saw nothing, naturally.",
+        "inspected": [
+          "footprints",
+          "gates_changed",
+          "empty_pedestals",
+          "memory"
+        ]
+      },
+      "errors": [
+        "line longer than 80 characters",
+        "inspected an unknown place"
+      ],
+      "equals_rule": false
+    },
+    {
+      "i": 18,
+      "latency_s": 2.021,
+      "model": "claude-sonnet-5-5",
+      "input_tokens": 1343,
+      "output_tokens": 120,
+      "thinking_tokens": null,
+      "stop_reason": "end_turn",
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_a",
+            "to": "post_pond"
+          }
+        ],
+        "line": "Roses trampled again and the pond gnome is gone. I didn't see who, though.",
+        "inspected": [
+          "footprints",
+          "gates_changed",
+          "empty_pedestals"
+        ]
+      },
+      "errors": [
+        "inspected an unknown place"
+      ],
+      "equals_rule": false
+    },
+    {
+      "i": 19,
+      "latency_s": 1.97,
+      "model": "claude-sonnet-5-5",
+      "input_tokens": 1343,
+      "output_tokens": 122,
+      "thinking_tokens": null,
+      "stop_reason": "end_turn",
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_a",
+            "to": "post_pond"
+          }
+        ],
+        "line": "Roses trampled again and the east gate swung open; the pond gnome is gone.",
+        "inspected": [
+          "footprints",
+          "gates_changed",
+          "empty_pedestals",
+          "memory"
+        ]
+      },
+      "errors": [
+        "inspected an unknown place"
+      ],
+      "equals_rule": false
+    }
+  ]
+}

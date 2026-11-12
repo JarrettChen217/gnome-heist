@@ -1,0 +1,161 @@
+{
+  "summary": {
+    "run_at": "2026-11-12T14:39:41-05:00",
+    "provider": "vertex",
+    "model": "gemini-3.8-flash",
+    "think": "high",
+    "prompt_version": "v0.2",
+    "calls": 20,
+    "answered": 0,
+    "valid": 0,
+    "equals_rule": 0,
+    "latency_p50_s": null,
+    "latency_p95_s": null,
+    "latency_max_s": null,
+    "input_tokens_mean": null,
+    "output_tokens_mean": null,
+    "thinking_tokens_mean": null
+  },
+  "rows": [
+    {
+      "i": 0,
+      "latency_s": 0.946,
+      "errors": [
+        "call failed: ClientError"
+      ]
+    },
+    {
+      "i": 1,
+      "latency_s": 0.727,
+      "errors": [
+        "call failed: ClientError"
+      ]
+    },
+    {
+      "i": 2,
+      "latency_s": 0.735,
+      "errors": [
+        "call failed: ClientError"
+      ]
+    },
+    {
+      "i": 3,
+      "latency_s": 0.746,
+      "errors": [
+        "call failed: ClientError"
+      ]
+    },
+    {
+      "i": 4,
+      "latency_s": 2.174,
+      "errors": [
+        "call failed: ClientError"
+      ]
+    },
+    {
+      "i": 5,
+      "latency_s": 0.702,
+      "errors": [
+        "call failed: ClientError"
+      ]
+    },
+    {
+      "i": 6,
+      "latency_s": 9.022,
+      "errors": [
+        "call failed: ClientError"
+      ]
+    },
+    {
+      "i": 7,
+      "latency_s": 0.693,
+      "errors": [
+        "call failed: ClientError"
+      ]
+    },
+    {
+      "i": 8,
+      "latency_s": 0.743,
+      "errors": [
+        "call failed: ClientError"
+      ]
+    },
+    {
+      "i": 9,
+      "latency_s": 0.925,
+      "errors": [
+        "call failed: ClientError"
+      ]
+    },
+    {
+      "i": 10,
+      "latency_s": 0.805,
+      "errors": [
+        "call failed: ClientError"
+      ]
+    },
+    {
+      "i": 11,
+      "latency_s": 11.824,
+      "errors": [
+        "call failed: ClientError"
+      ]
+    },
+    {
+      "i": 12,
+      "latency_s": 0.894,
+      "errors": [
+        "call failed: ClientError"
+      ]
+    },
+    {
+      "i": 13,
+      "latency_s": 0.715,
+      "errors": [
+        "call failed: ClientError"
+      ]
+    },
+    {
+      "i": 14,
+      "latency_s": 0.718,
+      "errors": [
+        "call failed: ClientError"
+      ]
+    },
+    {
+      "i": 15,
+      "latency_s": 0.745,
+      "errors": [
+        "call failed: ClientError"
+      ]
+    },
+    {
+      "i": 16,
+      "latency_s": 11.822,
+      "errors": [
+        "call failed: ClientError"
+      ]
+    },
+    {
+      "i": 17,
+      "latency_s": 0.67,
+      "errors": [
+        "call failed: ClientError"
+      ]
+    },
+    {
+      "i": 18,
+      "latency_s": 0.653,
+      "errors": [
+        "call failed: ClientError"
+      ]
+    },
+    {
+      "i": 19,
+      "latency_s": 0.695,
+      "errors": [
+        "call failed: ClientError"
+      ]
+    }
+  ]
+}

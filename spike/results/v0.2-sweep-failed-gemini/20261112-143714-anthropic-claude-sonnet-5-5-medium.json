@@ -1,0 +1,646 @@
+{
+  "summary": {
+    "run_at": "2026-11-12T14:37:14-05:00",
+    "provider": "anthropic",
+    "model": "claude-sonnet-5-5",
+    "think": "medium",
+    "prompt_version": "v0.2",
+    "calls": 20,
+    "answered": 20,
+    "valid": 20,
+    "equals_rule": 0,
+    "latency_p50_s": 1.517,
+    "latency_p95_s": 2.114,
+    "latency_max_s": 2.958,
+    "input_tokens_mean": 1686,
+    "output_tokens_mean": 122.0,
+    "thinking_tokens_mean": null,
+    "price_in_per_mtok": 2.0,
+    "price_out_per_mtok": 10.0,
+    "cost_per_call_usd": 0.004592,
+    "cost_per_5_call_session_usd": 0.02296
+  },
+  "rows": [
+    {
+      "i": 0,
+      "latency_s": 2.958,
+      "model": "claude-sonnet-5-5",
+      "input_tokens": 1686,
+      "output_tokens": 121,
+      "thinking_tokens": null,
+      "stop_reason": "end_turn",
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_dog",
+            "defense": "dog",
+            "to": "kennel_orchard"
+          }
+        ],
+        "line": "Roses trampled again and the east gate opened; someone's lost the pond gnome.",
+        "inspected": [
+          "area_rosebed_east",
+          "gate_east",
+          "ped_pond"
+        ]
+      },
+      "errors": [],
+      "equals_rule": false
+    },
+    {
+      "i": 1,
+      "latency_s": 2.114,
+      "model": "claude-sonnet-5-5",
+      "input_tokens": 1686,
+      "output_tokens": 123,
+      "thinking_tokens": null,
+      "stop_reason": "end_turn",
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_dog",
+            "defense": "dog",
+            "to": "kennel_orchard"
+          }
+        ],
+        "line": "Roses trampled again and the pond gnome gone, and gate_east is open. Rude.",
+        "inspected": [
+          "area_rosebed_east",
+          "gate_east",
+          "ped_pond"
+        ]
+      },
+      "errors": [],
+      "equals_rule": false
+    },
+    {
+      "i": 2,
+      "latency_s": 1.544,
+      "model": "claude-sonnet-5-5",
+      "input_tokens": 1686,
+      "output_tokens": 121,
+      "thinking_tokens": null,
+      "stop_reason": "end_turn",
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_dog",
+            "defense": "dog",
+            "to": "kennel_orchard"
+          }
+        ],
+        "line": "Roses trampled again and the east gate opened; someone's pond gnome is gone.",
+        "inspected": [
+          "area_rosebed_east",
+          "gate_east",
+          "ped_pond"
+        ]
+      },
+      "errors": [],
+      "equals_rule": false
+    },
+    {
+      "i": 3,
+      "latency_s": 1.582,
+      "model": "claude-sonnet-5-5",
+      "input_tokens": 1686,
+      "output_tokens": 121,
+      "thinking_tokens": null,
+      "stop_reason": "end_turn",
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_dog",
+            "defense": "dog",
+            "to": "kennel_orchard"
+          }
+        ],
+        "line": "Roses trampled again and my pond gnome is gone. Gate east was open, too.",
+        "inspected": [
+          "area_rosebed_east",
+          "gate_east",
+          "ped_pond"
+        ]
+      },
+      "errors": [],
+      "equals_rule": false
+    },
+    {
+      "i": 4,
+      "latency_s": 1.465,
+      "model": "claude-sonnet-5-5",
+      "input_tokens": 1686,
+      "output_tokens": 123,
+      "thinking_tokens": null,
+      "stop_reason": "end_turn",
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_dog",
+            "defense": "dog",
+            "to": "kennel_orchard"
+          }
+        ],
+        "line": "Roses trampled again and the pond gnome is gone. Gate east, you're grounded.",
+        "inspected": [
+          "area_rosebed_east",
+          "gate_east",
+          "ped_pond"
+        ]
+      },
+      "errors": [],
+      "equals_rule": false
+    },
+    {
+      "i": 5,
+      "latency_s": 1.537,
+      "model": "claude-sonnet-5-5",
+      "input_tokens": 1686,
+      "output_tokens": 121,
+      "thinking_tokens": null,
+      "stop_reason": "end_turn",
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_dog",
+            "defense": "dog",
+            "to": "kennel_orchard"
+          }
+        ],
+        "line": "Roses trampled again and my pond gnome's gone; the east gate's been opened.",
+        "inspected": [
+          "area_rosebed_east",
+          "gate_east",
+          "ped_pond"
+        ]
+      },
+      "errors": [],
+      "equals_rule": false
+    },
+    {
+      "i": 6,
+      "latency_s": 1.493,
+      "model": "claude-sonnet-5-5",
+      "input_tokens": 1686,
+      "output_tokens": 122,
+      "thinking_tokens": null,
+      "stop_reason": "end_turn",
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_dog",
+            "defense": "dog",
+            "to": "kennel_orchard"
+          }
+        ],
+        "line": "Roses stomped again and my pond gnome is gone. Gate east was opened, too.",
+        "inspected": [
+          "area_rosebed_east",
+          "gate_east",
+          "ped_pond"
+        ]
+      },
+      "errors": [],
+      "equals_rule": false
+    },
+    {
+      "i": 7,
+      "latency_s": 1.487,
+      "model": "claude-sonnet-5-5",
+      "input_tokens": 1686,
+      "output_tokens": 123,
+      "thinking_tokens": null,
+      "stop_reason": "end_turn",
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_dog",
+            "defense": "dog",
+            "to": "kennel_orchard"
+          }
+        ],
+        "line": "Roses trampled again and the pond gnome's gone; the east gate is getting a lock.",
+        "inspected": [
+          "area_rosebed_east",
+          "gate_east",
+          "ped_pond"
+        ]
+      },
+      "errors": [],
+      "equals_rule": false
+    },
+    {
+      "i": 8,
+      "latency_s": 1.433,
+      "model": "claude-sonnet-5-5",
+      "input_tokens": 1686,
+      "output_tokens": 123,
+      "thinking_tokens": null,
+      "stop_reason": "end_turn",
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_dog",
+            "defense": "dog",
+            "to": "kennel_orchard"
+          }
+        ],
+        "line": "Roses trampled again and the pond gnome is gone. Gate east, you're grounded.",
+        "inspected": [
+          "area_rosebed_east",
+          "gate_east",
+          "ped_pond"
+        ]
+      },
+      "errors": [],
+      "equals_rule": false
+    },
+    {
+      "i": 9,
+      "latency_s": 1.391,
+      "model": "claude-sonnet-5-5",
+      "input_tokens": 1686,
+      "output_tokens": 119,
+      "thinking_tokens": null,
+      "stop_reason": "end_turn",
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_dog",
+            "defense": "dog",
+            "to": "kennel_orchard"
+          }
+        ],
+        "line": "Roses trampled again and the pond gnome is gone; the east gate was open.",
+        "inspected": [
+          "area_rosebed_east",
+          "gate_east",
+          "ped_pond"
+        ]
+      },
+      "errors": [],
+      "equals_rule": false
+    },
+    {
+      "i": 10,
+      "latency_s": 1.403,
+      "model": "claude-sonnet-5-5",
+      "input_tokens": 1686,
+      "output_tokens": 123,
+      "thinking_tokens": null,
+      "stop_reason": "end_turn",
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_dog",
+            "defense": "dog",
+            "to": "kennel_orchard"
+          }
+        ],
+        "line": "Roses trampled again and my pond gnome is gone. Gate east was opened, rude.",
+        "inspected": [
+          "area_rosebed_east",
+          "gate_east",
+          "ped_pond"
+        ]
+      },
+      "errors": [],
+      "equals_rule": false
+    },
+    {
+      "i": 11,
+      "latency_s": 1.529,
+      "model": "claude-sonnet-5-5",
+      "input_tokens": 1686,
+      "output_tokens": 122,
+      "thinking_tokens": null,
+      "stop_reason": "end_turn",
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_dog",
+            "defense": "dog",
+            "to": "kennel_orchard"
+          }
+        ],
+        "line": "Roses stomped again and my pond gnome's gone; the east gate's getting locked.",
+        "inspected": [
+          "area_rosebed_east",
+          "gate_east",
+          "ped_pond"
+        ]
+      },
+      "errors": [],
+      "equals_rule": false
+    },
+    {
+      "i": 12,
+      "latency_s": 1.429,
+      "model": "claude-sonnet-5-5",
+      "input_tokens": 1686,
+      "output_tokens": 122,
+      "thinking_tokens": null,
+      "stop_reason": "end_turn",
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_dog",
+            "defense": "dog",
+            "to": "kennel_orchard"
+          }
+        ],
+        "line": "Roses trampled again and the pond gnome is gone; I'm locking the east gate.",
+        "inspected": [
+          "area_rosebed_east",
+          "gate_east",
+          "ped_pond"
+        ]
+      },
+      "errors": [],
+      "equals_rule": false
+    },
+    {
+      "i": 13,
+      "latency_s": 1.583,
+      "model": "claude-sonnet-5-5",
+      "input_tokens": 1686,
+      "output_tokens": 120,
+      "thinking_tokens": null,
+      "stop_reason": "end_turn",
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_dog",
+            "defense": "dog",
+            "to": "kennel_orchard"
+          }
+        ],
+        "line": "Roses trampled again and the pond gnome is gone; the east gate was opened.",
+        "inspected": [
+          "area_rosebed_east",
+          "gate_east",
+          "ped_pond"
+        ]
+      },
+      "errors": [],
+      "equals_rule": false
+    },
+    {
+      "i": 14,
+      "latency_s": 1.606,
+      "model": "claude-sonnet-5-5",
+      "input_tokens": 1686,
+      "output_tokens": 122,
+      "thinking_tokens": null,
+      "stop_reason": "end_turn",
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_dog",
+            "defense": "dog",
+            "to": "kennel_orchard"
+          }
+        ],
+        "line": "Roses trampled again and the pond gnome gone; East gate, you're getting locked.",
+        "inspected": [
+          "area_rosebed_east",
+          "gate_east",
+          "ped_pond"
+        ]
+      },
+      "errors": [],
+      "equals_rule": false
+    },
+    {
+      "i": 15,
+      "latency_s": 1.544,
+      "model": "claude-sonnet-5-5",
+      "input_tokens": 1686,
+      "output_tokens": 122,
+      "thinking_tokens": null,
+      "stop_reason": "end_turn",
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_dog",
+            "defense": "dog",
+            "to": "kennel_orchard"
+          }
+        ],
+        "line": "Roses trampled again and the pond gnome's gone; east gate, you're on notice.",
+        "inspected": [
+          "area_rosebed_east",
+          "gate_east",
+          "ped_pond"
+        ]
+      },
+      "errors": [],
+      "equals_rule": false
+    },
+    {
+      "i": 16,
+      "latency_s": 1.505,
+      "model": "claude-sonnet-5-5",
+      "input_tokens": 1686,
+      "output_tokens": 131,
+      "thinking_tokens": null,
+      "stop_reason": "end_turn",
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_dog",
+            "defense": "dog",
+            "to": "kennel_orchard"
+          }
+        ],
+        "line": "Roses trampled again and the pond gnome is gone. Gate east was opened, rude.",
+        "inspected": [
+          "area_rosebed_east",
+          "area_tulips_west",
+          "gate_east",
+          "ped_pond"
+        ]
+      },
+      "errors": [],
+      "equals_rule": false
+    },
+    {
+      "i": 17,
+      "latency_s": 1.365,
+      "model": "claude-sonnet-5-5",
+      "input_tokens": 1686,
+      "output_tokens": 122,
+      "thinking_tokens": null,
+      "stop_reason": "end_turn",
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_dog",
+            "defense": "dog",
+            "to": "kennel_orchard"
+          }
+        ],
+        "line": "Roses trampled again and the pond gnome's gone. Gate east was opened, too.",
+        "inspected": [
+          "area_rosebed_east",
+          "gate_east",
+          "ped_pond"
+        ]
+      },
+      "errors": [],
+      "equals_rule": false
+    },
+    {
+      "i": 18,
+      "latency_s": 1.392,
+      "model": "claude-sonnet-5-5",
+      "input_tokens": 1686,
+      "output_tokens": 119,
+      "thinking_tokens": null,
+      "stop_reason": "end_turn",
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_dog",
+            "defense": "dog",
+            "to": "kennel_orchard"
+          }
+        ],
+        "line": "Roses trampled again and the east gate popped open. Subtle, you are not.",
+        "inspected": [
+          "area_rosebed_east",
+          "gate_east",
+          "ped_pond"
+        ]
+      },
+      "errors": [],
+      "equals_rule": false
+    },
+    {
+      "i": 19,
+      "latency_s": 1.582,
+      "model": "claude-sonnet-5-5",
+      "input_tokens": 1686,
+      "output_tokens": 121,
+      "thinking_tokens": null,
+      "stop_reason": "end_turn",
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_dog",
+            "defense": "dog",
+            "to": "kennel_orchard"
+          }
+        ],
+        "line": "Roses trampled again and the east gate opened; someone's pond gnome is gone.",
+        "inspected": [
+          "area_rosebed_east",
+          "gate_east",
+          "ped_pond"
+        ]
+      },
+      "errors": [],
+      "equals_rule": false
+    }
+  ]
+}

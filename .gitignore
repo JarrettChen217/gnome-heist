@@ -11,3 +11,4 @@ dist/
 .DS_Store
 spike/results/raw/
 __pycache__/
+spike/results/logs/

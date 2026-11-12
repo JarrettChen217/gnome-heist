@@ -1,0 +1,645 @@
+{
+  "summary": {
+    "run_at": "2026-11-12T14:26:56-05:00",
+    "provider": "vertex",
+    "model": "gemini-3.8-flash",
+    "think": "medium",
+    "prompt_version": "v0.1",
+    "calls": 20,
+    "answered": 20,
+    "valid": 20,
+    "equals_rule": 13,
+    "latency_p50_s": 8.18,
+    "latency_p95_s": 13.461,
+    "latency_max_s": 14.402,
+    "input_tokens_mean": 877,
+    "output_tokens_mean": 104.8,
+    "thinking_tokens_mean": 771.3,
+    "price_in_per_mtok": 1.5,
+    "price_out_per_mtok": 7.5,
+    "cost_per_call_usd": 0.007886,
+    "cost_per_5_call_session_usd": 0.03943
+  },
+  "rows": [
+    {
+      "i": 0,
+      "latency_s": 10.086,
+      "model": "gemini-3.8-flash",
+      "input_tokens": 877,
+      "output_tokens": 72,
+      "thinking_tokens": 1097,
+      "stop_reason": null,
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_b",
+            "to": "post_rose_east"
+          }
+        ],
+        "line": "Not the pond gnome! And stop trampling my poor roses!",
+        "inspected": [
+          "gate_east",
+          "ped_pond",
+          "area_rosebed_east"
+        ]
+      },
+      "errors": [],
+      "equals_rule": true
+    },
+    {
+      "i": 1,
+      "latency_s": 8.095,
+      "model": "gemini-3.8-flash",
+      "input_tokens": 877,
+      "output_tokens": 137,
+      "thinking_tokens": 869,
+      "stop_reason": null,
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_b",
+            "to": "post_rose_east"
+          }
+        ],
+        "line": "My pond gnome is gone, and the east gate is wide open again!",
+        "inspected": [
+          "area_rosebed_east",
+          "gate_east",
+          "ped_pond"
+        ]
+      },
+      "errors": [],
+      "equals_rule": true
+    },
+    {
+      "i": 2,
+      "latency_s": 7.347,
+      "model": "gemini-3.8-flash",
+      "input_tokens": 877,
+      "output_tokens": 134,
+      "thinking_tokens": 685,
+      "stop_reason": null,
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_b",
+            "to": "post_pond"
+          }
+        ],
+        "line": "Not Barnaby from the pond! Gate East gets a padlock tonight.",
+        "inspected": [
+          "gate_east",
+          "ped_pond",
+          "area_rosebed_east"
+        ]
+      },
+      "errors": [],
+      "equals_rule": false
+    },
+    {
+      "i": 3,
+      "latency_s": 6.644,
+      "model": "gemini-3.8-flash",
+      "input_tokens": 877,
+      "output_tokens": 137,
+      "thinking_tokens": 564,
+      "stop_reason": null,
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_b",
+            "to": "post_rose_east"
+          }
+        ],
+        "line": "Left my east gate flapping and nicked my pond gnome. Unacceptable!",
+        "inspected": [
+          "gate_east",
+          "area_rosebed_east",
+          "ped_pond"
+        ]
+      },
+      "errors": [],
+      "equals_rule": true
+    },
+    {
+      "i": 4,
+      "latency_s": 13.461,
+      "model": "gemini-3.8-flash",
+      "input_tokens": 877,
+      "output_tokens": 73,
+      "thinking_tokens": 874,
+      "stop_reason": null,
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_b",
+            "to": "post_rose_east"
+          }
+        ],
+        "line": "My pond gnome is gone and the east gate was left wide open!",
+        "inspected": [
+          "ped_pond",
+          "gate_east",
+          "area_rosebed_east"
+        ]
+      },
+      "errors": [],
+      "equals_rule": true
+    },
+    {
+      "i": 5,
+      "latency_s": 8.814,
+      "model": "gemini-3.8-flash",
+      "input_tokens": 877,
+      "output_tokens": 73,
+      "thinking_tokens": 883,
+      "stop_reason": null,
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_dog",
+            "defense": "dog",
+            "to": "kennel_orchard"
+          }
+        ],
+        "line": "They snatched Barnaby from the pond! That east gate is getting chained shut.",
+        "inspected": [
+          "gate_east",
+          "ped_pond",
+          "area_rosebed_east"
+        ]
+      },
+      "errors": [],
+      "equals_rule": false
+    },
+    {
+      "i": 6,
+      "latency_s": 7.863,
+      "model": "gemini-3.8-flash",
+      "input_tokens": 877,
+      "output_tokens": 138,
+      "thinking_tokens": 757,
+      "stop_reason": null,
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_b",
+            "to": "post_rose_east"
+          }
+        ],
+        "line": "Left my east gate wide open and pinched my pond gnome. Unbelievable.",
+        "inspected": [
+          "gate_east",
+          "area_rosebed_east",
+          "ped_pond"
+        ]
+      },
+      "errors": [],
+      "equals_rule": true
+    },
+    {
+      "i": 7,
+      "latency_s": 10.576,
+      "model": "gemini-3.8-flash",
+      "input_tokens": 877,
+      "output_tokens": 130,
+      "thinking_tokens": 635,
+      "stop_reason": null,
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_b",
+            "to": "post_rose_east"
+          }
+        ],
+        "line": "First the shed, now Barnaby by the pond? That east gate is getting locked.",
+        "inspected": [
+          "ped_pond",
+          "gate_east",
+          "area_rosebed_east"
+        ]
+      },
+      "errors": [],
+      "equals_rule": true
+    },
+    {
+      "i": 8,
+      "latency_s": 8.924,
+      "model": "gemini-3.8-flash",
+      "input_tokens": 877,
+      "output_tokens": 74,
+      "thinking_tokens": 860,
+      "stop_reason": null,
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_b",
+            "to": "post_gate_east"
+          }
+        ],
+        "line": "They nicked my pond gnome! That east gate is getting a padlock.",
+        "inspected": [
+          "gate_east",
+          "ped_pond",
+          "area_rosebed_east"
+        ]
+      },
+      "errors": [],
+      "equals_rule": false
+    },
+    {
+      "i": 9,
+      "latency_s": 7.611,
+      "model": "gemini-3.8-flash",
+      "input_tokens": 877,
+      "output_tokens": 72,
+      "thinking_tokens": 533,
+      "stop_reason": null,
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_b",
+            "to": "post_pond"
+          }
+        ],
+        "line": "My pond gnome is gone and the east gate was swung wide open again!",
+        "inspected": [
+          "gate_east",
+          "ped_pond",
+          "area_rosebed_east"
+        ]
+      },
+      "errors": [],
+      "equals_rule": false
+    },
+    {
+      "i": 10,
+      "latency_s": 14.402,
+      "model": "gemini-3.8-flash",
+      "input_tokens": 877,
+      "output_tokens": 138,
+      "thinking_tokens": 638,
+      "stop_reason": null,
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_b",
+            "to": "post_rose_east"
+          }
+        ],
+        "line": "Pond gnome is gone and the east gate was swinging wide again. Bah!",
+        "inspected": [
+          "gate_east",
+          "ped_pond",
+          "area_rosebed_east"
+        ]
+      },
+      "errors": [],
+      "equals_rule": true
+    },
+    {
+      "i": 11,
+      "latency_s": 8.123,
+      "model": "gemini-3.8-flash",
+      "input_tokens": 877,
+      "output_tokens": 139,
+      "thinking_tokens": 757,
+      "stop_reason": null,
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_b",
+            "to": "post_gate_east"
+          }
+        ],
+        "line": "First my shed gnome, now pond Barnaby? Gate East gets the padlock tonight!",
+        "inspected": [
+          "gate_east",
+          "area_rosebed_east",
+          "ped_pond"
+        ]
+      },
+      "errors": [],
+      "equals_rule": false
+    },
+    {
+      "i": 12,
+      "latency_s": 6.498,
+      "model": "gemini-3.8-flash",
+      "input_tokens": 877,
+      "output_tokens": 75,
+      "thinking_tokens": 852,
+      "stop_reason": null,
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_b",
+            "to": "post_rose_east"
+          }
+        ],
+        "line": "They took Barnaby from the pond! Gate East is getting locked down tight.",
+        "inspected": [
+          "gate_east",
+          "ped_pond",
+          "area_rosebed_east"
+        ]
+      },
+      "errors": [],
+      "equals_rule": true
+    },
+    {
+      "i": 13,
+      "latency_s": 8.238,
+      "model": "gemini-3.8-flash",
+      "input_tokens": 877,
+      "output_tokens": 75,
+      "thinking_tokens": 813,
+      "stop_reason": null,
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_b",
+            "to": "post_rose_east"
+          }
+        ],
+        "line": "Not Barnaby by the pond! And who keeps leaving the east gate swinging?!",
+        "inspected": [
+          "gate_east",
+          "ped_pond",
+          "area_rosebed_east"
+        ]
+      },
+      "errors": [],
+      "equals_rule": true
+    },
+    {
+      "i": 14,
+      "latency_s": 7.599,
+      "model": "gemini-3.8-flash",
+      "input_tokens": 877,
+      "output_tokens": 74,
+      "thinking_tokens": 672,
+      "stop_reason": null,
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_b",
+            "to": "post_rose_east"
+          }
+        ],
+        "line": "They took Barnaby by the pond and left the east gate wide open!",
+        "inspected": [
+          "gate_east",
+          "ped_pond",
+          "area_rosebed_east"
+        ]
+      },
+      "errors": [],
+      "equals_rule": true
+    },
+    {
+      "i": 15,
+      "latency_s": 12.467,
+      "model": "gemini-3.8-flash",
+      "input_tokens": 877,
+      "output_tokens": 135,
+      "thinking_tokens": 888,
+      "stop_reason": null,
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_a",
+            "to": "post_rose_east"
+          }
+        ],
+        "line": "Not my pond gnome! Close the blasted east gate behind you!",
+        "inspected": [
+          "gate_east",
+          "ped_pond",
+          "area_rosebed_east"
+        ]
+      },
+      "errors": [],
+      "equals_rule": true
+    },
+    {
+      "i": 16,
+      "latency_s": 8.341,
+      "model": "gemini-3.8-flash",
+      "input_tokens": 877,
+      "output_tokens": 73,
+      "thinking_tokens": 776,
+      "stop_reason": null,
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_b",
+            "to": "post_rose_east"
+          }
+        ],
+        "line": "East gate swung wide and my pond gnome vanished! Outrageous!",
+        "inspected": [
+          "gate_east",
+          "area_rosebed_east",
+          "ped_pond"
+        ]
+      },
+      "errors": [],
+      "equals_rule": true
+    },
+    {
+      "i": 17,
+      "latency_s": 9.929,
+      "model": "gemini-3.8-flash",
+      "input_tokens": 877,
+      "output_tokens": 137,
+      "thinking_tokens": 778,
+      "stop_reason": null,
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_b",
+            "to": "post_gate_east"
+          }
+        ],
+        "line": "Not the pond gnome! And that east gate was swung wide open again.",
+        "inspected": [
+          "gate_east",
+          "ped_pond",
+          "area_rosebed_east"
+        ]
+      },
+      "errors": [],
+      "equals_rule": false
+    },
+    {
+      "i": 18,
+      "latency_s": 7.588,
+      "model": "gemini-3.8-flash",
+      "input_tokens": 877,
+      "output_tokens": 136,
+      "thinking_tokens": 697,
+      "stop_reason": null,
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_b",
+            "to": "post_gate_east"
+          }
+        ],
+        "line": "They nicked my pond gnome and left the east gate open again!",
+        "inspected": [
+          "gate_east",
+          "ped_pond",
+          "area_rosebed_east"
+        ]
+      },
+      "errors": [],
+      "equals_rule": false
+    },
+    {
+      "i": 19,
+      "latency_s": 7.322,
+      "model": "gemini-3.8-flash",
+      "input_tokens": 877,
+      "output_tokens": 74,
+      "thinking_tokens": 798,
+      "stop_reason": null,
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_b",
+            "to": "post_rose_east"
+          }
+        ],
+        "line": "Not Barnaby from the pond! Gate east will be shut tight tonight.",
+        "inspected": [
+          "gate_east",
+          "ped_pond",
+          "area_rosebed_east"
+        ]
+      },
+      "errors": [],
+      "equals_rule": true
+    }
+  ]
+}

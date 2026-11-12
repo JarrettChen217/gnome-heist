@@ -43,7 +43,7 @@ SYSTEM = (
     "what you noticed (at most 80 characters), and it must not claim knowledge you do "
     "not have. Move format: move_lamp (defense = lamp id, to = lamp post id); move_dog "
     "(defense = \"dog\", to = dog spot id); lock (defense = \"lock\", to = gate id); "
-    "hold (defense = any defense id, to = \"\")."
+    "hold (defense = any defense id, to = \"none\")."
 )
 
 ESTATE = {
@@ -95,15 +95,17 @@ SCHEMA = {
                 "type": "object",
                 "properties": {
                     "type": {"type": "string", "enum": ["move_lamp", "move_dog", "lock", "hold"]},
-                    "defense": {"type": "string"},
-                    "to": {"type": "string"},
+                    "defense": {"type": "string", "enum": ESTATE["lamps"] + ["dog", "lock"]},
+                    "to": {"type": "string", "enum": ESTATE["lamp_posts"] + ESTATE["dog_spots"]
+                           + ESTATE["gates"] + ["none"]},
                 },
                 "required": ["type", "defense", "to"],
                 "additionalProperties": False,
             },
         },
         "line": {"type": "string"},
-        "inspected": {"type": "array", "items": {"type": "string"}},
+        "inspected": {"type": "array", "items": {
+            "type": "string", "enum": ESTATE["areas"] + ESTATE["gates"] + ESTATE["pedestals"]}},
     },
     "required": ["moves", "line", "inspected"],
     "additionalProperties": False,
@@ -142,7 +144,7 @@ def validate(out: dict) -> list[str]:
             (t == "move_lamp" and d in ESTATE["lamps"] and to in ESTATE["lamp_posts"])
             or (t == "move_dog" and d == "dog" and to in ESTATE["dog_spots"])
             or (t == "lock" and d == "lock" and to in ESTATE["gates"])
-            or (t == "hold" and d in defenses)
+            or (t == "hold" and d in defenses and to == "none")
         )
         if not ok:
             errs.append(f"illegal move {m}")
@@ -173,12 +175,24 @@ def main() -> int:
     ap.add_argument("--timeout-s", type=float, default=15.0)
     ap.add_argument("--price-in", type=float, help="USD per 1M input tokens")
     ap.add_argument("--price-out", type=float, help="USD per 1M output tokens")
+    ap.add_argument("--model", help="override the provider's model setting")
+    ap.add_argument("--think", help="vertex: minimal|low|medium|high; anthropic: "
+                    "low|medium|high|xhigh|max effort, or 'off' (Sonnet/Haiku only)")
     args = ap.parse_args()
     if args.calls > 30:
         print("Refusing more than 30 calls in a measurement run.", file=sys.stderr)
         return 2
 
     load_dotenv(ROOT / ".env")
+    if args.model:
+        os.environ[{"vertex": "VERTEX_MODEL", "anthropic": "ANTHROPIC_MODEL",
+                    "openai": "OPENAI_MODEL"}[args.provider]] = args.model
+    if args.think and args.provider == "vertex":
+        os.environ["VERTEX_THINKING_LEVEL"] = args.think
+    elif args.think == "off" and args.provider == "anthropic":
+        os.environ["ANTHROPIC_THINKING"], os.environ["ANTHROPIC_EFFORT"] = "off", "low"
+    elif args.think and args.provider == "anthropic":
+        os.environ["ANTHROPIC_EFFORT"] = args.think
     mod = providers.get(args.provider)
     missing = [k for k in mod.REQUIRED_ENV if not os.environ.get(k)]
     if missing:
@@ -204,7 +218,7 @@ def main() -> int:
                 row["errors"] = [f"parse: {e}"]
         except Exception as e:  # provider error or timeout; never print credentials
             row["latency_s"] = round(time.perf_counter() - t0, 3)
-            row["errors"] = [f"call failed: {type(e).__name__}"]
+            row["errors"] = [f"call failed: {type(e).__name__}: {str(e)[:150]}"]
         rows.append(row)
         print(f"{i:2d} {row['latency_s']:6.2f}s  errors={len(row['errors'])}"
               f"  rule={'=' if row.get('equals_rule') else '≠'}")
@@ -217,7 +231,9 @@ def main() -> int:
     summary = {
         "run_at": dt.datetime.now().astimezone().isoformat(timespec="seconds"),
         "provider": args.provider,
-        "model": answered[0]["model"] if answered else None,
+        "model": answered[0]["model"] if answered else (args.model or None),
+        "think": args.think or "default",
+        "prompt_version": "v0.3",
         "calls": len(rows), "answered": len(answered), "valid": len(ok),
         "equals_rule": sum(1 for r in answered if r.get("equals_rule")),
         "latency_p50_s": round(statistics.median(lat), 3) if lat else None,
@@ -228,15 +244,18 @@ def main() -> int:
         "thinking_tokens_mean": mean("thinking_tokens"),
     }
     if args.price_in is not None and args.price_out is not None and summary["input_tokens_mean"]:
-        per_call = (summary["input_tokens_mean"] * args.price_in
-                    + (summary["output_tokens_mean"] or 0) * args.price_out) / 1e6
+        # Gemini reports thinking tokens apart from output tokens but bills them as
+        # output; Anthropic's output_tokens already include thinking.
+        billed_out = (summary["output_tokens_mean"] or 0) + (
+            (summary["thinking_tokens_mean"] or 0) if args.provider == "vertex" else 0)
+        per_call = (summary["input_tokens_mean"] * args.price_in + billed_out * args.price_out) / 1e6
         summary.update(price_in_per_mtok=args.price_in, price_out_per_mtok=args.price_out,
                        cost_per_call_usd=round(per_call, 6),
                        cost_per_5_call_session_usd=round(5 * per_call, 5))
     out_dir = Path(__file__).parent / "results"
     out_dir.mkdir(exist_ok=True)
     stamp = dt.datetime.now().strftime("%Y%m%d-%H%M%S")
-    path = out_dir / f"{stamp}-{args.provider}-{summary['model']}.json"
+    path = out_dir / f"{stamp}-{args.provider}-{summary['model']}-{summary['think']}.json"
     path.write_text(json.dumps({"summary": summary, "rows": rows}, indent=2))
     print(json.dumps(summary, indent=2))
     print(f"saved {path.relative_to(ROOT)}")

@@ -98,8 +98,8 @@ Retrieval: none planned. The whole context is small enough to send each time.
 | Setting | Value |
 | --- | --- |
 | Provider | **Switchable** between Gemini on Vertex AI (course-funded default), Anthropic, and OpenAI (or an OpenAI-compatible endpoint), chosen by `NEIGHBOR_PROVIDER`. Unified interface in the Worker: Vercel AI SDK, one structured-output call. [Hao, 2026-11-12, for multiple providers; library on agent proposal] Anthropic and OpenAI are paid by me; course credits cover only Vertex. Names of all settings: [`.env.example`](../.env.example). |
-| Model identifier | `gemini-3.5-flash-lite`, global endpoint (measured 2026-11-12; see [spike results](../spike/README.md)). |
-| Temperature | 0.7 in the measured run. Revisit after evaluation: 14 of 20 runs matched the rule-based neighbor (Section A8). [Proposed] |
+| Model identifier | **Proposed default: `claude-sonnet-5-5`, thinking off** (`thinking: between_tools`). Course-funded alternative: `gemini-3.5-flash-lite`, thinking low, global endpoint. Chosen from a 26-configuration sweep of Claude Opus/Sonnet/Haiku 5.5 and Gemini 3.1 Pro, 3.8 Flash, 3.5 Flash-Lite and Gemini 4 at each thinking level ([spike results](../spike/README.md)). Final choice: Hao (C8). |
+| Thinking and sampling | Thinking off for latency. Claude Opus 5.5 at any effort matched the rule-based neighbor on 18 to 20 of 20 calls; Sonnet 5.5 off/low/medium on 0 of 20 (Section A8). Gemini temperature left at the model default. [Proposed] |
 | Output | JSON with a response schema; max output about 200 tokens. |
 | Where it runs | A Cloudflare Worker; one Durable Object per play session holds state. API keys and endpoints stay in Worker secrets (`wrangler secret put`; locally a gitignored `.dev.vars`) and never reach the browser or the repository. |
 | Provider switching rules | The provider and model are fixed for a whole session and logged with every morning, so comparisons never mix providers silently. One output schema for all providers (every field required, no extra keys). A provider failure goes to the rule-based fallback, not to another provider, to stay inside the 4 s timeout. [Proposed] |
@@ -135,6 +135,8 @@ Draft system instruction (v0, not yet tested):
 
 First evidence (2026-11-12, 20 calls, one night-3 input, prompt v0): all 40 moves were legal; 4 of 20 outputs failed only on the 80-character line limit; **14 of 20 move sets equaled the rule-based neighbor's** (lamp to the most-trampled area, lock the changed gate). On this input, the v0 prompt behaves mostly like the baseline. This is the largest open risk to the agent hypothesis (Risk Register R2).
 
+Sweep evidence (2026-11-12, schema v0.3, 20 calls per configuration): deeper thinking copies the rule more often (Opus 5.5 18 to 20 of 20 at every effort; Sonnet 5.5 14 of 20 at high, 0 of 20 at off/low/medium). Sonnet 5.5 off still picked one move set on most calls, so "different from the rule" is not yet "adapts to the player". Schema lesson: two earlier sweeps failed on the contract, not the models (an unconstrained `inspected` field; an empty string inside an enum that Gemini rejects). Ids are now enumerated in the schema itself.
+
 ### A9. Scripted baseline and fallback: the rule-based neighbor
 
 Same input, same two moves, no model [Hao, on agent proposal]:
@@ -150,12 +152,12 @@ It reads only today's traces, so it has no memory. In comparisons, the game runs
 | Budget | Value | Basis |
 | --- | --- | --- |
 | Model calls per session | at most 5 (one per morning), at most 10 with retries | GDD: 5 nights |
-| Latency per call | p50 0.98 s, p95 1.56 s, max 2.86 s; timeout 4 s | 20 timed calls, 2026-11-12, from my laptop to the global endpoint, one night-3 input |
-| Input and output tokens per call | mean 859 input, 108 output (no reasoning tokens reported) | Same run |
-| Cost per session | about $0.0026 for 5 calls; at most about $0.007 for 10 calls with a longer night-5 input (est. 1,100 input, 150 output) | Vertex AI Standard pay-as-you-go, global: $0.30 per 1M input tokens, $2.50 per 1M output tokens (response and reasoning), read 2026-11-12 at cloud.google.com/vertex-ai/generative-ai/pricing |
+| Latency per call | Sonnet 5.5 off: p50 1.75 s, p95 2.69 s, max 2.85 s. Flash-Lite low: p50 1.43 s, p95 1.73 s. Timeout 4 s. | 20 timed calls per configuration, 2026-11-12, laptop to provider, one night-3 input, schema v0.3 |
+| Input and output tokens per call | Sonnet 5.5 off: 1,687 input, 126 output. Flash-Lite low: 1,090 input, 93 output. | Same runs (tokenizers differ by provider) |
+| Cost per session | Sonnet 5.5 off: about $0.023 for 5 calls, under $0.05 at the 10-call cap. Flash-Lite low: about $0.003 for 5 calls. | Anthropic pricing page ($2 / $10 per 1M input/output tokens) and Vertex AI pricing page, global ($0.30 / $2.50), both read 2026-11-12. Anthropic usage is paid by me; Vertex is course-funded. |
 | Spending limit | Session refuses further calls after 10; target under $0.01 per session; daily cap set in the provider console | — |
 
-Limits of this measurement: one input, one day, 20 calls, called from a laptop rather than the Worker. The checkpoint run on Nov 23 repeats it from the deployed Worker.
+Limits of this measurement: one input, one day, 20 calls per configuration, called from a laptop rather than the Worker. Gemini 3.1 Pro, Gemini 3.8 Flash and Gemini 4 had p95 latencies of 9.5 to 30 s that day and are excluded for now. The checkpoint run on Nov 23 repeats the chosen configuration from the deployed Worker.
 
 ### A11. Human override
 
@@ -201,7 +203,7 @@ G1 plans the team; working roles and gaps are shown at G2/G3. My accountability 
 | C1 | ~~Which Gemini model and timeout pass the measurement?~~ Answered 2026-11-12: `gemini-3.5-flash-lite`, 4 s. | Done |
 | C2 | ~~Is Vertex AI access working?~~ Answered 2026-11-12: yes, 20 of 20 calls returned. | Done |
 | C7 | Vertex from a Cloudflare Worker cannot use my laptop's Application Default Credentials; it needs a service-account credential stored as a Worker secret. Is that allowed for the course project, or does the deployed game default to Anthropic or OpenAI? | Before T11 (Nov 23 checkpoint) |
-| C8 | Which provider and model become the default after a same-input comparison (latency, cost, validity, agent-equals-rule rate)? | After keys are set and the comparison runs |
+| C8 | Default model: the sweep's proposal is Claude Sonnet 5.5 with thinking off, with Gemini 3.5 Flash-Lite low as the course-funded alternative. | Hao, before T11 |
 | C6 | How do I make the agent differ from the rule where it matters (fake trails, repeated routes) without hard-coding the answer? 14 of 20 measured runs matched the rule. | Before T13 |
 | C3 | Does the morning line need a separate cheaper call, or is one call enough? | First live evaluation |
 | C4 | How large a live suite per change is affordable (trials × sessions)? | After C1 |

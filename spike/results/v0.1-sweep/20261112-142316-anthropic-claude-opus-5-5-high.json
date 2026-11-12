@@ -1,0 +1,740 @@
+{
+  "summary": {
+    "run_at": "2026-11-12T14:23:16-05:00",
+    "provider": "anthropic",
+    "model": "claude-opus-5-5",
+    "think": "high",
+    "prompt_version": "v0.1",
+    "calls": 20,
+    "answered": 20,
+    "valid": 0,
+    "equals_rule": 19,
+    "latency_p50_s": 6.155,
+    "latency_p95_s": 7.393,
+    "latency_max_s": 8.029,
+    "input_tokens_mean": 1343,
+    "output_tokens_mean": 528.1,
+    "thinking_tokens_mean": null,
+    "price_in_per_mtok": 4.0,
+    "price_out_per_mtok": 20.0,
+    "cost_per_call_usd": 0.015934,
+    "cost_per_5_call_session_usd": 0.07967
+  },
+  "rows": [
+    {
+      "i": 0,
+      "latency_s": 8.029,
+      "model": "claude-opus-5-5",
+      "input_tokens": 1343,
+      "output_tokens": 649,
+      "thinking_tokens": null,
+      "stop_reason": "end_turn",
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_b",
+            "to": "post_rose_east"
+          }
+        ],
+        "line": "East gate open, roses stomped, pond gnome gone. Same old tune, pal.",
+        "inspected": [
+          "footprints:area_rosebed_east",
+          "footprints:area_tulips_west",
+          "gate:gate_east",
+          "pedestal:ped_pond",
+          "memory:night_1",
+          "memory:night_2"
+        ]
+      },
+      "errors": [
+        "inspected an unknown place"
+      ],
+      "equals_rule": true
+    },
+    {
+      "i": 1,
+      "latency_s": 5.476,
+      "model": "claude-opus-5-5",
+      "input_tokens": 1343,
+      "output_tokens": 440,
+      "thinking_tokens": null,
+      "stop_reason": "end_turn",
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_b",
+            "to": "post_rose_east"
+          }
+        ],
+        "line": "Roses stomped again, east gate open, pond gnome gone. I see a pattern.",
+        "inspected": [
+          "area_rosebed_east",
+          "area_tulips_west",
+          "gate_east",
+          "ped_pond",
+          "memory_night_1",
+          "memory_night_2"
+        ]
+      },
+      "errors": [
+        "inspected an unknown place"
+      ],
+      "equals_rule": true
+    },
+    {
+      "i": 2,
+      "latency_s": 6.294,
+      "model": "claude-opus-5-5",
+      "input_tokens": 1343,
+      "output_tokens": 547,
+      "thinking_tokens": null,
+      "stop_reason": "end_turn",
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_b",
+            "to": "post_rose_east"
+          }
+        ],
+        "line": "Roses trampled again, east gate open, pond gnome gone. Subtle.",
+        "inspected": [
+          "footprints area_rosebed_east x9",
+          "footprints area_tulips_west x4",
+          "gate_east changed closed->open",
+          "ped_pond empty",
+          "memory night 1: rosebed_east, gate_east, ped_shed",
+          "memory night 2: tulips_west, nothing taken"
+        ]
+      },
+      "errors": [
+        "inspected an unknown place"
+      ],
+      "equals_rule": true
+    },
+    {
+      "i": 3,
+      "latency_s": 6.501,
+      "model": "claude-opus-5-5",
+      "input_tokens": 1343,
+      "output_tokens": 585,
+      "thinking_tokens": null,
+      "stop_reason": "end_turn",
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_b",
+            "to": "post_rose_east"
+          }
+        ],
+        "line": "East gate open again, roses stomped again. Subtle as a tuba.",
+        "inspected": [
+          "footprints:area_rosebed_east",
+          "footprints:area_tulips_west",
+          "gate_changed:gate_east",
+          "empty_pedestal:ped_pond",
+          "memory:night_1",
+          "memory:night_2"
+        ]
+      },
+      "errors": [
+        "inspected an unknown place"
+      ],
+      "equals_rule": true
+    },
+    {
+      "i": 4,
+      "latency_s": 5.888,
+      "model": "claude-opus-5-5",
+      "input_tokens": 1343,
+      "output_tokens": 512,
+      "thinking_tokens": null,
+      "stop_reason": "end_turn",
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_a",
+            "to": "post_rose_east"
+          }
+        ],
+        "line": "East gate open again, roses stomped. Funny how tulips never cost a gnome.",
+        "inspected": [
+          "footprints:area_rosebed_east",
+          "footprints:area_tulips_west",
+          "gates_changed:gate_east",
+          "empty_pedestals:ped_pond",
+          "memory:night_1",
+          "memory:night_2"
+        ]
+      },
+      "errors": [
+        "inspected an unknown place"
+      ],
+      "equals_rule": true
+    },
+    {
+      "i": 5,
+      "latency_s": 6.182,
+      "model": "claude-opus-5-5",
+      "input_tokens": 1343,
+      "output_tokens": 521,
+      "thinking_tokens": null,
+      "stop_reason": "end_turn",
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_b",
+            "to": "post_rose_east"
+          }
+        ],
+        "line": "East gate open, roses stomped again, pond gnome gone. I see a pattern.",
+        "inspected": [
+          "footprints:area_rosebed_east",
+          "footprints:area_tulips_west",
+          "gate:gate_east",
+          "pedestal:ped_pond",
+          "memory:night_1",
+          "memory:night_2"
+        ]
+      },
+      "errors": [
+        "inspected an unknown place"
+      ],
+      "equals_rule": true
+    },
+    {
+      "i": 6,
+      "latency_s": 6.191,
+      "model": "claude-opus-5-5",
+      "input_tokens": 1343,
+      "output_tokens": 519,
+      "thinking_tokens": null,
+      "stop_reason": "end_turn",
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_b",
+            "to": "post_rose_east"
+          }
+        ],
+        "line": "East gate open, roses stomped again. Twice is a habit.",
+        "inspected": [
+          "footprints area_rosebed_east x9",
+          "footprints area_tulips_west x4",
+          "gate_east changed closed->open",
+          "ped_pond empty",
+          "memory night 1: rosebed_east + gate_east + ped_shed taken",
+          "memory night 2: tulips_west only, nothing taken"
+        ]
+      },
+      "errors": [
+        "inspected an unknown place"
+      ],
+      "equals_rule": true
+    },
+    {
+      "i": 7,
+      "latency_s": 6.635,
+      "model": "claude-opus-5-5",
+      "input_tokens": 1343,
+      "output_tokens": 578,
+      "thinking_tokens": null,
+      "stop_reason": "end_turn",
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_b",
+            "to": "post_rose_east"
+          }
+        ],
+        "line": "Roses stomped again, east gate open, pond gnome gone. Enough.",
+        "inspected": [
+          "footprints:area_rosebed_east",
+          "footprints:area_tulips_west",
+          "gates_changed:gate_east",
+          "empty_pedestals:ped_pond",
+          "memory:night_1",
+          "memory:night_2"
+        ]
+      },
+      "errors": [
+        "inspected an unknown place"
+      ],
+      "equals_rule": true
+    },
+    {
+      "i": 8,
+      "latency_s": 5.845,
+      "model": "claude-opus-5-5",
+      "input_tokens": 1343,
+      "output_tokens": 478,
+      "thinking_tokens": null,
+      "stop_reason": "end_turn",
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_b",
+            "to": "post_rose_east"
+          }
+        ],
+        "line": "East gate open, roses stomped again. Tulip prints? Nice try.",
+        "inspected": [
+          "footprints",
+          "gates_changed",
+          "empty_pedestals",
+          "memory"
+        ]
+      },
+      "errors": [
+        "inspected an unknown place"
+      ],
+      "equals_rule": true
+    },
+    {
+      "i": 9,
+      "latency_s": 7.393,
+      "model": "claude-opus-5-5",
+      "input_tokens": 1343,
+      "output_tokens": 656,
+      "thinking_tokens": null,
+      "stop_reason": "end_turn",
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_b",
+            "to": "post_rose_east"
+          }
+        ],
+        "line": "Roses trampled, east gate open, pond gnome gone. Subtle, real subtle.",
+        "inspected": [
+          "footprints:area_rosebed_east",
+          "footprints:area_tulips_west",
+          "gate:gate_east",
+          "pedestal:ped_pond",
+          "memory:night_1",
+          "memory:night_2"
+        ]
+      },
+      "errors": [
+        "inspected an unknown place"
+      ],
+      "equals_rule": true
+    },
+    {
+      "i": 10,
+      "latency_s": 6.128,
+      "model": "claude-opus-5-5",
+      "input_tokens": 1343,
+      "output_tokens": 495,
+      "thinking_tokens": null,
+      "stop_reason": "end_turn",
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_b",
+            "to": "post_rose_east"
+          }
+        ],
+        "line": "East gate open, roses stomped again. I'm sensing a favorite route.",
+        "inspected": [
+          "footprints:area_rosebed_east",
+          "footprints:area_tulips_west",
+          "gate:gate_east",
+          "pedestal:ped_pond",
+          "memory:night_1",
+          "memory:night_2"
+        ]
+      },
+      "errors": [
+        "inspected an unknown place"
+      ],
+      "equals_rule": true
+    },
+    {
+      "i": 11,
+      "latency_s": 5.973,
+      "model": "claude-opus-5-5",
+      "input_tokens": 1343,
+      "output_tokens": 522,
+      "thinking_tokens": null,
+      "stop_reason": "end_turn",
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_b",
+            "to": "post_rose_east"
+          }
+        ],
+        "line": "Roses stomped, east gate open, pond gnome gone. East side again, eh?",
+        "inspected": [
+          "footprints:area_rosebed_east",
+          "footprints:area_tulips_west",
+          "gate:gate_east",
+          "pedestal:ped_pond",
+          "memory:night_1",
+          "memory:night_2"
+        ]
+      },
+      "errors": [
+        "inspected an unknown place"
+      ],
+      "equals_rule": true
+    },
+    {
+      "i": 12,
+      "latency_s": 5.704,
+      "model": "claude-opus-5-5",
+      "input_tokens": 1343,
+      "output_tokens": 501,
+      "thinking_tokens": null,
+      "stop_reason": "end_turn",
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_b",
+            "to": "post_rose_east"
+          }
+        ],
+        "line": "East gate open, roses stomped, pond gnome gone. Coincidence? Hardly.",
+        "inspected": [
+          "footprints:area_rosebed_east",
+          "footprints:area_tulips_west",
+          "gate:gate_east",
+          "pedestal:ped_pond",
+          "memory:night_1",
+          "memory:night_2"
+        ]
+      },
+      "errors": [
+        "inspected an unknown place"
+      ],
+      "equals_rule": true
+    },
+    {
+      "i": 13,
+      "latency_s": 6.695,
+      "model": "claude-opus-5-5",
+      "input_tokens": 1343,
+      "output_tokens": 580,
+      "thinking_tokens": null,
+      "stop_reason": "end_turn",
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_b",
+            "to": "post_rose_east"
+          }
+        ],
+        "line": "East gate open, roses stomped again. Tulip prints? Cute. Not buying it.",
+        "inspected": [
+          "footprints:area_rosebed_east",
+          "footprints:area_tulips_west",
+          "gates_changed:gate_east",
+          "empty_pedestals:ped_pond",
+          "memory:night_1",
+          "memory:night_2"
+        ]
+      },
+      "errors": [
+        "inspected an unknown place"
+      ],
+      "equals_rule": true
+    },
+    {
+      "i": 14,
+      "latency_s": 5.028,
+      "model": "claude-opus-5-5",
+      "input_tokens": 1343,
+      "output_tokens": 442,
+      "thinking_tokens": null,
+      "stop_reason": "end_turn",
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_b",
+            "to": "post_rose_east"
+          }
+        ],
+        "line": "Roses stomped again, east gate open, pond gnome gone. Enough.",
+        "inspected": [
+          "footprints",
+          "gates_changed",
+          "empty_pedestals",
+          "memory"
+        ]
+      },
+      "errors": [
+        "inspected an unknown place"
+      ],
+      "equals_rule": true
+    },
+    {
+      "i": 15,
+      "latency_s": 6.045,
+      "model": "claude-opus-5-5",
+      "input_tokens": 1343,
+      "output_tokens": 570,
+      "thinking_tokens": null,
+      "stop_reason": "end_turn",
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_b",
+            "to": "post_rose_east"
+          }
+        ],
+        "line": "Roses stomped again, east gate open, pond gnome gone. Enough.",
+        "inspected": [
+          "footprints:area_rosebed_east",
+          "footprints:area_tulips_west",
+          "gates_changed:gate_east",
+          "empty_pedestals:ped_pond",
+          "memory:night_1",
+          "memory:night_2"
+        ]
+      },
+      "errors": [
+        "inspected an unknown place"
+      ],
+      "equals_rule": true
+    },
+    {
+      "i": 16,
+      "latency_s": 7.34,
+      "model": "claude-opus-5-5",
+      "input_tokens": 1343,
+      "output_tokens": 578,
+      "thinking_tokens": null,
+      "stop_reason": "end_turn",
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_b",
+            "to": "post_rose_east"
+          }
+        ],
+        "line": "Roses stomped again, east gate open, pond gnome gone. I see a pattern.",
+        "inspected": [
+          "footprints:area_rosebed_east",
+          "footprints:area_tulips_west",
+          "gate:gate_east",
+          "pedestal:ped_pond",
+          "memory:night_1",
+          "memory:night_2"
+        ]
+      },
+      "errors": [
+        "inspected an unknown place"
+      ],
+      "equals_rule": true
+    },
+    {
+      "i": 17,
+      "latency_s": 6.485,
+      "model": "claude-opus-5-5",
+      "input_tokens": 1343,
+      "output_tokens": 584,
+      "thinking_tokens": null,
+      "stop_reason": "end_turn",
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_b",
+            "to": "post_rose_east"
+          }
+        ],
+        "line": "East gate open, roses stomped, pond gnome gone. Same trick twice? Rude.",
+        "inspected": [
+          "footprints:area_rosebed_east",
+          "footprints:area_tulips_west",
+          "gate:gate_east",
+          "pedestal:ped_pond",
+          "memory:night_1",
+          "memory:night_2"
+        ]
+      },
+      "errors": [
+        "inspected an unknown place"
+      ],
+      "equals_rule": true
+    },
+    {
+      "i": 18,
+      "latency_s": 5.281,
+      "model": "claude-opus-5-5",
+      "input_tokens": 1343,
+      "output_tokens": 458,
+      "thinking_tokens": null,
+      "stop_reason": "end_turn",
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_b",
+            "to": "post_rose_east"
+          }
+        ],
+        "line": "Roses stomped, east gate open, pond gnome gone. Again. Wonderful.",
+        "inspected": [
+          "footprints:area_rosebed_east",
+          "footprints:area_tulips_west",
+          "gate_east",
+          "ped_pond",
+          "memory:night_1",
+          "memory:night_2"
+        ]
+      },
+      "errors": [
+        "inspected an unknown place"
+      ],
+      "equals_rule": true
+    },
+    {
+      "i": 19,
+      "latency_s": 5.083,
+      "model": "claude-opus-5-5",
+      "input_tokens": 1343,
+      "output_tokens": 348,
+      "thinking_tokens": null,
+      "stop_reason": "end_turn",
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_b",
+            "to": "post_gate_east"
+          }
+        ],
+        "line": "East gate open, roses stomped, gnome gone. Again. I'm sensing a theme.",
+        "inspected": [
+          "area_rosebed_east",
+          "area_tulips_west",
+          "gate_east",
+          "ped_pond",
+          "memory"
+        ]
+      },
+      "errors": [
+        "inspected an unknown place"
+      ],
+      "equals_rule": false
+    }
+  ]
+}

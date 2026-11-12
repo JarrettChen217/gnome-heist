@@ -1,0 +1,56 @@
+{
+  "summary": {
+    "run_at": "2026-11-12T14:39:38-05:00",
+    "provider": "vertex",
+    "model": "gemini-4-argon",
+    "think": "high",
+    "prompt_version": "v0.2",
+    "calls": 5,
+    "answered": 0,
+    "valid": 0,
+    "equals_rule": 0,
+    "latency_p50_s": null,
+    "latency_p95_s": null,
+    "latency_max_s": null,
+    "input_tokens_mean": null,
+    "output_tokens_mean": null,
+    "thinking_tokens_mean": null
+  },
+  "rows": [
+    {
+      "i": 0,
+      "latency_s": 0.977,
+      "errors": [
+        "call failed: ClientError"
+      ]
+    },
+    {
+      "i": 1,
+      "latency_s": 0.841,
+      "errors": [
+        "call failed: ClientError"
+      ]
+    },
+    {
+      "i": 2,
+      "latency_s": 0.728,
+      "errors": [
+        "call failed: ClientError"
+      ]
+    },
+    {
+      "i": 3,
+      "latency_s": 0.728,
+      "errors": [
+        "call failed: ClientError"
+      ]
+    },
+    {
+      "i": 4,
+      "latency_s": 0.852,
+      "errors": [
+        "call failed: ClientError"
+      ]
+    }
+  ]
+}

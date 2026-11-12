@@ -1,0 +1,615 @@
+{
+  "summary": {
+    "run_at": "2026-11-12T14:27:18-05:00",
+    "provider": "vertex",
+    "model": "gemini-3.5-flash-lite",
+    "think": "medium",
+    "prompt_version": "v0.1",
+    "calls": 20,
+    "answered": 20,
+    "valid": 18,
+    "equals_rule": 0,
+    "latency_p50_s": 3.864,
+    "latency_p95_s": 4.635,
+    "latency_max_s": 4.858,
+    "input_tokens_mean": 877,
+    "output_tokens_mean": 77.8,
+    "thinking_tokens_mean": 894.3,
+    "price_in_per_mtok": 0.3,
+    "price_out_per_mtok": 2.5,
+    "cost_per_call_usd": 0.002693,
+    "cost_per_5_call_session_usd": 0.01347
+  },
+  "rows": [
+    {
+      "i": 0,
+      "latency_s": 3.885,
+      "model": "gemini-3.5-flash-lite",
+      "input_tokens": 877,
+      "output_tokens": 72,
+      "thinking_tokens": 772,
+      "stop_reason": null,
+      "output": {
+        "moves": [
+          {
+            "type": "move_lamp",
+            "defense": "lamp_a",
+            "to": "post_pond"
+          },
+          {
+            "type": "move_dog",
+            "defense": "dog",
+            "to": "kennel_orchard"
+          }
+        ],
+        "line": "They took the pond gnome and tracked mud everywhere.",
+        "inspected": []
+      },
+      "errors": [],
+      "equals_rule": false
+    },
+    {
+      "i": 1,
+      "latency_s": 4.152,
+      "model": "gemini-3.5-flash-lite",
+      "input_tokens": 877,
+      "output_tokens": 77,
+      "thinking_tokens": 971,
+      "stop_reason": null,
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_dog",
+            "defense": "dog",
+            "to": "kennel_orchard"
+          }
+        ],
+        "line": "They took my pond gnome and left muddy boots everywhere.",
+        "inspected": [
+          "ped_pond",
+          "gate_east"
+        ]
+      },
+      "errors": [],
+      "equals_rule": false
+    },
+    {
+      "i": 2,
+      "latency_s": 4.438,
+      "model": "gemini-3.5-flash-lite",
+      "input_tokens": 877,
+      "output_tokens": 66,
+      "thinking_tokens": 1113,
+      "stop_reason": null,
+      "output": {
+        "moves": [
+          {
+            "type": "move_dog",
+            "defense": "dog",
+            "to": "kennel_orchard"
+          },
+          {
+            "type": "hold",
+            "defense": "lamp_a",
+            "to": ""
+          }
+        ],
+        "line": "They stole from the pond and tracked mud everywhere!",
+        "inspected": []
+      },
+      "errors": [],
+      "equals_rule": false
+    },
+    {
+      "i": 3,
+      "latency_s": 3.35,
+      "model": "gemini-3.5-flash-lite",
+      "input_tokens": 877,
+      "output_tokens": 86,
+      "thinking_tokens": 708,
+      "stop_reason": null,
+      "output": {
+        "moves": [
+          {
+            "type": "move_lamp",
+            "defense": "lamp_a",
+            "to": "post_rose_east"
+          },
+          {
+            "type": "move_dog",
+            "defense": "dog",
+            "to": "kennel_orchard"
+          }
+        ],
+        "line": "They took my pond gnome and trampled the roses again!",
+        "inspected": [
+          "ped_pond",
+          "area_rosebed_east"
+        ]
+      },
+      "errors": [],
+      "equals_rule": false
+    },
+    {
+      "i": 4,
+      "latency_s": 3.286,
+      "model": "gemini-3.5-flash-lite",
+      "input_tokens": 877,
+      "output_tokens": 83,
+      "thinking_tokens": 656,
+      "stop_reason": null,
+      "output": {
+        "moves": [
+          {
+            "type": "move_dog",
+            "defense": "dog",
+            "to": "kennel_orchard"
+          },
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          }
+        ],
+        "line": "They stole my pond gnome and trashed my roses!",
+        "inspected": [
+          "area_rosebed_east",
+          "area_tulips_west"
+        ]
+      },
+      "errors": [],
+      "equals_rule": false
+    },
+    {
+      "i": 5,
+      "latency_s": 3.578,
+      "model": "gemini-3.5-flash-lite",
+      "input_tokens": 877,
+      "output_tokens": 89,
+      "thinking_tokens": 691,
+      "stop_reason": null,
+      "output": {
+        "moves": [
+          {
+            "type": "move_dog",
+            "defense": "dog",
+            "to": "kennel_orchard"
+          },
+          {
+            "type": "lock",
+            "defense": "gate_east",
+            "to": "gate_east"
+          }
+        ],
+        "line": "They took my pond gnome and left muddy boots everywhere. Unbelievable.",
+        "inspected": [
+          "area_rosebed_east",
+          "area_tulips_west"
+        ]
+      },
+      "errors": [
+        "illegal move {'type': 'lock', 'defense': 'gate_east', 'to': 'gate_east'}"
+      ],
+      "equals_rule": false
+    },
+    {
+      "i": 6,
+      "latency_s": 3.157,
+      "model": "gemini-3.5-flash-lite",
+      "input_tokens": 877,
+      "output_tokens": 81,
+      "thinking_tokens": 674,
+      "stop_reason": null,
+      "output": {
+        "moves": [
+          {
+            "type": "move_lamp",
+            "defense": "lamp_a",
+            "to": "post_pond"
+          },
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          }
+        ],
+        "line": "My pond pedestal is bare and the east gate is wide open. Figures.",
+        "inspected": [
+          "ped_pond",
+          "gate_east"
+        ]
+      },
+      "errors": [],
+      "equals_rule": false
+    },
+    {
+      "i": 7,
+      "latency_s": 2.882,
+      "model": "gemini-3.5-flash-lite",
+      "input_tokens": 877,
+      "output_tokens": 94,
+      "thinking_tokens": 527,
+      "stop_reason": null,
+      "output": {
+        "moves": [
+          {
+            "type": "move_dog",
+            "defense": "dog",
+            "to": "kennel_orchard"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_a",
+            "to": "post_rose_east"
+          }
+        ],
+        "line": "They swiped my pond gnome and left the gate open. Unbelievable.",
+        "inspected": [
+          "area_rosebed_east",
+          "area_tulips_west"
+        ]
+      },
+      "errors": [],
+      "equals_rule": false
+    },
+    {
+      "i": 8,
+      "latency_s": 1.564,
+      "model": "gemini-3.5-flash-lite",
+      "input_tokens": 877,
+      "output_tokens": 67,
+      "thinking_tokens": null,
+      "stop_reason": null,
+      "output": {
+        "moves": [
+          {
+            "type": "move_dog",
+            "defense": "dog",
+            "to": "kennel_orchard"
+          },
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          }
+        ],
+        "line": "Someone left the east gate open again, the clowns.",
+        "inspected": [
+          "area_rosebed_east",
+          "area_tulips_west"
+        ]
+      },
+      "errors": [],
+      "equals_rule": false
+    },
+    {
+      "i": 9,
+      "latency_s": 3.995,
+      "model": "gemini-3.5-flash-lite",
+      "input_tokens": 877,
+      "output_tokens": 56,
+      "thinking_tokens": 1008,
+      "stop_reason": null,
+      "output": {
+        "moves": [
+          {
+            "type": "move_lamp",
+            "defense": "lamp_a",
+            "to": "post_rose_east"
+          },
+          {
+            "type": "hold",
+            "defense": "dog",
+            "to": ""
+          }
+        ],
+        "line": "They took another gnome and trampled my roses. Unbelievable!",
+        "inspected": []
+      },
+      "errors": [],
+      "equals_rule": false
+    },
+    {
+      "i": 10,
+      "latency_s": 4.635,
+      "model": "gemini-3.5-flash-lite",
+      "input_tokens": 877,
+      "output_tokens": 84,
+      "thinking_tokens": 1104,
+      "stop_reason": null,
+      "output": {
+        "moves": [
+          {
+            "type": "move_dog",
+            "defense": "dog",
+            "to": "kennel_orchard"
+          },
+          {
+            "type": "lock",
+            "defense": "gate_east",
+            "to": "gate_east"
+          }
+        ],
+        "line": "They stole from the pond and tracked mud everywhere!",
+        "inspected": [
+          "area_rosebed_east",
+          "area_tulips_west"
+        ]
+      },
+      "errors": [
+        "illegal move {'type': 'lock', 'defense': 'gate_east', 'to': 'gate_east'}"
+      ],
+      "equals_rule": false
+    },
+    {
+      "i": 11,
+      "latency_s": 3.898,
+      "model": "gemini-3.5-flash-lite",
+      "input_tokens": 877,
+      "output_tokens": 90,
+      "thinking_tokens": 989,
+      "stop_reason": null,
+      "output": {
+        "moves": [
+          {
+            "type": "move_lamp",
+            "defense": "lamp_a",
+            "to": "post_rose_east"
+          },
+          {
+            "type": "move_dog",
+            "defense": "dog",
+            "to": "kennel_orchard"
+          }
+        ],
+        "line": "They took a gnome from the pond and trampled my roses!",
+        "inspected": [
+          "area_rosebed_east",
+          "area_tulips_west"
+        ]
+      },
+      "errors": [],
+      "equals_rule": false
+    },
+    {
+      "i": 12,
+      "latency_s": 4.495,
+      "model": "gemini-3.5-flash-lite",
+      "input_tokens": 877,
+      "output_tokens": 60,
+      "thinking_tokens": 1115,
+      "stop_reason": null,
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_dog",
+            "defense": "dog",
+            "to": "kennel_orchard"
+          }
+        ],
+        "line": "They stole my pond gnome and left the east gate wide open again!",
+        "inspected": [
+          "ped_pond"
+        ]
+      },
+      "errors": [],
+      "equals_rule": false
+    },
+    {
+      "i": 13,
+      "latency_s": 3.383,
+      "model": "gemini-3.5-flash-lite",
+      "input_tokens": 877,
+      "output_tokens": 89,
+      "thinking_tokens": 815,
+      "stop_reason": null,
+      "output": {
+        "moves": [
+          {
+            "type": "move_dog",
+            "defense": "dog",
+            "to": "kennel_orchard"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_a",
+            "to": "post_rose_east"
+          }
+        ],
+        "line": "They took my pond gnome and muddied the roses!",
+        "inspected": [
+          "area_rosebed_east",
+          "area_tulips_west"
+        ]
+      },
+      "errors": [],
+      "equals_rule": false
+    },
+    {
+      "i": 14,
+      "latency_s": 4.437,
+      "model": "gemini-3.5-flash-lite",
+      "input_tokens": 877,
+      "output_tokens": 82,
+      "thinking_tokens": 1071,
+      "stop_reason": null,
+      "output": {
+        "moves": [
+          {
+            "type": "move_lamp",
+            "defense": "lamp_a",
+            "to": "post_rose_east"
+          },
+          {
+            "type": "move_dog",
+            "defense": "dog",
+            "to": "kennel_orchard"
+          }
+        ],
+        "line": "They took my pond gnome and my roses are a disaster!",
+        "inspected": [
+          "area_rosebed_east"
+        ]
+      },
+      "errors": [],
+      "equals_rule": false
+    },
+    {
+      "i": 15,
+      "latency_s": 3.5,
+      "model": "gemini-3.5-flash-lite",
+      "input_tokens": 877,
+      "output_tokens": 73,
+      "thinking_tokens": 785,
+      "stop_reason": null,
+      "output": {
+        "moves": [
+          {
+            "type": "move_lamp",
+            "defense": "lamp_a",
+            "to": "post_pond"
+          },
+          {
+            "type": "hold",
+            "defense": "dog",
+            "to": ""
+          }
+        ],
+        "line": "They took a pond gnome and tracked mud all over my roses!",
+        "inspected": [
+          "area_rosebed_east"
+        ]
+      },
+      "errors": [],
+      "equals_rule": false
+    },
+    {
+      "i": 16,
+      "latency_s": 3.363,
+      "model": "gemini-3.5-flash-lite",
+      "input_tokens": 877,
+      "output_tokens": 90,
+      "thinking_tokens": 783,
+      "stop_reason": null,
+      "output": {
+        "moves": [
+          {
+            "type": "move_lamp",
+            "defense": "lamp_a",
+            "to": "post_rose_east"
+          },
+          {
+            "type": "move_dog",
+            "defense": "dog",
+            "to": "kennel_orchard"
+          }
+        ],
+        "line": "They stole my pond gnome and flattened my flowers. Thieves!",
+        "inspected": [
+          "area_rosebed_east",
+          "area_tulips_west"
+        ]
+      },
+      "errors": [],
+      "equals_rule": false
+    },
+    {
+      "i": 17,
+      "latency_s": 4.858,
+      "model": "gemini-3.5-flash-lite",
+      "input_tokens": 877,
+      "output_tokens": 62,
+      "thinking_tokens": 1272,
+      "stop_reason": null,
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_dog",
+            "defense": "dog",
+            "to": "kennel_orchard"
+          }
+        ],
+        "line": "They hit the pond and left the east gate wide open. Unbelievable!",
+        "inspected": [
+          "ped_pond"
+        ]
+      },
+      "errors": [],
+      "equals_rule": false
+    },
+    {
+      "i": 18,
+      "latency_s": 3.842,
+      "model": "gemini-3.5-flash-lite",
+      "input_tokens": 877,
+      "output_tokens": 85,
+      "thinking_tokens": 886,
+      "stop_reason": null,
+      "output": {
+        "moves": [
+          {
+            "type": "move_lamp",
+            "defense": "lamp_a",
+            "to": "post_rose_east"
+          },
+          {
+            "type": "move_dog",
+            "defense": "dog",
+            "to": "kennel_orchard"
+          }
+        ],
+        "line": "They took from the pond and trampled my roses again. Unbelievable!",
+        "inspected": [
+          "area_rosebed_east"
+        ]
+      },
+      "errors": [],
+      "equals_rule": false
+    },
+    {
+      "i": 19,
+      "latency_s": 4.035,
+      "model": "gemini-3.5-flash-lite",
+      "input_tokens": 877,
+      "output_tokens": 70,
+      "thinking_tokens": 1052,
+      "stop_reason": null,
+      "output": {
+        "moves": [
+          {
+            "type": "move_lamp",
+            "defense": "lamp_a",
+            "to": "post_rose_east"
+          },
+          {
+            "type": "move_dog",
+            "defense": "dog",
+            "to": "kennel_orchard"
+          }
+        ],
+        "line": "Pond gnome stolen and the east gate is open again. Wonderful.",
+        "inspected": [
+          "ped_pond",
+          "gate_east"
+        ]
+      },
+      "errors": [],
+      "equals_rule": false
+    }
+  ]
+}

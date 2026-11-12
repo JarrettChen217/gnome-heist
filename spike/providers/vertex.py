@@ -1,7 +1,9 @@
 """Gemini on Vertex AI via Google Application Default Credentials.
 
 AI-use disclosure: written by Claude (Claude Code) under Hao's direction.
-Environment: GOOGLE_CLOUD_PROJECT, GOOGLE_CLOUD_LOCATION, VERTEX_MODEL.
+Environment: GOOGLE_CLOUD_PROJECT, GOOGLE_CLOUD_LOCATION, VERTEX_MODEL,
+optional VERTEX_THINKING_LEVEL (minimal | low | medium | high; unset = model
+default) and VERTEX_TEMPERATURE (unset = model default).
 """
 
 from __future__ import annotations
@@ -41,16 +43,18 @@ def call(system: str, user: str, schema: dict, timeout_s: float) -> Result:
         location=os.environ["GOOGLE_CLOUD_LOCATION"],
         http_options=types.HttpOptions(timeout=int(timeout_s * 1000)),
     )
-    temperature = float(os.environ.get("VERTEX_TEMPERATURE", "0.7"))
+    level = os.environ.get("VERTEX_THINKING_LEVEL")
+    temperature = os.environ.get("VERTEX_TEMPERATURE")
     r = client.models.generate_content(
         model=model,
         contents=user,
         config=types.GenerateContentConfig(
             system_instruction=system,
-            temperature=temperature,
+            temperature=float(temperature) if temperature else None,
             response_mime_type="application/json",
             response_schema=_to_gemini(schema),
-            max_output_tokens=400,
+            max_output_tokens=8000,  # thinking tokens count toward this cap
+            thinking_config=types.ThinkingConfig(thinking_level=level.upper()) if level else None,
         ),
     )
     u = r.usage_metadata

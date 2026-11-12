@@ -1,0 +1,661 @@
+{
+  "summary": {
+    "run_at": "2026-11-12T14:23:01-05:00",
+    "provider": "anthropic",
+    "model": "claude-haiku-5-5",
+    "think": "low",
+    "prompt_version": "v0.1",
+    "calls": 20,
+    "answered": 20,
+    "valid": 13,
+    "equals_rule": 4,
+    "latency_p50_s": 3.453,
+    "latency_p95_s": 4.361,
+    "latency_max_s": 4.632,
+    "input_tokens_mean": 1343,
+    "output_tokens_mean": 543.6,
+    "thinking_tokens_mean": null,
+    "price_in_per_mtok": 0.1,
+    "price_out_per_mtok": 0.5,
+    "cost_per_call_usd": 0.000406,
+    "cost_per_5_call_session_usd": 0.00203
+  },
+  "rows": [
+    {
+      "i": 0,
+      "latency_s": 2.301,
+      "model": "claude-haiku-5-5",
+      "input_tokens": 1343,
+      "output_tokens": 121,
+      "thinking_tokens": null,
+      "stop_reason": "end_turn",
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_dog",
+            "defense": "dog",
+            "to": "kennel_orchard"
+          }
+        ],
+        "line": "Gate_east swung open again and my roses are trampled. Lovely. Locking it up.",
+        "inspected": [
+          "footprints",
+          "gates_changed",
+          "empty_pedestals"
+        ]
+      },
+      "errors": [
+        "inspected an unknown place"
+      ],
+      "equals_rule": false
+    },
+    {
+      "i": 1,
+      "latency_s": 3.323,
+      "model": "claude-haiku-5-5",
+      "input_tokens": 1343,
+      "output_tokens": 672,
+      "thinking_tokens": null,
+      "stop_reason": "end_turn",
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_b",
+            "to": "post_pond"
+          }
+        ],
+        "line": "Gate_east swung open again, roses trampled, and the pond pedestal's bare. Grr.",
+        "inspected": [
+          "gate_east",
+          "ped_pond",
+          "area_rosebed_east"
+        ]
+      },
+      "errors": [],
+      "equals_rule": false
+    },
+    {
+      "i": 2,
+      "latency_s": 3.772,
+      "model": "claude-haiku-5-5",
+      "input_tokens": 1343,
+      "output_tokens": 739,
+      "thinking_tokens": null,
+      "stop_reason": "end_turn",
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_a",
+            "to": "post_pond"
+          }
+        ],
+        "line": "East gate open again and the pond gnome's gone. I'm done being polite.",
+        "inspected": [
+          "ped_pond",
+          "gate_east",
+          "area_rosebed_east"
+        ]
+      },
+      "errors": [],
+      "equals_rule": false
+    },
+    {
+      "i": 3,
+      "latency_s": 0.959,
+      "model": "claude-haiku-5-5",
+      "input_tokens": 1343,
+      "output_tokens": 101,
+      "thinking_tokens": null,
+      "stop_reason": "end_turn",
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_dog",
+            "defense": "dog",
+            "to": "kennel_maze_center"
+          }
+        ],
+        "line": "Gate_east swung open again and my roses look trampled. Lock it, I say.",
+        "inspected": []
+      },
+      "errors": [],
+      "equals_rule": false
+    },
+    {
+      "i": 4,
+      "latency_s": 4.632,
+      "model": "claude-haiku-5-5",
+      "input_tokens": 1343,
+      "output_tokens": 925,
+      "thinking_tokens": null,
+      "stop_reason": "end_turn",
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_a",
+            "to": "post_pond"
+          }
+        ],
+        "line": "Gate east was open, my roses are trampled, and the pond pedestal is bare. Ugh.",
+        "inspected": [
+          "gate_east",
+          "area_rosebed_east",
+          "area_tulips_west",
+          "ped_pond"
+        ]
+      },
+      "errors": [],
+      "equals_rule": false
+    },
+    {
+      "i": 5,
+      "latency_s": 3.681,
+      "model": "claude-haiku-5-5",
+      "input_tokens": 1343,
+      "output_tokens": 670,
+      "thinking_tokens": null,
+      "stop_reason": "end_turn",
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_a",
+            "to": "post_gate_east"
+          }
+        ],
+        "line": "Gate east swung open again, and my roses look like a dance floor. Lovely.",
+        "inspected": [
+          "footprints area_rosebed_east",
+          "gates_changed gate_east",
+          "empty_pedestals ped_pond",
+          "memory night 1 and 2"
+        ]
+      },
+      "errors": [
+        "inspected an unknown place"
+      ],
+      "equals_rule": false
+    },
+    {
+      "i": 6,
+      "latency_s": 3.583,
+      "model": "claude-haiku-5-5",
+      "input_tokens": 1343,
+      "output_tokens": 689,
+      "thinking_tokens": null,
+      "stop_reason": "end_turn",
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_a",
+            "to": "post_pond"
+          }
+        ],
+        "line": "Roses trampled again, a pond gnome gone, and gate_east swung open. Enough.",
+        "inspected": [
+          "gate_east",
+          "ped_pond",
+          "area_rosebed_east",
+          "area_tulips_west"
+        ]
+      },
+      "errors": [],
+      "equals_rule": false
+    },
+    {
+      "i": 7,
+      "latency_s": 3.022,
+      "model": "claude-haiku-5-5",
+      "input_tokens": 1343,
+      "output_tokens": 609,
+      "thinking_tokens": null,
+      "stop_reason": "end_turn",
+      "output": {
+        "moves": [
+          {
+            "type": "move_lamp",
+            "defense": "lamp_b",
+            "to": "post_gate_east"
+          },
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          }
+        ],
+        "line": "Gate_east was open again and my roses got trampled. Again. Lovely.",
+        "inspected": [
+          "gate_east",
+          "area_rosebed_east",
+          "ped_pond"
+        ]
+      },
+      "errors": [],
+      "equals_rule": false
+    },
+    {
+      "i": 8,
+      "latency_s": 1.038,
+      "model": "claude-haiku-5-5",
+      "input_tokens": 1343,
+      "output_tokens": 119,
+      "thinking_tokens": null,
+      "stop_reason": "end_turn",
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_dog",
+            "defense": "dog",
+            "to": "kennel_maze_center"
+          }
+        ],
+        "line": "Gate_east popped open again and my roses are trampled. Lovely.",
+        "inspected": [
+          "footprints",
+          "gates_changed",
+          "empty_pedestals",
+          "memory"
+        ]
+      },
+      "errors": [
+        "inspected an unknown place"
+      ],
+      "equals_rule": false
+    },
+    {
+      "i": 9,
+      "latency_s": 3.904,
+      "model": "claude-haiku-5-5",
+      "input_tokens": 1343,
+      "output_tokens": 741,
+      "thinking_tokens": null,
+      "stop_reason": "end_turn",
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_a",
+            "to": "post_rose_east"
+          }
+        ],
+        "line": "Gate east swung open again and my roses got trampled. Ugh, my poor roses.",
+        "inspected": [
+          "gate_east",
+          "area_rosebed_east",
+          "ped_pond"
+        ]
+      },
+      "errors": [],
+      "equals_rule": true
+    },
+    {
+      "i": 10,
+      "latency_s": 4.256,
+      "model": "claude-haiku-5-5",
+      "input_tokens": 1343,
+      "output_tokens": 885,
+      "thinking_tokens": null,
+      "stop_reason": "end_turn",
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_b",
+            "to": "post_pond"
+          }
+        ],
+        "line": "Roses trampled, east gate flung open, pond pedestal bare. Wonderful morning.",
+        "inspected": [
+          "area_rosebed_east",
+          "gate_east",
+          "ped_pond"
+        ]
+      },
+      "errors": [],
+      "equals_rule": false
+    },
+    {
+      "i": 11,
+      "latency_s": 4.056,
+      "model": "claude-haiku-5-5",
+      "input_tokens": 1343,
+      "output_tokens": 762,
+      "thinking_tokens": null,
+      "stop_reason": "end_turn",
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_b",
+            "to": "post_gate_east"
+          }
+        ],
+        "line": "Nine rose footprints and the east gate hanging open. Charming houseguest.",
+        "inspected": [
+          "footprints area_rosebed_east",
+          "gate_east changed to open",
+          "ped_pond empty",
+          "footprints area_tulips_west"
+        ]
+      },
+      "errors": [
+        "inspected an unknown place"
+      ],
+      "equals_rule": false
+    },
+    {
+      "i": 12,
+      "latency_s": 0.943,
+      "model": "claude-haiku-5-5",
+      "input_tokens": 1343,
+      "output_tokens": 109,
+      "thinking_tokens": null,
+      "stop_reason": "end_turn",
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_dog",
+            "defense": "dog",
+            "to": "kennel_maze_center"
+          }
+        ],
+        "line": "Roses trampled again, gate_east flapping open, and the pond gnomes are missing. Lovely.",
+        "inspected": []
+      },
+      "errors": [
+        "line longer than 80 characters"
+      ],
+      "equals_rule": false
+    },
+    {
+      "i": 13,
+      "latency_s": 2.707,
+      "model": "claude-haiku-5-5",
+      "input_tokens": 1343,
+      "output_tokens": 486,
+      "thinking_tokens": null,
+      "stop_reason": "end_turn",
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_b",
+            "to": "post_rose_east"
+          }
+        ],
+        "line": "Gate east swung open again, and my roses are trampled. Wonderful morning.",
+        "inspected": [
+          "gate_east",
+          "area_rosebed_east",
+          "ped_pond"
+        ]
+      },
+      "errors": [],
+      "equals_rule": true
+    },
+    {
+      "i": 14,
+      "latency_s": 4.361,
+      "model": "claude-haiku-5-5",
+      "input_tokens": 1343,
+      "output_tokens": 885,
+      "thinking_tokens": null,
+      "stop_reason": "end_turn",
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_a",
+            "to": "post_pond"
+          }
+        ],
+        "line": "Gate east popped open, roses trampled, pond gnome gone. Lovely morning.",
+        "inspected": [
+          "gate_east",
+          "area_rosebed_east",
+          "area_tulips_west",
+          "ped_pond"
+        ]
+      },
+      "errors": [],
+      "equals_rule": false
+    },
+    {
+      "i": 15,
+      "latency_s": 1.285,
+      "model": "claude-haiku-5-5",
+      "input_tokens": 1343,
+      "output_tokens": 115,
+      "thinking_tokens": null,
+      "stop_reason": "end_turn",
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_dog",
+            "defense": "dog",
+            "to": "kennel_orchard"
+          }
+        ],
+        "line": "Gate_east swung open again, and my roses look like a stampede went through.",
+        "inspected": [
+          "footprints",
+          "gates_changed",
+          "empty_pedestals"
+        ]
+      },
+      "errors": [
+        "inspected an unknown place"
+      ],
+      "equals_rule": false
+    },
+    {
+      "i": 16,
+      "latency_s": 3.856,
+      "model": "claude-haiku-5-5",
+      "input_tokens": 1343,
+      "output_tokens": 730,
+      "thinking_tokens": null,
+      "stop_reason": "end_turn",
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_b",
+            "to": "post_rose_east"
+          }
+        ],
+        "line": "Nine rose footprints and a gate swung open overnight. Locking east, lighting the roses.",
+        "inspected": [
+          "footprints area_rosebed_east x9",
+          "footprints area_tulips_west x4",
+          "gate_east changed closed to open",
+          "ped_pond empty"
+        ]
+      },
+      "errors": [
+        "line longer than 80 characters",
+        "inspected an unknown place"
+      ],
+      "equals_rule": true
+    },
+    {
+      "i": 17,
+      "latency_s": 3.12,
+      "model": "claude-haiku-5-5",
+      "input_tokens": 1343,
+      "output_tokens": 620,
+      "thinking_tokens": null,
+      "stop_reason": "end_turn",
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_a",
+            "to": "post_pond"
+          }
+        ],
+        "line": "Gate_east swung open and my roses got trampled again. Fine, it gets a lock now.",
+        "inspected": [
+          "gate_east",
+          "area_rosebed_east",
+          "ped_pond",
+          "area_tulips_west"
+        ]
+      },
+      "errors": [],
+      "equals_rule": false
+    },
+    {
+      "i": 18,
+      "latency_s": 3.98,
+      "model": "claude-haiku-5-5",
+      "input_tokens": 1343,
+      "output_tokens": 775,
+      "thinking_tokens": null,
+      "stop_reason": "end_turn",
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_lamp",
+            "defense": "lamp_b",
+            "to": "post_rose_east"
+          }
+        ],
+        "line": "Gate_east swung open again, and my roses are still trampled. Lovely.",
+        "inspected": [
+          "gate_east",
+          "area_rosebed_east",
+          "area_tulips_west",
+          "ped_pond"
+        ]
+      },
+      "errors": [],
+      "equals_rule": true
+    },
+    {
+      "i": 19,
+      "latency_s": 1.081,
+      "model": "claude-haiku-5-5",
+      "input_tokens": 1343,
+      "output_tokens": 120,
+      "thinking_tokens": null,
+      "stop_reason": "end_turn",
+      "output": {
+        "moves": [
+          {
+            "type": "lock",
+            "defense": "lock",
+            "to": "gate_east"
+          },
+          {
+            "type": "move_dog",
+            "defense": "dog",
+            "to": "kennel_orchard"
+          }
+        ],
+        "line": "Gate_east swung open again and my roses are trampled. Lock it, I say.",
+        "inspected": [
+          "gate_east",
+          "area_rosebed_east",
+          "ped_pond"
+        ]
+      },
+      "errors": [],
+      "equals_rule": false
+    }
+  ]
+}

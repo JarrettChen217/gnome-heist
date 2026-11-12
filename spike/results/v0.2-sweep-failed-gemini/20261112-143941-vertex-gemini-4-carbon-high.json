@@ -1,0 +1,56 @@
+{
+  "summary": {
+    "run_at": "2026-11-12T14:39:41-05:00",
+    "provider": "vertex",
+    "model": "gemini-4-carbon",
+    "think": "high",
+    "prompt_version": "v0.2",
+    "calls": 5,
+    "answered": 0,
+    "valid": 0,
+    "equals_rule": 0,
+    "latency_p50_s": null,
+    "latency_p95_s": null,
+    "latency_max_s": null,
+    "input_tokens_mean": null,
+    "output_tokens_mean": null,
+    "thinking_tokens_mean": null
+  },
+  "rows": [
+    {
+      "i": 0,
+      "latency_s": 0.922,
+      "errors": [
+        "call failed: ClientError"
+      ]
+    },
+    {
+      "i": 1,
+      "latency_s": 0.698,
+      "errors": [
+        "call failed: ClientError"
+      ]
+    },
+    {
+      "i": 2,
+      "latency_s": 0.701,
+      "errors": [
+        "call failed: ClientError"
+      ]
+    },
+    {
+      "i": 3,
+      "latency_s": 0.732,
+      "errors": [
+        "call failed: ClientError"
+      ]
+    },
+    {
+      "i": 4,
+      "latency_s": 0.713,
+      "errors": [
+        "call failed: ClientError"
+      ]
+    }
+  ]
+}
