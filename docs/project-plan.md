@@ -56,7 +56,7 @@ Internal checkpoint: by **Nov 22**, one night and one morning are playable with 
 
 ## 3. Initial Risk Register
 
-Risk Profile ratings (G1, proposed): IP / Concept Medium; Business / Audience Medium; Technology **High**; Team Medium; Genre / Mechanics **High**; Timeline **High**. The three High ratings share one cause: no playable night-and-morning loop exists yet. A working loop by Nov 22 would lower all three.
+Risk Profile ratings (G1, proposed by my agent and accepted by me on 2026-11-12): IP / Concept Medium; Business / Audience Medium; Technology **High**; Team Medium; Genre / Mechanics **High**; Timeline **High**. The three High ratings share one cause: no playable night-and-morning loop exists yet. A working loop by Nov 22 would lower all three.
 
 | Risk | Evidence or trigger | Impact and likelihood | Responsible role | Mitigation | Contingency | Status and next check |
 | --- | --- | --- | --- | --- | --- | --- |

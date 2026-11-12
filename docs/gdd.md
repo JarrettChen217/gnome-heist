@@ -39,7 +39,7 @@ Each morning the neighbor, an AI agent, reads only the traces you left behind an
 | **Interpret** | You compare his line and the traces he inspected with your own memory of the night. Your map still shows the defenses where you last saw them. [Hao, on agent proposal] |
 | **Next action** | You re-scout the areas you need, then choose a route, or plant a false trail to pull a defense away. [Hao] |
 
-## 4. Pillars [Proposed]
+## 4. Pillars [Hao, on agent proposal]
 
 1. **Every trace is a message.** Whatever you leave is read, including what you leave on purpose.
 2. **Read before you risk.** Danger is drawn on the ground. Failure comes from a wrong judgment, not slow fingers.
@@ -206,4 +206,4 @@ The neighbor sees a trace list, his own layout, and short summaries of the last 
 | 2026-11-12 | Repository is private for now | Hao | Decided |
 | 2026-11-12 | Default neighbor model: Claude Sonnet 5.5 with thinking off, after a 26-configuration latency/cost sweep | Hao, on agent proposal | Decided |
 | 2026-11-12 | Support both Claude Sonnet 5.5 (primary) and Gemini 3.5 Flash-Lite (secondary); failover rule proposed in the Configuration Document | Hao (both); failover rule on agent proposal, accepted by Hao | Decided |
-| — | Pillars; Risk Profile ratings | Agent proposal | Awaiting Hao |
+| 2026-11-12 | Pillars (Section 4) and Risk Profile ratings (Project Plan Section 3) | Agent proposal, accepted by Hao | Decided |
