@@ -47,10 +47,10 @@ Raw rows: [`results/v0.3-sweep/`](results/v0.3-sweep/). Rebuild the table with `
 - **"Different from the rule" is not yet "better."** Sonnet low still chose one move set on 17 of 20 calls (lock the east gate, dog to the orchard): different from the rule, but just as fixed on this input. Gemini 3.5 Flash-Lite varied most (7 distinct move sets) but once invented a detail ("my poor ceramic duck"). Whether the agent reads memory and fake trails better than the rule needs a designed set of trace sequences (Project Plan T13) and playtests, not this single input.
 - **Cost is small for every candidate:** $0.001 to $0.05 per five-night session for the configurations inside the latency budget.
 
-## Recommendation (agent proposal; decision is Hao's, Configuration Document C8)
+## Decision (agent proposal, accepted by Hao on 2026-11-12; Configuration Document C8)
 
 - Default: **Claude Sonnet 5.5, thinking off** (p95 2.69 s, 19/20 valid, about $0.023 per session). Its key fits in a Worker secret, which avoids the Vertex service-account question (C7).
-- Course-funded alternative: **Gemini 3.5 Flash-Lite, thinking low** (p95 1.73 s, 20/20 valid, about $0.003 per session), if Vertex works from the Worker.
+- Secondary, also supported: **Gemini 3.5 Flash-Lite, thinking low** (p95 1.73 s, 20/20 valid, about $0.003 per session, course-funded). It answers once when the primary fails fast; both run in the automated evaluation. Hao decided to support both on 2026-11-12.
 - Not used: Opus (copies the rule, highest cost), Gemini Pro, Gemini 3.8 Flash, Gemini 4 (too slow today).
 
 ## Earlier runs, kept for the record
