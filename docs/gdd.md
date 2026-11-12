@@ -205,5 +205,5 @@ The neighbor sees a trace list, his own layout, and short summaries of the last 
 | 2026-11-12 | The neighbor can switch between model providers (Vertex, Anthropic, OpenAI) through one interface | Hao (library choice, Vercel AI SDK, on agent proposal) | Decided |
 | 2026-11-12 | Repository is private for now | Hao | Decided |
 | 2026-11-12 | Default neighbor model: Claude Sonnet 5.5 with thinking off, after a 26-configuration latency/cost sweep | Hao, on agent proposal | Decided |
-| 2026-11-12 | Support both Claude Sonnet 5.5 (primary) and Gemini 3.5 Flash-Lite (secondary); failover rule proposed in the Configuration Document | Hao (both); agent proposal (failover rule) | Decided / failover Proposed |
+| 2026-11-12 | Support both Claude Sonnet 5.5 (primary) and Gemini 3.5 Flash-Lite (secondary); failover rule proposed in the Configuration Document | Hao (both); failover rule on agent proposal, accepted by Hao | Decided |
 | — | Pillars; Risk Profile ratings | Agent proposal | Awaiting Hao |
