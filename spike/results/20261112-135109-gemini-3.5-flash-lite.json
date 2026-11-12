@@ -1,0 +1,545 @@
+{
+  "summary": {
+    "run_at": "2026-11-12T13:51:09-05:00",
+    "model": "gemini-3.5-flash-lite",
+    "location": "global",
+    "temperature": 0.7,
+    "calls": 20,
+    "valid": 16,
+    "latency_p50_s": 0.982,
+    "latency_p95_s": 1.558,
+    "latency_max_s": 2.858,
+    "input_tokens_mean": 859,
+    "output_tokens_mean": 108.2,
+    "price_source": "fill in: official price page URL and date"
+  },
+  "rows": [
+    {
+      "i": 0,
+      "latency_s": 2.858,
+      "input_tokens": 859,
+      "output_tokens": 109,
+      "thinking_tokens": null,
+      "errors": [],
+      "output": {
+        "moves": [
+          {
+            "type": "move_lamp",
+            "lamp": "lamp_a",
+            "to": "post_rose_east"
+          },
+          {
+            "type": "lock",
+            "gate": "gate_east"
+          }
+        ],
+        "line": "My poor roses are taking a beating again.",
+        "inspected": [
+          "area_rosebed_east"
+        ]
+      }
+    },
+    {
+      "i": 1,
+      "latency_s": 1.558,
+      "input_tokens": 859,
+      "output_tokens": 125,
+      "thinking_tokens": null,
+      "errors": [
+        "line longer than 80 characters"
+      ],
+      "output": {
+        "moves": [
+          {
+            "type": "move_lamp",
+            "lamp": "lamp_a",
+            "to": "post_rose_east"
+          },
+          {
+            "type": "lock",
+            "gate": "gate_east"
+          }
+        ],
+        "line": "They took the one from the pond and left muddy boots all over my favorite flowers again.",
+        "inspected": [
+          "area_rosebed_east",
+          "ped_pond"
+        ]
+      }
+    },
+    {
+      "i": 2,
+      "latency_s": 0.979,
+      "input_tokens": 859,
+      "output_tokens": 126,
+      "thinking_tokens": null,
+      "errors": [
+        "line longer than 80 characters"
+      ],
+      "output": {
+        "moves": [
+          {
+            "type": "move_lamp",
+            "lamp": "lamp_a",
+            "to": "post_rose_east"
+          },
+          {
+            "type": "lock",
+            "gate": "gate_east"
+          }
+        ],
+        "line": "Someone trampled the rosebed again, and now the koi pond gnome has vanished into thin air.",
+        "inspected": [
+          "area_rosebed_east",
+          "ped_pond"
+        ]
+      }
+    },
+    {
+      "i": 3,
+      "latency_s": 0.987,
+      "input_tokens": 859,
+      "output_tokens": 120,
+      "thinking_tokens": null,
+      "errors": [],
+      "output": {
+        "moves": [
+          {
+            "type": "move_lamp",
+            "lamp": "lamp_a",
+            "to": "post_rose_east"
+          },
+          {
+            "type": "lock",
+            "gate": "gate_east"
+          }
+        ],
+        "line": "Someone left my east gate wide open and trampled the roses again.",
+        "inspected": [
+          "ped_pond",
+          "area_rosebed_east"
+        ]
+      }
+    },
+    {
+      "i": 4,
+      "latency_s": 0.972,
+      "input_tokens": 859,
+      "output_tokens": 71,
+      "thinking_tokens": null,
+      "errors": [],
+      "output": {
+        "moves": [
+          {
+            "type": "move_lamp",
+            "lamp": "lamp_a",
+            "to": "post_rose_east"
+          },
+          {
+            "type": "move_dog",
+            "spot": "kennel_orchard"
+          }
+        ],
+        "line": "My trampled roses are getting expensive.",
+        "inspected": [
+          "area_rosebed_east"
+        ]
+      }
+    },
+    {
+      "i": 5,
+      "latency_s": 0.993,
+      "input_tokens": 859,
+      "output_tokens": 123,
+      "thinking_tokens": null,
+      "errors": [],
+      "output": {
+        "moves": [
+          {
+            "type": "move_lamp",
+            "lamp": "lamp_a",
+            "to": "post_rose_east"
+          },
+          {
+            "type": "lock",
+            "gate": "gate_east"
+          }
+        ],
+        "line": "Someone left my east gate wide open and stomped all over the flowers again.",
+        "inspected": [
+          "area_rosebed_east",
+          "gate_east"
+        ]
+      }
+    },
+    {
+      "i": 6,
+      "latency_s": 0.943,
+      "input_tokens": 859,
+      "output_tokens": 81,
+      "thinking_tokens": null,
+      "errors": [],
+      "output": {
+        "moves": [
+          {
+            "type": "move_lamp",
+            "lamp": "lamp_a",
+            "to": "post_rose_east"
+          },
+          {
+            "type": "move_dog",
+            "spot": "kennel_orchard"
+          }
+        ],
+        "line": "My poor roses are getting more footprints than a public sidewalk.",
+        "inspected": [
+          "area_rosebed_east",
+          "gate_east"
+        ]
+      }
+    },
+    {
+      "i": 7,
+      "latency_s": 1.143,
+      "input_tokens": 859,
+      "output_tokens": 127,
+      "thinking_tokens": null,
+      "errors": [
+        "line longer than 80 characters"
+      ],
+      "output": {
+        "moves": [
+          {
+            "type": "move_lamp",
+            "lamp": "lamp_a",
+            "to": "post_rose_east"
+          },
+          {
+            "type": "lock",
+            "gate": "gate_east"
+          }
+        ],
+        "line": "Someone left my east gate wide open and my pond gnome is doing the backstroke in thin air.",
+        "inspected": [
+          "area_rosebed_east",
+          "ped_pond"
+        ]
+      }
+    },
+    {
+      "i": 8,
+      "latency_s": 0.97,
+      "input_tokens": 859,
+      "output_tokens": 119,
+      "thinking_tokens": null,
+      "errors": [],
+      "output": {
+        "moves": [
+          {
+            "type": "move_lamp",
+            "lamp": "lamp_a",
+            "to": "post_pond"
+          },
+          {
+            "type": "lock",
+            "gate": "gate_east"
+          }
+        ],
+        "line": "My poor pond pedestal is bare, and someone left the east gate wide open again.",
+        "inspected": [
+          "ped_pond",
+          "gate_east"
+        ]
+      }
+    },
+    {
+      "i": 9,
+      "latency_s": 0.969,
+      "input_tokens": 859,
+      "output_tokens": 122,
+      "thinking_tokens": null,
+      "errors": [],
+      "output": {
+        "moves": [
+          {
+            "type": "move_lamp",
+            "lamp": "lamp_a",
+            "to": "post_rose_east"
+          },
+          {
+            "type": "move_dog",
+            "spot": "kennel_orchard"
+          }
+        ],
+        "line": "Those muddy boots tracked all over my precious roses again.",
+        "inspected": [
+          "area_rosebed_east",
+          "ped_pond"
+        ]
+      }
+    },
+    {
+      "i": 10,
+      "latency_s": 1.013,
+      "input_tokens": 859,
+      "output_tokens": 92,
+      "thinking_tokens": null,
+      "errors": [
+        "line longer than 80 characters"
+      ],
+      "output": {
+        "moves": [
+          {
+            "type": "move_lamp",
+            "lamp": "lamp_a",
+            "to": "post_rose_east"
+          },
+          {
+            "type": "move_dog",
+            "spot": "kennel_orchard"
+          }
+        ],
+        "line": "Someone trampled my roses again and now my pond gnome is doing the backstroke in the Great Beyond.",
+        "inspected": [
+          "area_rosebed_east",
+          "area_tulips_west"
+        ]
+      }
+    },
+    {
+      "i": 11,
+      "latency_s": 1.078,
+      "input_tokens": 859,
+      "output_tokens": 124,
+      "thinking_tokens": null,
+      "errors": [],
+      "output": {
+        "moves": [
+          {
+            "type": "move_lamp",
+            "lamp": "lamp_a",
+            "to": "post_rose_east"
+          },
+          {
+            "type": "lock",
+            "gate": "gate_east"
+          }
+        ],
+        "line": "Someone left my east gate wide open and stomped all over the rosebed again.",
+        "inspected": [
+          "area_rosebed_east",
+          "gate_east"
+        ]
+      }
+    },
+    {
+      "i": 12,
+      "latency_s": 0.916,
+      "input_tokens": 859,
+      "output_tokens": 81,
+      "thinking_tokens": null,
+      "errors": [],
+      "output": {
+        "moves": [
+          {
+            "type": "move_lamp",
+            "lamp": "lamp_a",
+            "to": "post_rose_east"
+          },
+          {
+            "type": "lock",
+            "gate": "gate_east"
+          }
+        ],
+        "line": "Those sneaky shoe prints in the roses are ruining my landscaping hobby.",
+        "inspected": [
+          "area_rosebed_east",
+          "area_tulips_west"
+        ]
+      }
+    },
+    {
+      "i": 13,
+      "latency_s": 0.984,
+      "input_tokens": 859,
+      "output_tokens": 122,
+      "thinking_tokens": null,
+      "errors": [],
+      "output": {
+        "moves": [
+          {
+            "type": "move_lamp",
+            "lamp": "lamp_a",
+            "to": "post_rose_east"
+          },
+          {
+            "type": "lock",
+            "gate": "gate_east"
+          }
+        ],
+        "line": "Someone left my east gate wide open and stomped all over the flowers.",
+        "inspected": [
+          "area_rosebed_east",
+          "gate_east"
+        ]
+      }
+    },
+    {
+      "i": 14,
+      "latency_s": 0.849,
+      "input_tokens": 859,
+      "output_tokens": 84,
+      "thinking_tokens": null,
+      "errors": [],
+      "output": {
+        "moves": [
+          {
+            "type": "move_lamp",
+            "lamp": "lamp_a",
+            "to": "post_rose_east"
+          },
+          {
+            "type": "lock",
+            "gate": "gate_east"
+          }
+        ],
+        "line": "Somebody took a ceramic duck and left big muddy boots all over my prized roses.",
+        "inspected": [
+          "area_rosebed_east",
+          "area_tulips_west"
+        ]
+      }
+    },
+    {
+      "i": 15,
+      "latency_s": 1.044,
+      "input_tokens": 859,
+      "output_tokens": 122,
+      "thinking_tokens": null,
+      "errors": [],
+      "output": {
+        "moves": [
+          {
+            "type": "move_lamp",
+            "lamp": "lamp_a",
+            "to": "post_rose_east"
+          },
+          {
+            "type": "lock",
+            "gate": "gate_east"
+          }
+        ],
+        "line": "Someone left my east gate wide open and stomped all over the place.",
+        "inspected": [
+          "area_rosebed_east",
+          "gate_east"
+        ]
+      }
+    },
+    {
+      "i": 16,
+      "latency_s": 0.936,
+      "input_tokens": 859,
+      "output_tokens": 120,
+      "thinking_tokens": null,
+      "errors": [],
+      "output": {
+        "moves": [
+          {
+            "type": "move_lamp",
+            "lamp": "lamp_a",
+            "to": "post_rose_east"
+          },
+          {
+            "type": "lock",
+            "gate": "gate_east"
+          }
+        ],
+        "line": "Someone left my east gate wide open like they own the place.",
+        "inspected": [
+          "ped_pond",
+          "area_rosebed_east"
+        ]
+      }
+    },
+    {
+      "i": 17,
+      "latency_s": 1.031,
+      "input_tokens": 859,
+      "output_tokens": 132,
+      "thinking_tokens": null,
+      "errors": [],
+      "output": {
+        "moves": [
+          {
+            "type": "move_lamp",
+            "lamp": "lamp_a",
+            "to": "post_rose_east"
+          },
+          {
+            "type": "lock",
+            "gate": "gate_east"
+          }
+        ],
+        "line": "They took a gnome from the pond and walked right through my trampled roses.",
+        "inspected": [
+          "area_rosebed_east",
+          "area_tulips_west",
+          "ped_pond"
+        ]
+      }
+    },
+    {
+      "i": 18,
+      "latency_s": 0.914,
+      "input_tokens": 859,
+      "output_tokens": 119,
+      "thinking_tokens": null,
+      "errors": [],
+      "output": {
+        "moves": [
+          {
+            "type": "move_lamp",
+            "lamp": "lamp_a",
+            "to": "post_rose_east"
+          },
+          {
+            "type": "lock",
+            "gate": "gate_east"
+          }
+        ],
+        "line": "My poor roses are taking a beating again.",
+        "inspected": [
+          "area_rosebed_east",
+          "area_tulips_west"
+        ]
+      }
+    },
+    {
+      "i": 19,
+      "latency_s": 0.919,
+      "input_tokens": 859,
+      "output_tokens": 83,
+      "thinking_tokens": null,
+      "errors": [],
+      "output": {
+        "moves": [
+          {
+            "type": "move_lamp",
+            "lamp": "lamp_a",
+            "to": "post_rose_east"
+          },
+          {
+            "type": "move_dog",
+            "spot": "kennel_orchard"
+          }
+        ],
+        "line": "My poor roses are taking a beating every single night.",
+        "inspected": [
+          "area_rosebed_east",
+          "area_tulips_west"
+        ]
+      }
+    }
+  ]
+}
