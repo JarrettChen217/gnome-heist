@@ -12,3 +12,4 @@ dist/
 spike/results/raw/
 __pycache__/
 spike/results/logs/
+.claude/settings.local.json
