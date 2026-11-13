@@ -25,7 +25,7 @@ def call(system: str, user: str, schema: dict, timeout_s: float) -> Result:
                   {"role": "user", "content": user}],
         response_format={
             "type": "json_schema",
-            "json_schema": {"name": "neighbor_morning", "schema": schema, "strict": True},
+            "json_schema": {"name": "morning_plan", "schema": schema, "strict": True},
         },
     )
     u = r.usage

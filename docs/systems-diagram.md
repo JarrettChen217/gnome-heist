@@ -2,39 +2,39 @@ AI-use disclosure: Claude (Claude Code) drew this diagram from the GDD and Confi
 
 # Gnome Heist: Systems diagram (G1, planned)
 
-The diagram shows the five required elements: state, player input, agent context and actions, validation, and feedback. The dashed box is the neighbor agent's knowledge boundary: only the trace list, his own layout, and his memory cross into it. Nothing here is implemented yet.
+The diagram shows the five required elements: state, player input, agent context and actions, validation, and feedback. The dashed box is the farmer agent's knowledge boundary: only the trace list, his own layout and budget, and his memory cross into it. Nothing here is implemented yet.
 
 ```mermaid
 flowchart LR
   subgraph NIGHT["Night (deterministic game code)"]
-    IN["Player input<br/>move · take gnome · open/close gate<br/>end night in safe zone"]
-    WS[("World state (authoritative)<br/>map, gates, defenses, pedestals,<br/>player position, stamina, strikes,<br/>night number, full action log")]
+    IN["Player input<br/>move · pick lock / kick fence · dig gnome<br/>leave through a dog hole"]
+    WS[("World state (authoritative)<br/>map, gates, padlocks, fences, defenses,<br/>pedestals, player position, stamina,<br/>strikes, night number, full action log")]
     PV["Player view<br/>fog of war + 'last seen' snapshot"]
     IN --> WS
     WS --> PV
   end
 
-  TX["Trace extractor<br/>footprints by area · gates changed vs his layout<br/>empty pedestals · sighting tile"]
+  TX["Trace extractor<br/>footprints by area · gates and padlocks changed<br/>broken fences · empty pedestals · sighting tile"]
   WS -- "end of night" --> TX
 
-  subgraph AGENT["Neighbor's knowledge boundary"]
-    CTX["Agent context<br/>estate slots · his layout · today's traces<br/>memory: last 3 mornings"]
-    LLM["Neighbor agent (LLM)<br/>Cloudflare Worker, one session state<br/>returns 2 moves + 1 line + inspected areas"]
+  subgraph AGENT["Farmer's knowledge boundary"]
+    CTX["Agent context<br/>farm slots · his layout · stamina 2 · money<br/>today's traces · memory: last 3 mornings"]
+    LLM["Farmer agent (Claude Sonnet 5.5)<br/>Cloudflare Worker, one session state<br/>returns a plan (buy / move / repair) + 1 line + inspected places"]
     CTX --> LLM
   end
   TX --> CTX
 
-  VAL{"Validator<br/>schema · legal ids · exactly 2 moves<br/>reachability invariant · line check<br/>timeout"}
+  VAL{"Validator<br/>schema · legal ids · within budget<br/>no dog-hole safe zone · a route stays open<br/>line check · 4 s timeout"}
   LLM --> VAL
-  FB["Fallback: rule-based neighbor<br/>(also the scripted baseline)"]
-  VAL -- "invalid or timeout" --> FB
+  FB["Fallback: Gemini Flash-Lite on a fast error,<br/>otherwise the rule-based farmer<br/>(also the scripted baseline)"]
+  VAL -- "invalid or late" --> FB
   FB --> APPLY
-  VAL -- "valid" --> APPLY["Apply moves to world state"]
+  VAL -- "valid" --> APPLY["Apply plan to world state"]
   APPLY --> WS
   APPLY --> LOG[("Trace log<br/>input, output, policy, latency, tokens")]
 
-  APPLY --> MORN["Feedback: morning sequence<br/>neighbor walks to inspected traces,<br/>says his line, caption names the moved category<br/>(new positions NOT shown)"]
+  APPLY --> MORN["Feedback: morning sequence<br/>farmer walks to inspected traces, says his line,<br/>thinking beat with costs, caption names the kind of change<br/>(new positions NOT shown)"]
   MORN --> PV
 ```
 
-What the neighbor **never** receives: the player's path, position, stamina, strikes, remaining nights, fog memory, or intent. See [Configuration Document, Section A2](configuration.md#a2-world-state-and-what-the-agent-knows).
+What the farmer **never** receives: the player's path, position, dog hole used, stamina, strikes, remaining nights, fog memory, or intent. See [Configuration Document, Section A2](configuration.md#a2-world-state-and-what-the-agent-knows).

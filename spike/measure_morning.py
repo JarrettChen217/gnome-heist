@@ -2,19 +2,22 @@
 # requires-python = ">=3.11"
 # dependencies = ["google-genai>=1.0", "anthropic>=1.0", "openai>=1.0"]
 # ///
-"""G1 budget measurement for the Gnome Heist neighbor agent.
+"""G1 budget measurement for the Gnome Heist farmer agent (earlier two-move contract).
+
+The SYSTEM prompt below is kept exactly as it was measured on 2026-11-12, so it still
+uses the earlier wording; the current contract is in docs/configuration.md.
 
 AI-use disclosure: written by Claude (Claude Code) under Hao's direction.
 
 Sends one realistic morning input N times to one provider and records
 wall-clock latency, token usage, output validity, and whether the move set
-equals the rule-based neighbor's. Credentials come from the environment or
+equals the rule-based baseline's. Credentials come from the environment or
 from a gitignored .env at the repository root; nothing is written back.
 
 Usage:
-  uv run spike/measure_neighbor.py --provider vertex --calls 20
-  uv run spike/measure_neighbor.py --provider anthropic --calls 20 --price-in 4 --price-out 20
-  uv run spike/measure_neighbor.py --provider openai --calls 20 --price-in X --price-out Y
+  uv run spike/measure_morning.py --provider vertex --calls 20
+  uv run spike/measure_morning.py --provider anthropic --calls 20 --price-in 4 --price-out 20
+  uv run spike/measure_morning.py --provider openai --calls 20 --price-in X --price-out Y
 Prices are USD per 1M tokens, copied from the provider's official price page.
 """
 
@@ -111,7 +114,7 @@ SCHEMA = {
     "additionalProperties": False,
 }
 
-# What the rule-based neighbor does with MORNING_INPUT: a lamp to the post by the
+# What the rule-based baseline did with MORNING_INPUT: a lamp to the post by the
 # most-trampled area, and the lock to the gate whose state changed.
 RULE_MOVES = {("move_lamp", "post_rose_east"), ("lock", "gate_east")}
 

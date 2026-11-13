@@ -1,12 +1,14 @@
 AI-use disclosure: Claude (Claude Code) wrote the measurement scripts, ran the runs I approved, and drafted this summary; the model choice is mine.
 
-# Budget measurement for the neighbor agent (G1)
+# Budget measurement for the farmer agent (G1)
 
-All runs send one realistic night-3 input (2 memory entries, 2 footprint areas, 1 changed gate, 1 empty pedestal) and ask for exactly two moves, one line, and the inspected places. Calls go from my laptop, not yet from the Worker. Prices are list prices read on 2026-11-12 from the official pages (Anthropic pricing page; Vertex AI generative AI pricing page, global endpoint).
+**Contract note (2026-11-13).** All runs below used the earlier output contract, in which the opponent made exactly two moves a morning. On 2026-11-13 the design changed to the farmer's stamina-and-money budget (buy, move, repair; see the Configuration Document). The prompt text inside `measure_morning.py` is kept exactly as measured, so its wording is the old one. Latency and cost carry over as estimates; validity and agent-equals-rule rates will be re-measured with the budget contract (Configuration Document C9).
+
+All runs send one realistic night-3 input (2 memory entries, 2 footprint areas, 1 changed gate, 1 empty pedestal) and ask for exactly two moves (the earlier contract), one line, and the inspected places. Calls go from my laptop, not yet from the Worker. Prices are list prices read on 2026-11-12 from the official pages (Anthropic pricing page; Vertex AI generative AI pricing page, global endpoint).
 
 ## Main result: v0.3 sweep (2026-11-12, 14:41 to 14:53 EST)
 
-20 calls per configuration (5 for Gemini 4 Argon and Carbon), timeout 60 s, six configurations at a time. Output schema v0.3: every field required, and `defense`, `to`, `inspected` limited to real estate ids. "Same as rule" counts calls whose two moves equal the rule-based neighbor's choice on this input (lamp to the post by the most-trampled area, lock the changed gate). Claude output tokens include thinking; Gemini reports thinking separately and bills it as output, which the cost columns include.
+20 calls per configuration (5 for Gemini 4 Argon and Carbon), timeout 60 s, six configurations at a time. Output schema v0.3: every field required, and `defense`, `to`, `inspected` limited to real map ids. "Same as rule" counts calls whose two moves equal the rule-based baseline's choice on this input (lamp to the post by the most-trampled area, lock the changed gate). Claude output tokens include thinking; Gemini reports thinking separately and bills it as output, which the cost columns include.
 
 | Provider | Model | Thinking | Valid / calls | Same as rule | p50 s | p95 s | max s | In tok | Out tok | Thinking tok (Gemini, separate) | $ / call | $ / 5-night session |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
@@ -43,7 +45,7 @@ Raw rows: [`results/v0.3-sweep/`](results/v0.3-sweep/). Rebuild the table with `
 
 - **Inside the 4 s budget (p95 under 4 s):** Claude Sonnet 5.5 with thinking off, low, or medium (p95 2.7 to 3.1 s); Claude Opus 5.5 low (3.0 s); Claude Haiku 5.5 off or low (1.8 to 3.5 s); Gemini 3.5 Flash-Lite minimal or low (1.75 s). Gemini 3.1 Pro, Gemini 3.8 Flash, and all Gemini 4 models have p95 between 9.5 and 30 s on this day; Gemini 4 Carbon timed out on 5 of 5 calls.
 - **Validity:** with schema v0.3 almost every configuration returns legal moves. The remaining failures are lines over 80 characters (Haiku most often) and one empty Gemini 3.1 Pro response.
-- **Deeper thinking copies the rule.** Opus 5.5 matches the rule-based neighbor on 18 to 20 of 20 calls at every effort level; Sonnet 5.5 matches it 14 of 20 at high effort and 0 of 20 at off, low, or medium.
+- **Deeper thinking copies the rule.** Opus 5.5 matches the rule-based baseline on 18 to 20 of 20 calls at every effort level; Sonnet 5.5 matches it 14 of 20 at high effort and 0 of 20 at off, low, or medium.
 - **"Different from the rule" is not yet "better."** Sonnet low still chose one move set on 17 of 20 calls (lock the east gate, dog to the orchard): different from the rule, but just as fixed on this input. Gemini 3.5 Flash-Lite varied most (7 distinct move sets) but once invented a detail ("my poor ceramic duck"). Whether the agent reads memory and fake trails better than the rule needs a designed set of trace sequences (Project Plan T13) and playtests, not this single input.
 - **Cost is small for every candidate:** $0.001 to $0.05 per five-night session for the configurations inside the latency budget.
 
@@ -66,7 +68,7 @@ Raw rows: [`results/v0.3-sweep/`](results/v0.3-sweep/). Rebuild the table with `
 Copy `.env.example` to `.env` (gitignored) and fill in the providers you use. Then either one configuration:
 
 ```bash
-uv run spike/measure_neighbor.py --provider anthropic --model claude-sonnet-5-5 --think off --calls 20 --price-in 2 --price-out 10
+uv run spike/measure_morning.py --provider anthropic --model claude-sonnet-5-5 --think off --calls 20 --price-in 2 --price-out 10
 ```
 
 or the whole sweep: `./spike/run_matrix.sh` (configurations and prices are listed in the script).

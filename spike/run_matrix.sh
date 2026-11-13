@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # AI-use disclosure: written by Claude (Claude Code) under Hao's direction.
-# Model x thinking-level sweep for the neighbor agent: 20 calls per configuration,
+# Model x thinking-level sweep for the farmer agent (earlier two-move contract): 20 calls per configuration,
 # 6 configurations at a time (calls within one configuration run one after another).
 # Prices: USD per 1M input / output tokens, list prices read on 2026-11-12.
 # Optional 6th column: calls for that configuration (Gemini 4 Argon/Carbon: 5, often timing out).
@@ -41,7 +41,7 @@ configs=(
 mkdir -p spike/results/logs
 printf '%s\n' "${configs[@]}" | xargs -P 6 -L 1 bash -c '
   provider=$0 model=$1 think=$2 pin=$3 pout=$4 n=${5:-'"$CALLS"'}
-  uv run -q spike/measure_neighbor.py --provider "$provider" --model "$model" \
+  uv run -q spike/measure_morning.py --provider "$provider" --model "$model" \
     --think "$think" --calls "$n" --timeout-s 60 --price-in "$pin" --price-out "$pout" \
     > "spike/results/logs/$model-$think.log" 2>&1 \
     && echo "done $model $think" || echo "FAILED $model $think"
