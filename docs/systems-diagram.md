@@ -24,17 +24,21 @@ flowchart LR
   end
   TX --> CTX
 
-  VAL{"Validator<br/>schema · legal ids · within budget<br/>no dog-hole safe zone · a route stays open<br/>line check · 4 s timeout"}
+  VAL{"Validator<br/>schema · legal ids · within budget<br/>no dog-hole safe zone · an open route (≤ 1 stamina) stays<br/>line check · 4 s timeout"}
   LLM --> VAL
-  FB["Fallback: Gemini Flash-Lite on a fast error,<br/>otherwise the rule-based farmer<br/>(also the scripted baseline)"]
+  FB["Fallback: Gemini Flash-Lite once, on a fast primary error,<br/>otherwise the rule-based farmer<br/>(also the scripted baseline; runs in the browser if the server is unreachable)"]
   VAL -- "invalid or late" --> FB
   FB --> APPLY
   VAL -- "valid" --> APPLY["Apply plan to world state"]
   APPLY --> WS
   APPLY --> LOG[("Trace log<br/>input, output, policy, latency, tokens")]
 
-  APPLY --> MORN["Feedback: morning sequence<br/>farmer walks to inspected traces, says his line,<br/>thinking beat with costs, caption names the kind of change<br/>(new positions NOT shown)"]
+  TX -- "morning starts" --> BEAT["Opening beat (about 3 s)<br/>farmer leaves the house;<br/>runs while the request is in flight"]
+  BEAT --> MORN
+  APPLY --> MORN["Feedback: morning sequence<br/>(after the beat and the plan are both ready)<br/>farmer walks to inspected traces, says his line,<br/>thinking beat with costs, caption names the kind of change<br/>(new positions NOT shown)"]
   MORN --> PV
 ```
+
+Implementation note: the night rules, trace extractor, context builder, validator, and rule-based farmer are all in the shared `core/` package, so the client and the Worker run the same code ([Technical plan](architecture.md), Section 4).
 
 What the farmer **never** receives: the player's path, position, dog hole used, stamina, strikes, remaining nights, fog memory, or intent. See [Configuration Document, Section A2](configuration.md#a2-world-state-and-what-the-agent-knows).
