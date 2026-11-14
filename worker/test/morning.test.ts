@@ -1,4 +1,5 @@
 // AI-use disclosure: Claude (Claude Code) wrote this file under my direction for M0 (T11a); the model is always a mock, no real model is called.
+// Codex added exhausted-budget and late-promise regression cases under Hao's direction.
 import { SELF, runInDurableObject } from 'cloudflare:test';
 import { env } from 'cloudflare:workers';
 import { PLACEHOLDER_RULE_LINE, ruleFarmer } from '@gnome-heist/core';
@@ -7,6 +8,7 @@ import { describe, expect, it } from 'vitest';
 import { MAP_VERSION } from '../src/farm.ts';
 import type { MorningResponse, StoredSession } from '../src/session.ts';
 import type { ModelPolicy } from '../src/failover.ts';
+import { decideMorning } from '../src/failover.ts';
 
 const nightResult = { night: 1, traces: [], changes: [], gnomeTaken: null, spotted: false };
 const morning = (session: string, morningId: string, expectedRevision: number, extra: Record<string, unknown> = {}) =>
@@ -92,6 +94,36 @@ describe('two sessions keep separate state', () => {
 
 describe('failover', () => {
   const timing = { cutoffMs: 200, fastFailMs: 80, minRemainingForSecondaryMs: 60 };
+
+  it('does not start a model call when request processing has exhausted the cutoff', async () => {
+    let calls = 0;
+    const primary: ModelPolicy = async () => {
+      calls++;
+      return { actions: [], line: 'Already too late.', inspected: [] };
+    };
+    const context: FarmerContext = { tracesToday: [], layout: [], stamina: 3, money: 3, memory: [] };
+    const decision = await decideMorning(context, { primary, secondary: null }, timing, () => 200, undefined, 0);
+    expect(decision.actedBy).toBe('rule');
+    expect(calls).toBe(0);
+  });
+
+  it.each(['primary', 'secondary'] as const)('discards a %s result at the cutoff even before its timer fires', async (which) => {
+    let clock = 0;
+    const logs: Record<string, unknown>[] = [];
+    const late: ModelPolicy = async () => {
+      clock = 200;
+      return { actions: [], line: 'Late result.', inspected: [] };
+    };
+    const fail: ModelPolicy = async () => { throw new Error('provider unavailable'); };
+    const context: FarmerContext = { tracesToday: [], layout: [], stamina: 3, money: 3, memory: [] };
+    const decision = await decideMorning(context, {
+      primary: which === 'primary' ? late : fail,
+      secondary: which === 'secondary' ? late : null,
+    }, timing, () => clock, (entry) => logs.push(entry), 0);
+    expect(decision.actedBy).toBe('rule');
+    expect(decision.attempts.at(-1)).toMatchObject({ policy: which, outcome: 'timeout' });
+    expect(logs).toContainEqual({ event: 'late_model_result_ignored', policy: which });
+  });
 
   it('an injected timeout falls back to the rule plan, and the late model plan is not committed', async () => {
     const S = 'session-timeout-1';

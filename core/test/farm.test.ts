@@ -1,4 +1,5 @@
 // AI-use disclosure: Claude (Claude Code) wrote this file under my direction for M0 (T7).
+// Codex added unsupported tile-size regression cases under Hao's direction.
 
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
@@ -55,6 +56,15 @@ describe('loadFarm rejects maps outside the Tiled subset', () => {
   it.each<[string, (m: Record<string, any>) => void, RegExp]>([
     ['isometric', (m) => (m.orientation = 'isometric'), /orthogonal/],
     ['infinite', (m) => (m.infinite = true), /finite/],
+    ['unsupported tile width', (m) => {
+      m.tilewidth = 32;
+      for (const l of m.layers) for (const o of l.objects ?? []) { o.x *= 2; o.width *= 2; }
+    }, /16x16/],
+    ['unsupported tile height', (m) => {
+      m.tileheight = 32;
+      for (const l of m.layers) for (const o of l.objects ?? []) { o.y *= 2; o.height *= 2; }
+    }, /16x16/],
+    ['unsupported tileset size', (m) => (m.tilesets[0].tilewidth = 32), /16x16/],
     ['external tileset', (m) => (m.tilesets = [{ firstgid: 1, source: 'greybox.tsx' }]), /external/],
     ['compressed data', (m) => Object.assign(layer(m, 'ground'), { encoding: 'base64', compression: 'zlib' }), /uncompressed/],
     ['unknown layer', (m) => m.layers.push({ name: 'patrols', type: 'objectgroup', objects: [] }), /unsupported layer/],

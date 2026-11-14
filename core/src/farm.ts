@@ -1,4 +1,5 @@
 // AI-use disclosure: Claude (Claude Code) wrote this file under my direction for M0 (T7); it implements the Tiled subset in docs/architecture.md Section 5.
+// Codex added the rendering-grid size checks under Hao's direction after the M0 review.
 //
 // `loadFarm`: Tiled JSON -> validated FarmDef. M0 checks the file format and
 // ids; the GDD checks (no slot in a safe zone, an open route at the start) are
@@ -102,6 +103,7 @@ export function loadFarm(tiledJson: Json): FarmDef {
   const H = height as number;
   const TW = tw as number;
   const TH = th as number;
+  if (TW !== 16 || TH !== 16) problems.push('map tiles must be 16x16 pixels');
 
   // Tilesets: embedded only, each tile's ground kind as a custom property.
   const kindByGid = new Map<number, GroundKind>();
@@ -117,6 +119,7 @@ export function loadFarm(tiledJson: Json): FarmDef {
       continue;
     }
     if (typeof ts['image'] !== 'string') problems.push(`tileset ${i}: needs a single image`);
+    if (ts['tilewidth'] !== 16 || ts['tileheight'] !== 16) problems.push(`tileset ${i}: tiles must be 16x16 pixels`);
     const firstgid = ts['firstgid'];
     if (typeof firstgid !== 'number') {
       problems.push(`tileset ${i}: missing firstgid`);

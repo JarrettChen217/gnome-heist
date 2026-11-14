@@ -1,4 +1,5 @@
 AI-use disclosure: Claude (Claude Code) wrote this README under my direction for M0 (T7, T11a).
+Codex updated the test instructions under Hao's direction after the M0 review.
 
 # Running Gnome Heist (M0 greybox)
 
@@ -8,7 +9,7 @@ Everything runs with project-local tools; nothing is installed globally.
 nvm use                # Node 24.22.3 from .nvmrc (does not change the default Node)
 npm ci                 # exact versions from package-lock.json
 npm run typecheck      # strict tsc: core (no DOM, no Node), core tests, game, worker
-npm test               # core in Node; worker in the Workers runtime (workerd)
+npm test               # core and client placement in Node; worker in the Workers runtime (workerd)
 npm run build          # Vite build of game/ into game/dist, then a wrangler dry-run bundle
 npm run dev            # build the client, then `wrangler dev`: http://127.0.0.1:8787
 ```

@@ -1,8 +1,10 @@
 // AI-use disclosure: Claude (Claude Code) wrote this file under my direction for M0 (T7); the fog here is an engine check, not the T9 player view.
+// Codex fixed rectangular fence placement under Hao's direction after the M0 review.
 import * as Phaser from 'phaser';
 import { loadFarm, newSession, startNight, tick } from '@gnome-heist/core';
 import type { FarmDef, FarmObject, NightState } from '@gnome-heist/core';
 import { MIN_CAMERA_ZOOM, DEBUG_FOG_RADIUS_TILES, STEP_SECONDS, TILE_PX } from '../constants.ts';
+import { fenceSegments } from '../fence.ts';
 
 /** One drawn farm object, with a faded "last seen" copy for the fog check. */
 interface Prop {
@@ -109,7 +111,7 @@ export class NightScene extends Phaser.Scene {
       if (o.padlocked) add(o, 'padlock', 0);
     });
     f.fences.forEach((o) => {
-      for (let y = o.rect.y; y < o.rect.y + o.rect.h; y++) add({ id: o.id, rect: { x: o.rect.x, y, w: 1, h: 1 } }, 'fence');
+      fenceSegments(o).forEach((segment) => add(segment, 'fence'));
     });
   }
 

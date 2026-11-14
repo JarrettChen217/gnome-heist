@@ -1,4 +1,5 @@
 // AI-use disclosure: Claude (Claude Code) wrote this file under my direction for M0 (T11a); it follows the one-deadline failover in Configuration Document A6. No real model is wired in M0.
+// Codex added absolute-deadline guards under Hao's direction after the M0 review.
 import { ruleFarmer, validatePlan } from '@gnome-heist/core';
 import type { FarmerContext, Plan } from '@gnome-heist/core';
 
@@ -84,9 +85,15 @@ export async function decideMorning(
 
   const tryPolicy = async (which: 'primary' | 'secondary', policy: ModelPolicy): Promise<Plan | 'fast-fail' | null> => {
     const t0 = now();
-    const r = await attempt(policy, context, left(), () => log({ event: 'late_model_result_ignored', policy: which }));
+    const remaining = left();
+    // Parsing and storage reads share this deadline with the model calls.
+    if (remaining <= 0) return null;
+    const late = () => log({ event: 'late_model_result_ignored', policy: which });
+    const r = await attempt(policy, context, remaining, late);
     const ms = now() - t0;
-    if (r.kind === 'timeout') {
+    // A resolved promise can win the race before an overdue timer is dispatched.
+    if (r.kind === 'timeout' || left() <= 0) {
+      if (r.kind === 'ok') late();
       attempts.push({ policy: which, outcome: 'timeout', ms });
       return null;
     }

@@ -1,18 +1,19 @@
-AI-use disclosure: Claude (Claude Code) maintains this handoff under Hao's direction; Codex recorded the authorized moved-padlock clarification. Each snapshot is written from repository and session evidence.
+AI-use disclosure: Claude (Claude Code) and Codex maintain this handoff under Hao's direction. Codex recorded the M0 review fixes and verification below from repository and session evidence.
 
 # Gnome Heist handoff
 
 Keep this file short: replace the snapshot each time, and update only your own row in Active work. Durable detail belongs in commits, PRs, and the docs.
 
-## Snapshot (2026-11-13, Claude, M0)
+## Snapshot (2026-11-13, Codex, M0 review fixes)
 
 - **Stage:** G1 Concept. Post due Sun Nov 15, 11:59 p.m. America/New_York (CourseWorks). Braintrust replies Nov 18 (CourseWorks) or Nov 19 (G1 page); the sources disagree.
-- **M0 (T7, T11a):** built on branch `feat/m0-skeleton` (commits `4c04c54`, `b6f2ffd`, then this handoff); not pushed, no PR. Node 24.22.3 installed with nvm with Hao's OK (default Node stays 18). Exact versions: Phaser 4.2.1, Vite 8.3.8, TypeScript 7.0.2, Vitest 4.1.12, Wrangler 4.162.0, `@cloudflare/vitest-plugin` 1.8.2 (the requested `vitest-pool-workers` is deprecated; the plugin is its new name and what the technical plan named).
-- **Verified locally at `b6f2ffd`:** `npm ci`, `npm run typecheck`, `npm test` (104 tests: core in Node, worker in workerd), `npm run build` (Vite + `wrangler deploy --dry-run`). Mutation checks: removing the cut-off or sharing one Durable Object makes the worker tests fail. In Chrome via `wrangler dev` (at `4c04c54`): Phaser 4.2.1 on WebGL, no console errors; every Section 7 engine check passed, so no switch to 3.90.0 (details in Technical plan Section 7). The client's boot log of the map version (added in `b6f2ffd`) was not re-checked in the browser.
-- **Reviewed:** `gnome-reviewer` (read-only) found no blocker; low findings fixed in `b6f2ffd`.
-- **Not verified:** deploy (preview and deployed URL), CI on GitHub. Both need Hao: deploy needs his OK and `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` in `.env`; CI runs once the branch is pushed and a PR opened.
+- **Git checked directly:** original M0 commits `4c04c54`, `b6f2ffd`, `d62c884` are committed locally on `feat/m0-skeleton`; the worktree was clean before these authorized fixes. `git ls-remote --heads origin` found only `main` at `d8bb2f3` and `docs/build-plan-phaser-core` at `2a5b012`; the M0 branch is not pushed. This session does not push, open a PR, deploy, or call real models.
+- **Review fixes after `d62c884`:** skip model calls when the absolute cut-off is exhausted; reject late promise results even if the timer has not fired; draw every cell of rectangular fences; reject map and tileset tiles other than 16 x 16 pixels. Client placement tests now run in Node and are included in strict typechecking. No GDD rules or dependency versions changed.
+- **Fresh local verification of the fix tree:** `npm run typecheck`, `npm test` (111 passing tests: core and client placement in Node, Worker in workerd), `npm run build` (Vite + Wrangler dry-run), and `git diff --check` passed. All 7 new regression cases failed against the old behavior before the fixes. Independent read-only reviewer found no blocker or material regression.
+- **Earlier evidence:** `npm ci` passed at `b6f2ffd`; Chrome engine checks passed at `4c04c54` (Technical plan Section 7). Browser rendering was not rechecked in this fix session, including the new boot log and widened-fence rendering. Node remains pinned at 24.22.3; the default Node remains 18.
+- **Still unverified:** deployed preview/API and GitHub CI. Deploy requires Hao's authorization and Cloudflare credentials; push/PR also require his authorization.
 - **G1 deck:** Google Slides "Gnome Heist - G1 Concept Pitch" (13 slides) and recording script v2 in Hao's OneDrive G1 folder; unchanged this session. A greybox clip for the recording is now possible from `npm run dev`.
-- **Docs:** Technical plan Section 7 now records versions and engine-check results; README points to `game/README.md`. GDD and Configuration Document unchanged.
+- **Docs:** Technical plan Section 5 now states the supported 16 x 16 rendering grid; game README includes client placement tests. GDD and Configuration Document unchanged.
 
 ## Active work
 
@@ -22,6 +23,7 @@ Keep this file short: replace the snapshot each time, and update only your own r
 | Build-plan docs | Claude, for Hao | `docs/build-plan-phaser-core` | `docs/`, `CLAUDE.md`, `README.md`, `spike/README.md` | Both review rounds applied; merged into `main` 2026-11-13 |
 | Moved-padlock clarification | Codex, for Hao | `docs/build-plan-phaser-core` | `docs/gdd.md`, `docs/configuration.md`, `docs/HANDOFF.md` | Authorized clarification applied over `4a183cb`; committed and merged 2026-11-13; no game tests or model calls run |
 | M0 skeleton and Worker skeleton (T7, T11a) | Claude, for Hao | `feat/m0-skeleton` | `core/`, `game/`, `worker/`, `maps/`, `.github/`, root config, `docs/architecture.md`, `docs/project-plan.md` | Built, checked locally, reviewed; awaiting Hao: deploy, push/PR, acceptance |
+| M0 review fixes | Codex, for Hao | `feat/m0-skeleton` | `core/`, `game/`, `worker/`, `vitest.config.ts`, `docs/architecture.md`, `docs/HANDOFF.md` | Three reported defects fixed; 111 tests, strict typecheck and build passed; independent review found no material issues; local commit only |
 
 ## Before posting (Hao)
 
@@ -42,4 +44,4 @@ Keep this file short: replace the snapshot each time, and update only your own r
 
 ## Next action
 
-Hao decides on M0: deploy (with the Cloudflare token in `.env`), push `feat/m0-skeleton` and open a PR so CI runs, then accept or not. After that, T8 (night rules) on a new branch.
+With Hao's authorization, push `feat/m0-skeleton` and open a PR to run CI; deploy with his Cloudflare credentials and verify the preview and morning API. Recheck the browser boot log and fence rendering. Full M0 acceptance still needs deployed evidence and CI; T8 (night rules) follows on a new branch.
