@@ -45,6 +45,10 @@ Every rule in the GDD and Configuration Document carries an origin label: **[Hao
 - `core/`: engine-free TypeScript rules shared by the client, the Worker, and the tests. Imports no Phaser, DOM, network, or clock.
 - `game/`: Phaser + TypeScript client (Vite). `worker/`: Cloudflare Worker + Durable Object for the farmer. `maps/`: Tiled maps.
 - These four are created at M0 (`docs/architecture.md`, Section 8).
+
+## Engine notes
+
+The client uses **Phaser 4.2.1**; most examples online are Phaser 3. Before writing rendering code, read the Phaser 4 list in `docs/architecture.md`, Section 7 (no `BitmapMask`/`setMask`, FX, custom pipelines, `setTintFill`, `Geom.Point`, `Struct.Set`/`Struct.Map`; `Math.TAU` is 2π; set `roundPixels` explicitly). Draw fog and danger overlays per tile, without masks or render textures.
 - `.claude/skills/`: `gnome-resume`, `gnome-handoff`. `.claude/agents/`: `gnome-reviewer`.
 - Loose notes, prompts, and pitch drafts live outside the repo in Hao's OneDrive folder `AI Pract Building Games/Final Game/`.
 

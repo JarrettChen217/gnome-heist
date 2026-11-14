@@ -26,14 +26,14 @@ flowchart LR
 
   VAL{"Validator<br/>schema · legal ids · within budget<br/>no dog-hole safe zone · a route stays open<br/>line check · 4 s timeout"}
   LLM --> VAL
-  FB["Fallback: Gemini Flash-Lite on a fast error,<br/>otherwise the rule-based farmer<br/>(also the scripted baseline)"]
+  FB["Fallback: Gemini Flash-Lite once, on a fast primary error,<br/>otherwise the rule-based farmer<br/>(also the scripted baseline; runs in the browser if the server is unreachable)"]
   VAL -- "invalid or late" --> FB
   FB --> APPLY
   VAL -- "valid" --> APPLY["Apply plan to world state"]
   APPLY --> WS
   APPLY --> LOG[("Trace log<br/>input, output, policy, latency, tokens")]
 
-  APPLY --> MORN["Feedback: morning sequence<br/>farmer walks to inspected traces, says his line,<br/>thinking beat with costs, caption names the kind of change<br/>(new positions NOT shown)"]
+  APPLY --> MORN["Feedback: morning sequence<br/>opening beat covers the call; farmer walks to inspected traces, says his line,<br/>thinking beat with costs, caption names the kind of change<br/>(new positions NOT shown)"]
   MORN --> PV
 ```
 

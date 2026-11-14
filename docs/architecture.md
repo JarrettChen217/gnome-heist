@@ -1,11 +1,11 @@
-AI-use disclosure: Claude (Claude Code) drafted this technical plan from my decisions and its own proposals; every item is labeled with who decided it.
+AI-use disclosure: Claude (Claude Code) drafted this technical plan from my decisions and its own proposals, revised after an independent review by another coding agent (Codex); every item is labeled with who decided it.
 
 # Gnome Heist: Technical plan
 
 | | |
 | --- | --- |
 | Gate | G1 Concept (Initial version) |
-| Version | 0.1, 2026-11-13 |
+| Version | 0.2, 2026-11-13 (after the build-plan review) |
 | Accountable owner | Hao, as Tech Lead, with Creative Director approval |
 | Companion documents | [GDD](gdd.md) · [Configuration Document](configuration.md) · [Systems diagram](systems-diagram.md) · [Project Plan](project-plan.md) |
 
@@ -16,25 +16,25 @@ AI-use disclosure: Claude (Claude Code) drafted this technical plan from my deci
 | Decision | Origin |
 | --- | --- |
 | Build the real game from the start. No scripted mock-up demo: the G1 pitch uses the deck, plus a short clip of the real greybox build only if one is playable by then. | Hao, on agent proposal, 2026-11-13 |
-| Browser game in **TypeScript + Phaser**. | Hao, on agent proposal (2026-11-12; reconfirmed for the full game 2026-11-13) |
+| Browser game in **TypeScript + Phaser 4.2.1**. If the M0 checks (Section 7) find a blocker, drop to Phaser 3.90.0 during M0. | Hao, on agent proposal, 2026-11-13 |
 | All game rules live in one **engine-free TypeScript package, `core/`**, used unchanged by the Phaser client, the Worker, and the tests. | Hao, on agent proposal, 2026-11-13 |
-| Farm maps are authored in the **Tiled** map editor and stored as Tiled JSON. | Hao, on agent proposal, 2026-11-13 |
-| The farmer runs in a **Cloudflare Worker** with one Durable Object per play session, calling models through the Vercel AI SDK (Configuration Document A6). | Hao, on agent proposal, 2026-11-12 |
-| Exact versions (Section 7) and the open technical questions (Section 9). | Proposed |
+| Farm maps are authored in the **Tiled** map editor, in a fixed subset of Tiled JSON (Section 5). | Hao, on agent proposal, 2026-11-13 |
+| The farmer runs in a **Cloudflare Worker** with one Durable Object per play session, calling models through the Vercel AI SDK (Configuration Document A6). The client is served as static assets by the same Worker, on the same origin as the API. | Hao, on agent proposal, 2026-11-12 and 2026-11-13 |
+| The morning protocol, the end-of-night order, and the offline rule (Section 4). | Hao, on agent proposal, 2026-11-13 |
 
 ## 2. Why Phaser and TypeScript
 
-The game is a small tile-based 2D stealth game that must be playable from a link (playtests, staff review) and must call a model from a server. The deciding factor is that the same rules must run in two places: the client judges the night (stamina, gates, footprints, spotting), and the Worker judges the farmer's plan (budget, safe zones, reachability). One language for both means one implementation and one test suite.
+The game is a small tile-based 2D stealth game that must be playable from a link (playtests, staff review) and must call a model from a server. The deciding factor is that the same rules run in two places: the client judges the night (stamina, gates, footprints, spotting), and the Worker judges the farmer's plan (budget, safe zones, reachability). In one language, both use one implementation and one test suite.
 
 | Criterion | Phaser + TypeScript | Godot 4 | Unity |
 | --- | --- | --- | --- |
-| Rules shared with the Worker | Same code, same tests | Rules written twice (GDScript and TypeScript) | Written twice (C# and TypeScript) |
+| Rules shared with the Worker | Same code, same tests | Possible through `JavaScriptBridge` in web builds, with a bridge and packaging boundary to maintain; otherwise written twice | Written twice (C# and TypeScript) |
 | Play from a link | Small static build | Web export works, larger download, threading options to configure | Heavy WebGL build, slow iteration |
 | Changes made and reviewed by coding agents | Plain code, readable diffs | Scenes are text files; workable | Editor-bound assets; hard to review |
 | 2D lighting and fog | Written by us; tile-based ranges are enough here | Built in | Built in |
 | Map editing | Loads Tiled maps natively | Built-in editor | Built-in editor |
 
-Rejected: **Godot 4** (its strength, lighting, is not needed because lamp and dog ranges are whole tiles; the duplicated rules are a permanent cost); **Unity** (build weight and editor dependence); **PixiJS** (a renderer only: tilemaps, cameras and input would be ours to write); **Pygame** (web export is not mature). **Excalibur.js** is a credible TypeScript alternative with less documentation and fewer examples than Phaser.
+Also considered: **Excalibur.js** (TypeScript with an official Tiled plugin; a credible alternative with no blocking gap found, but no reason to switch); **PixiJS** (mainly a renderer and scene graph: tilemaps, cameras, and game structure would be ours to assemble); **Pygame** (web export is not mature). For this schedule, Godot's built-in lighting does not outweigh the bridge, because lamp and dog ranges are whole tiles.
 
 Because rules live in `core/`, the engine choice is reversible: replacing Phaser means rewriting `game/` only.
 
@@ -42,60 +42,99 @@ Because rules live in `core/`, the engine choice is reversible: replacing Phaser
 
 ```
 gnome-heist/
-  core/     engine-free rules: map model, world state, night actions, stamina, traces,
-            fog memory, farmer context, plan validator, reachability, rule-based farmer
+  core/     engine-free rules: map model, session and night state, timers, stamina, detection,
+            traces, player view, farmer context, plan validator, reachability, rule-based farmer
   game/     Phaser client: scenes, rendering, input, camera, HUD, audio; calls core/
-  worker/   Cloudflare Worker + Durable Object: model call, failover, timeout, logging; calls core/
+  worker/   Cloudflare Worker + Durable Object: morning endpoint, model call, failover, logging,
+            static assets for game/; calls core/
   maps/     Tiled maps (.tmj) and tilesets
   docs/     design and planning documents
   spike/    model measurements (Python, uv)
 ```
 
-One npm workspace. **Dependency rule:** `core/` imports nothing from Phaser, the DOM, the network, or the clock; randomness comes from a seeded generator passed in. `game/` and `worker/` depend on `core/`, never on each other. [Proposed]
+One npm workspace. **Dependency rule:** `core/` imports nothing from Phaser, the DOM, the network, or the clock; time arrives as an explicit `dt`, and randomness comes from a seeded generator passed in. `game/` and `worker/` depend on `core/`, never on each other. [Hao, on agent proposal]
 
-## 4. The `core/` contract [Proposed]
+## 4. The `core/` contract [Hao, on agent proposal]
 
-The names are placeholders; the boundaries are the point.
+The function names are placeholders; the transitions and boundaries are the point. Every rule transition is in `core/`: Phaser only turns key presses into inputs and interpolates drawing, and the Worker only stores state and calls models.
 
-| Function | Input → output | Used by |
-| --- | --- | --- |
-| `loadFarm(tiledJson)` | Tiled JSON → validated `FarmDef` (rejects maps that break the GDD's rules, such as a slot inside a safe zone or no open route) | game, worker, tests |
-| `applyNightAction(state, action)` | `NightState` + move / interact / end night → new state + events | game, tests |
-| `extractTraces(state)` | end-of-night state → `TraceList` (GDD 5.6) | game, tests |
-| `buildFarmerContext(farmerState, traces)` | → `FarmerContext`: the only object the farmer receives (Configuration Document A2) | worker, tests |
-| `validatePlan(context, plan)` | → accepted plan, or the list of violated rules (A7) | worker, game (offline), tests |
-| `ruleFarmer(context)` | → plan; deterministic baseline and fallback (A9) | worker, game (offline), tests |
-| `applyPlan(farmerState, plan)` | → new layout, budget, memory | worker, game, tests |
+### 4.1 Transitions
 
-The knowledge boundary is enforced by type: `FarmerContext` is built only from the trace list, the farmer's own layout and budget, and his memory, so the player's path, position, stamina, and fog memory cannot reach the model by accident. A test asserts this.
+| Transition | Input → output |
+| --- | --- |
+| `loadFarm(tiledJson)` | Tiled JSON → validated `FarmDef` with a map version hash. Rejects maps that break the GDD (a slot inside a safe zone, no open route at the start, duplicate ids, unsupported Tiled features). |
+| `newSession(farm, seed)` | → `SessionState`: night 1, player and farmer budgets, the farmer's starting layout, empty memory. |
+| `startNight(session)` | → `NightState`: player at a dog hole, stamina refilled, fog memory carried over. |
+| `tick(night, input, dt)` | → new night state + events. Owns legal movement and collision, hold-E timers, stamina spending, the red prompt, the self-lock check, footprints, and detection. |
+| `endNight(night)` | → `NightResult`: the trace list (GDD 5.6) plus the final state of every changed gate, padlock, fence, and pedestal, the gnome taken, and a strike if spotted. |
+| `resolveNight(session, nightResult)` | Applies the end-of-night order (Section 4.3) → new session state, and either a terminal result or a morning to run. |
+| `buildFarmerContext(session)` | → `FarmerContext` (Section 4.2). |
+| `validatePlan(context, plan)` | → accepted plan, or the list of violated rules (Configuration Document A7). Simulates the plan with the same function that commits it. |
+| `ruleFarmer(context)` | → plan: the deterministic baseline and fallback (A9). Its output also goes through `validatePlan`. |
+| `commitPlan(session, acceptedPlan)` | → new layout, budget, and memory. Accepts only a validated plan. |
+| `projectPlayerView(session, night)` | → `PlayerView` (Section 4.4). |
 
-**Who owns which state [Proposed; see TQ2].** The client owns the night (single-player, so cheating is not a concern). The Durable Object owns the farmer's side: layout, budget, memory, and the morning log. At the end of a night the client sends the night result (trace list, gnome taken, strike); the Worker returns the validated plan and the new layout. If the Worker cannot be reached in time, the client runs `ruleFarmer` from `core/` locally, so the game stays playable offline and the forced-timeout fallback has a second line.
+### 4.2 The farmer's knowledge boundary
+
+`buildFarmerContext` builds a **new object from an explicit allowlist** of fields: today's traces, his own layout, his stamina and money, the static farm slots, and his memory. It never spreads or forwards a larger object. Memory summaries are built only from earlier filtered trace lists and committed plans. A TypeScript type annotation alone does not enforce this, because extra fields survive structural typing.
+
+Tests check the **serialized request body that would be sent to the model**: two sessions whose permitted inputs are equal but whose hidden state differs (player path, position, stamina, strikes, fog memory, action log) must produce byte-identical request bodies. This guarantees that hidden data is not sent. It cannot stop the model from inferring a route from footprints, or saying something wrong in its line; those stay in the evaluation (Configuration Document A8).
+
+### 4.3 State ownership, the morning protocol, and the end-of-night order
+
+- **Ownership.** The client owns the night; the game is single-player, so the trace list from the client is trusted. The Durable Object owns the farmer's side: layout, budget, memory, revision number, and the morning log. The client also keeps its own action log for replay and debugging.
+- **End-of-night order** (inside `resolveNight`): end the night → if spotted, the carried gnome returns to its pedestal and a strike is recorded → merge the night's final changes (gates, padlocks, fences, pedestals) into the farm → check for the end of the session (last gnome taken, third strike, or night 5 over) → only if the session continues, refill the farmer's budget and start a morning. A finished session runs no morning and calls no model.
+- **Morning request.** The client sends `POST /session/{id}/morning` with `morningId`, `expectedRevision`, `mapVersion`, and the `NightResult`. The Durable Object:
+  1. returns the stored result unchanged if this `morningId` was already committed (a retried request never charges, refills, or calls twice);
+  2. rejects a request whose `expectedRevision` or `mapVersion` does not match;
+  3. records the morning as pending before any model call, because a Durable Object can interleave other requests while it awaits an outside `fetch()`;
+  4. runs the failover rule (A6), validates, and commits only if the revision is still the expected one; then returns the plan, the new layout, and the new revision.
+- **Offline rule.** If the client gets no answer in time (network timeout about 6 s, above the Worker's 4 s budget), it runs `ruleFarmer` from `core/` locally and **switches the rest of this session to local rule mode**: later online responses for the session are ignored, and the log records the mode change. Reconciling a local morning back into the Durable Object is out of scope for v1.
+
+### 4.4 The player's view
+
+`projectPlayerView` gives the client everything it may draw: tiles in current sight show the real state; explored tiles outside sight show the last-seen snapshot, with defenses tagged by the night they were seen; unexplored tiles are hidden. The danger overlay (lit tiles, the window's sight line, the dog's radius), interaction prompts, and the full-map view are all drawn from this projection, so a moved lamp's light does not give the move away. Detection still uses the real state. Tests cover a defense that was moved, added, or removed while out of sight. The goal is that the normal UI follows GDD 5.3; hiding state from someone reading memory in DevTools is not.
 
 ## 5. Maps in Tiled [Hao, on agent proposal]
 
-- Tile layers: ground (soft, stone, blocked), decoration.
-- Object layers with custom properties: `dogHoles`, `pedestals`, `gates` (padlocked or not), `fences`, `lampPosts`, `doghouseSpots`, `bushes`, `windowSight`.
-- Phaser renders the tile layers; `core/loadFarm` reads the same file for the rules, so the map has one source.
-- Tiled is GPL-licensed as an editor; the map files are our own work. Recorded in `CREDITS.md` at M0.
+Supported subset; `loadFarm` rejects anything else:
 
-## 6. Client, deployment, tests [Proposed]
+- Orthogonal orientation, finite map, uncompressed tile arrays, embedded tilesets; every object aligned to whole tiles.
+- Fixed layer names. Tile layers: `ground` (property `kind`: `soft`, `stone`, or `blocked`), `decoration`. Object layers: `dogHoles`, `pedestals`, `gates` (`padlocked` true or false), `fences`, `lampPosts`, `doghouseSpots`, `bushes`, `windowSight`, and `areas` (named footprint areas, which the farmer's trace list and the schema use as ids).
+- Every object has a unique, stable string `id` property; coordinates convert to tiles one way, in one shared function.
+- The Worker imports the map JSON at build time, not from a file system at run time. The client and the Worker both log the map version hash, and a morning request with the wrong hash is rejected.
+- Phaser renders the tile layers; `core/loadFarm` reads the same file for the rules.
+- Tiled is GPL-licensed as an editor; the map files are my own work. Recorded in `CREDITS.md` at M0.
 
-- **Scenes:** `Boot` (load), `Night` (play), `Morning` (the farmer's sequence, GDD 5.8), `Hud` (stamina, strikes, night). Angled top-down view with depth sorted by y; camera follows the player.
-- **Art:** greybox first. The hand-drawn ink look (GDD 2) comes in the M4 art pass; its technique (textures drawn ahead of time or generated at load) is TQ5.
-- **Deployment:** static client on Cloudflare (Pages, or Worker static assets; TQ3); the Worker as its own service; keys only in Worker secrets.
-- **Tests:** Vitest for `core/` (one test per rule row in GDD 5.4, 5.7 and 5.2; validator fixtures; reachability; the knowledge-boundary test); Worker tests with the model mocked, including an injected timeout; a browser smoke test later.
-- **CI:** GitHub Actions runs typecheck, tests, and build on every PR.
+## 6. Client, deployment, tests [Hao, on agent proposal]
 
-## 7. Versions [Proposed, confirm and pin at M0]
+- **Scenes:** `Boot` (load), `Night` (play), `Morning` (the farmer's sequence, GDD 5.8), `Hud` (stamina, strikes, night). Angled top-down view; each character and object sets its depth from the y of its feet (tile layers do not interleave with sprites on their own, so tall objects are sprites). Camera follows the player.
+- **Fog and danger overlays** are drawn per tile from `PlayerView` (a tile layer or simple rectangles), without masks or render textures, which keeps them away from the parts of Phaser 4 that changed most.
+- **Art:** greybox first. The hand-drawn ink look (GDD 2) comes in the M4 art pass, mainly as textures drawn ahead of time, with optional seeded decorative noise. No custom shader on the critical path. The art pass replaces visuals only; collision, sight, and map semantics do not change.
+- **Deployment:** one Worker serves the client's static assets and the API on the same origin; the code stays in separate `game/` and `worker/` packages. Keys only in Worker secrets.
+- **Tests:** plain Vitest for `core/` (one test per rule row in GDD 5.2, 5.4, 5.6, 5.7 and 5.11; validator fixtures; reachability; the knowledge-boundary test; the end-of-night order; `PlayerView`). Worker tests run in the Workers runtime through Cloudflare's Vitest integration (`@cloudflare/vitest-plugin`) from the first Durable Object onward, with the model mocked: duplicate `morningId`, stale revision, two sessions, injected timeout, late result.
+- **CI:** GitHub Actions runs `tsc` in strict mode, tests, and build on every PR.
 
-Read from the npm registry on 2026-11-13.
+## 7. Versions and Phaser 4 notes [Hao, on agent proposal]
 
-| Tool | Candidate | Note |
+Every dependency is pinned to an exact version at M0; nothing is left at `latest`.
+
+| Tool | Version | Note |
 | --- | --- | --- |
-| Phaser | **4.2.1** (2026-07-09) | Phaser 4 stable since 4.0.0 (2026-04-10). Fallback: 3.90.0 (2025-05-23), the last 3.x release, with more examples online. See TQ1. |
-| Vite | 8.x (8.3.8 latest) | Needs Node ^20.19 or ≥ 22.12. |
-| Wrangler | latest | Needs Node ≥ 22.12. The development Mac has Node 18 and 20 only, so M0 installs a Node 22 or 24 LTS and pins it in `.nvmrc` (with Hao's OK). |
-| TypeScript, Vitest, Vercel AI SDK | pinned at M0 | — |
+| Phaser | **4.2.1** (2026-07-09) | Release candidates from 2025-04, stable since 4.0.0 (2026-04-10), then 4.1.0 and 4.2.0. Fallback: 3.90.0 (2025-05-23), the last 3.x. |
+| Node | **24 LTS**, exact version in `.nvmrc` | Current Wrangler needs Node ≥ 22.12; Vite 8 needs ^20.19 or ≥ 22.12. The same version locally, in CI, and for deploys. Installing it on the development Mac needs Hao's OK. |
+| Vite | 8.x, exact version at M0 | — |
+| Wrangler, TypeScript, Vitest, `@cloudflare/vitest-plugin`, `ai` and its provider packages | exact compatible versions at M0 | For Vertex in a Worker, the edge entry point `@ai-sdk/google-vertex/edge` with credentials from Worker bindings. |
+
+**Phaser 4 for coding agents.** Most examples online are Phaser 3. The v3-to-v4 migration guide ([`changelog/v4/4.0/MIGRATION-GUIDE.md`](https://github.com/phaserjs/phaser/blob/v4.2.1/changelog/v4/4.0/MIGRATION-GUIDE.md)) says the standard API (sprites, text, tilemaps, camera scroll and zoom) should work unchanged; the breaking changes are in rendering. Do not use these v3 forms:
+
+- `setMask` with a `BitmapMask` (removed; masks are Filters now), FX such as Bloom or Shine, custom pipelines, `setPipeline('Light2D')` (now `setLighting(true)`);
+- `setTintFill` (now `setTint(c).setTintMode(Phaser.TintModes.FILL)`);
+- `Geom.Point` (now `Vector2`), `Struct.Set` and `Struct.Map` (now native `Set` and `Map`);
+- `Math.TAU` meaning π/2 (in v4 it is 2π; `tsc` will not catch this);
+- relying on `roundPixels` being on (the default is now off; set it explicitly).
+
+`tsc` catches most removed APIs. **M0 acceptance for the engine:** the greybox farm loads from Tiled; a per-tile fog overlay and a last-seen snapshot draw correctly; a sprite passes behind and in front of a tall object by y; the camera follows; HUD text renders; the window resizes. A blocker in any of these during M0 means switching to 3.90.0 then, while it is cheap.
 
 ## 8. Milestones [Hao, on agent proposal]
 
@@ -103,20 +142,21 @@ Each milestone ends in something playable or testable. Target dates are my own, 
 
 | Milestone | Contents | Tasks | Target |
 | --- | --- | --- | --- |
-| M0 Skeleton | Workspace, `core/` types and interfaces, Tiled format and a greybox farm, Phaser boots and draws it, CI, preview deploy | T7 | Nov 16 |
-| M1 Night | Movement, dog holes and safe zones, gates, padlocks, fences, gnomes, stamina and red prompt, dangers on the ground, spotting, end night, trace list | T8 | Nov 18 |
-| M2 Full game on the rule-based farmer | Fog with "last seen", morning sequence, budget, five nights, strikes, win and loss | T9, T10, T12 | Nov 21 |
-| M3 Model farmer | Worker, one Durable Object per session, validator, failover, forced-timeout fallback, logging; re-measure with the budget contract (C9) | T11 | Nov 22 (checkpoint Nov 23) |
-| M4 Polish | Ink art pass, farmer lines, sound cues, morning staging | after T12 | before G2/G3 (Nov 28) |
+| M0 Skeleton | Workspace, Node pinned, `core/` types and transitions stubbed, Tiled subset and a greybox farm, Phaser 4 boots and passes the engine checks (Section 7), CI, and a **walking skeleton** of the Worker: deployed, one Durable Object per session, the morning endpoint answering with `ruleFarmer`, two isolated sessions, an injected timeout falling back | T7, T11a | Nov 16 to 17 |
+| M1 Night | All night rules in `core/` with tests and in the client: dog holes and safe zones, gates, padlocks and the self-lock check, fences, gnomes, stamina and red prompt, dangers on the ground, spotting, end night, `NightResult`; a self-playtest replaces the paper test | T8, T4 | Nov 18 |
+| M3a First real call | The first model call from the deployed Worker with the final schema (a few paid calls, run only with Hao's OK) | T11b | Nov 19 |
+| M2 Full game on the rule-based farmer | Fog with "last seen" and `PlayerView`, the morning sequence with its opening beat, the budget, five nights, strikes, win and loss | T9, T10, T12a | Nov 21 |
+| M3 Checkpoint | The three checkpoint items work end to end: deployed model call, isolated session state, forced-timeout fallback; morning protocol tests pass; small re-measurement with the budget contract (C9, step 2). Nov 22 is buffer. | T11c | Nov 21 (checkpoint Nov 23) |
+| M4 Agent mode and polish | A full session in agent mode; the live evaluation and the first external playtest; then the ink art pass, farmer lines, sound cues, morning staging | T12b, T13, T14 | Nov 25 to 28 |
 
-Then the live evaluation (T13) and the first external playtest (T14).
+If a milestone slips, the first things to stop are fine ink art, an elaborate morning walk, shaders, and offline reconciliation; the morning stays as plain, readable feedback. Gameplay cuts follow GDD Section 13. Art cuts do not unblock the Worker, so the Worker skeleton is built first, in M0.
 
-## 9. Open technical questions
+## 9. Technical questions
 
-| ID | Question | Current proposal | Decide by |
-| --- | --- | --- | --- |
-| TQ1 | Phaser 4.2.1 or 3.90.0? Phaser 4 is current and maintained; 3.x has more tutorials, plugins, and examples that coding agents have seen. | 4.2.1, unless the M0 spike finds a blocker (Tiled loading, depth sorting, text, camera). | M0 |
-| TQ2 | Should the Durable Object recompute the trace list from a night action log instead of trusting the client's list? | Trust the client (single-player); revisit only if logs need to be tamper-proof for evaluation. | M3 |
-| TQ3 | Cloudflare Pages or Worker static assets for the client? | Whichever needs fewer moving parts at M0. | M0 |
-| TQ4 | Worker test tooling: the Cloudflare Vitest pool or plain unit tests with the model and storage mocked? | Plain unit tests first; the Cloudflare pool if Durable Object behavior needs it. | M3 |
-| TQ5 | How to make the ink look: textures drawn ahead of time, textures generated at load from a fixed seed, or a shader? | Decide in the M4 art pass after a small test. | M4 |
+| ID | Question | Answer |
+| --- | --- | --- |
+| TQ1 | Phaser 4.2.1 or 3.90.0? | 4.2.1, with the M0 engine checks and the fallback in Section 7. [Hao, on agent proposal, 2026-11-13] |
+| TQ2 | Should the Durable Object recompute the trace list from a night action log? | No: trust the client's `NightResult`, with revisions, de-duplication, and the offline rule (Section 4.3). The client's action log stays for replay. [Hao, on agent proposal] |
+| TQ3 | Cloudflare Pages or Worker static assets? | Worker static assets, same origin as the API. [Hao, on agent proposal] |
+| TQ4 | Worker test tooling? | Plain Vitest for `core/`; Cloudflare's Vitest integration for the Worker and Durable Object from the start. [Hao, on agent proposal] |
+| TQ5 | How to make the ink look? | Textures drawn ahead of time, optional seeded noise, no shader on the critical path; decided in detail in the M4 art pass. [Hao, on agent proposal] |

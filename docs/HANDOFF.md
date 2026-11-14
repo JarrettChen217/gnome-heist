@@ -7,19 +7,19 @@ Keep this file short: replace the snapshot each time, and update only your own r
 ## Snapshot (2026-11-13, Claude)
 
 - **Stage:** G1 Concept. Post due Sun Nov 15, 11:59 p.m. America/New_York (CourseWorks G1 discussion). Two Braintrust replies due Nov 18, 11:59 p.m. (CourseWorks) or Nov 19 (G1 page); the sources disagree.
-- **Build plan (decided 2026-11-13):** no scripted mock-up demo; build the real game now. Phaser + TypeScript, all rules in an engine-free `core/` package shared by client, Worker, and tests; maps in Tiled; milestones M0 to M4 (`docs/architecture.md`). Phaser version (4.2.1 vs 3.90.0) and four other technical questions are open (TQ1 to TQ5).
-- **Docs:** GDD and Configuration Document v0.2, Technical plan v0.1, Project Plan v0.2 (T7 to T12 mapped to milestones), systems diagram. Branch `docs/build-plan-phaser-core` holds the build-plan changes, pushed for an outside review; not merged into `main` (`af257a0`).
-- **Deck:** Google Slides "Gnome Heist - G1 Concept Pitch", 13 slides; the references slide still says "Phaser 3" (left until TQ1 is decided). Recording script v2 in Hao's OneDrive G1 folder; the G1 recording uses the deck only, plus a greybox clip if one exists in time.
-- **Measurements:** 26 configurations on 2026-11-12 with the earlier two-move contract. Default Claude Sonnet 5.5 thinking off; secondary Gemini 3.5 Flash-Lite low. Budget contract not measured yet (C9).
-- **Code:** none yet. M0 needs Node 22.12+ (current Wrangler); this Mac has Node 18 and 20 only.
+- **Build plan:** decided 2026-11-13 and revised after an outside review (Codex) the same day. Phaser 4.2.1 (fallback 3.90.0 during M0), engine-free `core/` shared by client, Worker and tests, Tiled subset, one Worker serving client and API, morning protocol with `morningId` and revision, one-deadline failover, Node 24. Rules added in GDD v0.3: self-lock check, morning opening beat, end-of-night order, rule parameters (5.11).
+- **Docs:** GDD v0.3, Configuration Document v0.3, Technical plan v0.2, Project Plan v0.3 (T11 and T12 split; T4 folded into M1), systems diagram. All on branch `docs/build-plan-phaser-core`, pushed, **not merged** into `main` (`af257a0`).
+- **Deck:** Google Slides "Gnome Heist - G1 Concept Pitch", 13 slides; engine label updated to Phaser 4. Recording script v2 in Hao's OneDrive G1 folder; the G1 recording uses the deck only, plus a greybox clip if one exists in time.
+- **Measurements:** 26 configurations on 2026-11-12 with the earlier two-move contract; a provisional default only. Re-measurement in three steps (C9), each paid run with Hao's OK.
+- **Code:** none yet. M0 needs Node 24 installed (this Mac has 18 and 20); installing needs Hao's OK.
 
 ## Active work
 
 | Task | Owner | Branch | Files | Status |
 | --- | --- | --- | --- | --- |
 | G1 recording and post | Hao | — | outside repo | Not started; Hao records, uploads unlisted, posts |
-| Build-plan review | Outside reviewer (Codex), for Hao | `docs/build-plan-phaser-core` | `docs/` (read-only review) | Waiting for review |
-| M0 skeleton (T7) | Not assigned | — | `core/`, `game/`, `worker/`, `maps/` | Not started; after the review |
+| Build-plan docs | Claude, for Hao | `docs/build-plan-phaser-core` | `docs/`, `CLAUDE.md`, `README.md`, `spike/README.md` | Review findings applied; waiting for Hao to merge |
+| M0 skeleton and Worker skeleton (T7, T11a) | Not assigned | — | `core/`, `game/`, `worker/`, `maps/` | Not started; after the merge |
 
 ## Before posting (Hao)
 
@@ -30,9 +30,10 @@ Keep this file short: replace the snapshot each time, and update only your own r
 ## Open items
 
 - C7: Vertex from the Worker needs a service account; until then failover goes straight to the rule-based farmer.
-- C9: re-measure with the budget contract at M3 (T11), before T13.
+- C9: re-measure in three steps (Nov 19, Nov 21, before T13); each paid run needs Hao's OK.
+- Asana: create the project after the G1 decision (T6, about Nov 18), from `docs/project-plan.md`, with Hao's OK for each write.
 - Questions for the instructor (silent-playtester assignment, reply date, points, repository) are drafted in Hao's OneDrive G1 plan, section 5.
 
 ## Next action
 
-Hao has the build plan on `docs/build-plan-phaser-core` reviewed (engine choice, `core/` contract, LLM call design, plan and GDD), decides on the findings, and merges. Then M0 starts on its own branch (run `gnome-resume` first).
+Hao merges `docs/build-plan-phaser-core` into `main` (optionally after a second Codex pass on the new commit). Then M0 starts on its own branch: run `gnome-resume`, install Node 24 with Hao's OK, and build T7 and T11a.

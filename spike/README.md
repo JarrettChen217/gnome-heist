@@ -73,4 +73,4 @@ uv run spike/measure_morning.py --provider anthropic --model claude-sonnet-5-5 -
 
 or the whole sweep: `./spike/run_matrix.sh` (configurations and prices are listed in the script).
 
-**Limits:** one input, one day, laptop network; latency from the deployed Worker is re-measured for the Nov 23 checkpoint. Preview and newly released models (Gemini 3.1 Pro preview, Gemini 4) may change speed quickly.
+**Limits:** one input, one day, laptop network; latency from the deployed Worker is re-measured with the budget contract in three steps (Configuration Document C9). Preview and newly released models (Gemini 3.1 Pro preview, Gemini 4) may change speed quickly.

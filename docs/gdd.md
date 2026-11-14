@@ -5,7 +5,7 @@ AI-use disclosure: Claude (Claude Code) drafted this document from my design not
 | | |
 | --- | --- |
 | Gate | G1 Concept (Initial version) |
-| Version | 0.2, 2026-11-13 (farmer, entries, gates and fences, stamina-and-money budget) |
+| Version | 0.3, 2026-11-13 (after the build-plan review: rule parameters, self-lock check, morning opening beat, end-of-night order) |
 | Accountable owner | Hao, as Design Lead, with Creative Director approval |
 | Companion documents | [Configuration Document](configuration.md) · [Technical plan](architecture.md) · [Systems diagram](systems-diagram.md) · [Project Plan and Risk Register](project-plan.md) |
 
@@ -60,6 +60,7 @@ Each morning the farmer, an AI agent, reads only the traces you left behind and 
 - You always enter and leave through a dog hole in the outer hedge. Each dog hole is a fixed entry; v1 has three. [Hao]
 - **Entries are safe zones.** The farmer may not place or move anything onto a dog hole or within 2 tiles of it; the validator rejects such a move. Danger can still reach the path beyond those 2 tiles, so being seen soon after you crawl in remains a real risk. [Hao, on agent proposal]
 - Standing in a dog hole and pressing the end-night control ends the night. You cannot be stranded inside with no stamina, because walking is free. [Hao]
+- To keep that promise, a re-lock that would cut you off from every dog hole is refused: the prompt says "You'd lock yourself in" and no stamina is spent. The check uses the route rules in Section 5.11. [Hao, on agent proposal]
 
 ### 5.3 Fog of war and "last seen"
 
@@ -77,7 +78,7 @@ Each morning the farmer, an AI agent, reads only the traces you left behind and 
 | Object | Get through | Put it back | Trace if left |
 | --- | --- | --- | --- |
 | Plain gate | Open: free, hold E about 1 s | Close: free, hold E about 1 s (the cost is time in the open) | A gate whose state changed |
-| Padlocked gate | Pick the lock: **1 stamina** | Re-lock: **1 stamina** | An open lock |
+| Padlocked gate | Pick the lock: **1 stamina** | Re-lock: **1 stamina** (refused if it would lock you in, Section 5.2) | An open lock |
 | Fence | Kick a gap: **1 stamina** | Cannot be fixed the same night | A broken fence, always seen next morning |
 | Gnome | Dig it up: **1 stamina** | — | An empty pedestal |
 
@@ -122,12 +123,13 @@ Each morning the farmer spends a small budget. [Hao]
 - **Catalog in v1:** lamp (lights the tiles around a lamp post), doghouse (the dog's alert radius around it), padlock (on a gate). He starts with 1 lamp and 1 padlock. Decoy gnomes and traps come later, not in v1. [Hao for the catalog; Proposed for the starting set]
 - Lamps go on predefined lamp posts, doghouses on predefined spots, padlocks on gates.
 - There are more gnomes than lamps, so he cannot cover everything at once. If he lights every gnome he can, a false trail can draw a lamp away. [Hao]
-- **He never seals the farm.** At least one unlit, unguarded route must stay open from some dog hole to some remaining gnome, and nothing may be placed in an entry's safe zone. The game enforces both, not the agent. [Hao, on agent proposal]
+- **He never seals the farm.** At least one unlit, unguarded route must stay open from some dog hole to some remaining gnome, and nothing may be placed in an entry's safe zone. The game enforces both, not the agent. A route follows the rules in Section 5.11. Once the session is over (Section 5.10) there is no morning, so the check is not needed. [Hao, on agent proposal]
 - How he chooses is specified in the [Configuration Document](configuration.md).
 
 ### 5.8 Morning sequence
 
-1. The farmer walks to each trace he decides to inspect.
+0. The farmer comes out of the farmhouse, stretches, and looks around (about 3 s). This beat does not depend on his decision, so the model call runs during it. [Hao, on agent proposal]
+1. The farmer walks to each trace he decides to inspect. He can inspect only traces that are in that morning's list.
 2. He says one line, for example, *"Who kicked a hole in my fence?!"* [Hao for the animation; agent proposal for the line]
 3. A short "thinking" beat shows his options with their costs and the one he picks; his stamina and money bars drop. [Hao]
 4. A sound cue and a caption say what kind of thing he did ("Something was hammered by the east gate."). New positions are not shown on the player's map. [Hao, on agent proposal] (See Q5 for how much of step 3 the player should see.)
@@ -141,6 +143,22 @@ The night ends at once. A gnome you are carrying goes back to its pedestal. You 
 - A session is 5 nights. You win by stealing 5 gnomes. [Proposed]
 - 3 strikes ends the session as a loss. [Proposed]
 - Score: gnomes stolen, nights used, strikes taken. [Proposed]
+- **End of a night, in order:** the night ends; if you were spotted, the gnome you carry returns to its pedestal and you get a strike; the night's changes (gates, padlocks, fences, pedestals) are applied to the farm; the game checks whether the session is over (last gnome taken, third strike, or night 5 finished); only if it continues does the farmer's morning happen. [Hao, on agent proposal]
+
+### 5.11 Rule parameters
+
+Placeholder values, to be tuned in playtests. [Hao, on agent proposal]
+
+| Rule | v1 value |
+| --- | --- |
+| Movement and collision | Continuous movement; collision by whole tiles |
+| Routes (for the reachability check and the self-lock check) | 4-neighbour steps between tiles, no cutting corners. Passable: open ground, a closed plain gate (it can be opened for free), a broken fence. Not passable: a locked padlocked gate, an intact fence, hedges, the house. Lit tiles and tiles in a dog's radius do not count for the farmer's "unlit, unguarded" route. |
+| Distance | Straight-line distance between tile centers |
+| Lamp | Lights tiles within 2 |
+| Dog | Alert radius 2 around the doghouse |
+| Player sight | 5 tiles; hedges, bushes, and the house block the line of sight |
+| Spotted | The center of the player's tile is on a lit tile, on the window's sight line, or inside a dog's radius |
+| Footprints | One per soft tile entered, counted per named area (the areas are drawn in the map) |
 
 ## 6. Intended dynamics
 
@@ -148,7 +166,7 @@ The night ends at once. A gnome you are carrying goes back to its pedestal. You 
 - **Route variety:** because the farmer remembers recent nights and his defenses grow by one coin a day, a route that worked twice is likely to be covered.
 - **Cleaning up versus speed:** spending a second stamina to re-lock a gate, or kicking a fence and accepting the trace.
 - **Re-scouting:** a stale map pushes players to look before they commit.
-- **The fully defended night:** when every reachable gnome is covered, a good move is to steal nothing and spend the night planting false trails. [Hao]
+- **The quiet night:** when the only open route is long and exposed, or would leave traces you cannot clean up, a good move may be to steal nothing and spend the night planting false trails. [Hao; reworded on agent proposal on 2026-11-13, because the farmer can never cover every reachable gnome]
 
 ## 7. Intended aesthetics (MDA)
 
@@ -167,6 +185,9 @@ Within a session, the farmer's knowledge of your habits grows, and so does his s
 | The plan costs more than his stamina or money | The validator rejects it; fallback; logged. |
 | Agent output is invalid or late | The fallback farmer acts instead. The player sees the same morning sequence. The case is logged. |
 | Spotted while carrying a gnome | Gnome returned, strike recorded. |
+| A re-lock would shut you in | Refused with "You'd lock yourself in"; no stamina spent. |
+| The game cannot reach the server for a morning | The rule-based farmer runs in the browser, and the rest of the session stays on it; the log records the switch. |
+| Last gnome taken, or night 5 over | Session ends at once; no morning. |
 | Out of stamina inside the farm | Red prompt on any stamina action; walk back to a dog hole; walking is free. |
 | Third strike | Session ends immediately as a loss. |
 | Night 5 ends with fewer than 5 gnomes | Session ends; the score is shown. [Open: whether that counts as a loss or a partial result] |
@@ -218,8 +239,8 @@ The farmer sees a trace list, his own layout, his remaining stamina and money, a
 | ID | Question | Current proposal | Decide by |
 | --- | --- | --- | --- |
 | Q1 | Are 5 nights, 5 gnomes, 3 strikes, player 2 stamina, and farmer 2 stamina plus 1 coin a day the right numbers? | Placeholders. | First external playtest (G2) |
-| Q2 | Do the farmer's defenses pile up too fast? Is there a cap per type? | No cap yet; watch night 4 and 5. | Paper test |
-| Q3 | Does a false trail need its own action, or is walking on soft ground enough? | Walking is enough; opening a gate is the time-cost version. | Paper test |
+| Q2 | Do the farmer's defenses pile up too fast? Is there a cap per type? | No cap yet; watch night 4 and 5. | M1 self-playtest (T4) |
+| Q3 | Does a false trail need its own action, or is walking on soft ground enough? | Walking is enough; opening a gate is the time-cost version. | M1 self-playtest (T4) |
 | Q4 | When decoy gnomes and traps arrive (after v1), are they visible only within sight, and how does a decoy differ from a real gnome? | Out of v1. | After G3 |
 | Q5 | How much of the farmer's morning should the player see: the inspected traces, the thinking beat with options, the moved category? | Show inspected traces, his line, the thinking beat without positions, and the category. | First external playtest |
 | Q6 | Is a 24 × 18 farm large enough to feel like exploring, and small enough to finish by Gold (Dec 5)? | 24 × 18. | Greybox prototype |
@@ -234,7 +255,7 @@ The farmer sees a trace list, his own layout, his remaining stamina and money, a
 | 2026-11-10 | Angled 2D camera; hedge-maze grounds; fog with "last seen"; free walking; actions cost stamina; end the night from outside; a limited opponent (first as two moves a morning, replaced by the daily budget on 2026-11-13); more gnomes than lamps; morning animation | Hao | Decided |
 | 2026-11-12 | The opponent is an LLM with structured output, a validator, and a rule-based fallback | Agent proposal, accepted by Hao | Decided |
 | 2026-11-12 | Scripted baseline is a rule-based opponent with the same information and budget (not a fixed routine) | Agent proposal, accepted by Hao | Decided |
-| 2026-11-12 | TypeScript + Phaser 3 in the browser; Cloudflare Pages and a Worker for the model call (Phaser version reopened on 2026-11-13, Technical plan TQ1) | Agent proposal, accepted by Hao | Decided |
+| 2026-11-12 | TypeScript + Phaser 3 in the browser; Cloudflare Pages and a Worker for the model call (Phaser version changed to 4.2.1 on 2026-11-13) | Agent proposal, accepted by Hao | Decided |
 | 2026-11-12 | Map about 24 × 18; morning shows inspected traces and the kind of change, not new positions; being spotted ends the night | Agent proposal, accepted by Hao | Decided |
 | 2026-11-12 | Budgets come from a measured run of the model call | Agent proposal, accepted by Hao | Decided |
 | 2026-11-12 | The opponent can switch between model providers (Vertex, Anthropic, OpenAI) through one interface | Hao (library choice, Vercel AI SDK, on agent proposal) | Decided |
@@ -250,3 +271,8 @@ The farmer sees a trace list, his own layout, his remaining stamina and money, a
 | 2026-11-13 | Build the real game from the start instead of a scripted mock-up demo; the G1 recording uses the deck, plus a real greybox clip only if one is playable | Agent proposal, accepted by Hao | Decided |
 | 2026-11-13 | Phaser + TypeScript for the full game, with all rules in one engine-free `core/` package shared by the client, the Worker, and the tests; milestones M0 to M4 | Agent proposal, accepted by Hao | Decided |
 | 2026-11-13 | Farm maps authored in Tiled | Agent proposal, accepted by Hao | Decided |
+| 2026-11-13 | Phaser 4.2.1, with a fallback to 3.90.0 during M0 if the engine checks fail | Agent proposal, accepted by Hao | Decided |
+| 2026-11-13 | Keep the never-seal rule; reword the fully defended night as the quiet night | Agent proposal (after the outside review found the two rules contradict), accepted by Hao | Decided |
+| 2026-11-13 | A re-lock that would lock the player in is refused at no cost | Agent proposal, accepted by Hao | Decided |
+| 2026-11-13 | The morning opens with a fixed beat (about 3 s) that covers the model call; he inspects only traces in that morning's list | Agent proposal, accepted by Hao | Decided |
+| 2026-11-13 | Rule parameters (Section 5.11), the end-of-night order (Section 5.10), and the offline rule | Agent proposal, accepted by Hao | Decided (values are placeholders) |
