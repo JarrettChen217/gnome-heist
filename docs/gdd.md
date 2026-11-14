@@ -7,7 +7,7 @@ AI-use disclosure: Claude (Claude Code) drafted this document from my design not
 | Gate | G1 Concept (Initial version) |
 | Version | 0.2, 2026-11-13 (farmer, entries, gates and fences, stamina-and-money budget) |
 | Accountable owner | Hao, as Design Lead, with Creative Director approval |
-| Companion documents | [Configuration Document](configuration.md) · [Systems diagram](systems-diagram.md) · [Project Plan and Risk Register](project-plan.md) |
+| Companion documents | [Configuration Document](configuration.md) · [Technical plan](architecture.md) · [Systems diagram](systems-diagram.md) · [Project Plan and Risk Register](project-plan.md) |
 
 **Status of this document.** Nothing here is implemented or verified yet. Every rule is a paper design. Each item carries one label:
 
@@ -202,7 +202,8 @@ Arrow keys or WASD to move; E to interact (hold E for gates); E in a dog hole to
 | *Neighbours from Hell* (JoWooD Productions, 2003, Windows) | Watching the person next door for openings; pets that alert him when you fail to sneak past; being caught ends the attempt; hiding behind cover; the hand-drawn look. Per Wikipedia and a 2003 Worthplaying review, its neighbour walks a set routine that a specific prank can interrupt, and his pets alert him; neither source describes adaptation to your traces across episodes. | Inverted structure: I sneak in at night, and the farmer changes his defenses in the morning from traces only, remembering earlier nights, on a visible daily budget. | Design and style reference only. No assets, code, names, or characters used. |
 | *Stardew Valley* (ConcernedApe, 2016) | The angled top-down camera, tile readability, the farm setting. | Night stealth instead of farming. | Visual reference only. No assets used. |
 | "Explored but not visible" fog in real-time strategy games (e.g., *StarCraft*), where the last-seen snapshot of structures stays on the map | Stale map memory. | The stale snapshot is the core of the loop: the farmer changes things while you cannot see. | Mechanic reference only. |
-| Phaser 3 (engine) | Engine. | — | MIT License; to confirm on install. |
+| Phaser (engine; version in the [Technical plan](architecture.md), Section 7) | Engine. | — | MIT License; to confirm on install. |
+| Tiled (map editor) | Authoring the farm maps. | — | The editor is GPL-licensed; the map files are my own work. Recorded in `CREDITS.md`. |
 | Art assets | Hand-drawn by me and my agents, or a CC0 pack where needed. | — | Every external asset's license recorded in `CREDITS.md` before use. |
 | Model providers: Claude Sonnet 5.5 (primary), Gemini 3.5 Flash-Lite on Vertex AI (secondary) | The farmer's decisions. | — | Anthropic and Google Cloud terms and use policies, recorded in the Configuration Document. |
 
@@ -233,7 +234,7 @@ The farmer sees a trace list, his own layout, his remaining stamina and money, a
 | 2026-11-10 | Angled 2D camera; hedge-maze grounds; fog with "last seen"; free walking; actions cost stamina; end the night from outside; a limited opponent (first as two moves a morning, replaced by the daily budget on 2026-11-13); more gnomes than lamps; morning animation | Hao | Decided |
 | 2026-11-12 | The opponent is an LLM with structured output, a validator, and a rule-based fallback | Agent proposal, accepted by Hao | Decided |
 | 2026-11-12 | Scripted baseline is a rule-based opponent with the same information and budget (not a fixed routine) | Agent proposal, accepted by Hao | Decided |
-| 2026-11-12 | TypeScript + Phaser 3 in the browser; Cloudflare Pages and a Worker for the model call | Agent proposal, accepted by Hao | Decided |
+| 2026-11-12 | TypeScript + Phaser 3 in the browser; Cloudflare Pages and a Worker for the model call (Phaser version reopened on 2026-11-13, Technical plan TQ1) | Agent proposal, accepted by Hao | Decided |
 | 2026-11-12 | Map about 24 × 18; morning shows inspected traces and the kind of change, not new positions; being spotted ends the night | Agent proposal, accepted by Hao | Decided |
 | 2026-11-12 | Budgets come from a measured run of the model call | Agent proposal, accepted by Hao | Decided |
 | 2026-11-12 | The opponent can switch between model providers (Vertex, Anthropic, OpenAI) through one interface | Hao (library choice, Vercel AI SDK, on agent proposal) | Decided |
@@ -246,3 +247,6 @@ The farmer sees a trace list, his own layout, his remaining stamina and money, a
 | 2026-11-13 | Plain gates cost time, padlocks and fences cost stamina, fences cannot be fixed the same night; player has 2 stamina; red prompt when empty | Hao (stamina, red prompt); agent proposal for the gate and fence table, accepted by Hao | Decided |
 | 2026-11-13 | The farmer spends a daily budget (2 stamina, +1 coin) on buy, move, and repair, replacing the earlier fixed two moves | Hao (buy and move costs); agent proposal for the other values, accepted by Hao | Decided |
 | 2026-11-13 | The stolen item stays a garden gnome (the title), shown with a glow where it is the goal | Agent proposal at Hao's request, accepted by Hao | Decided |
+| 2026-11-13 | Build the real game from the start instead of a scripted mock-up demo; the G1 recording uses the deck, plus a real greybox clip only if one is playable | Agent proposal, accepted by Hao | Decided |
+| 2026-11-13 | Phaser + TypeScript for the full game, with all rules in one engine-free `core/` package shared by the client, the Worker, and the tests; milestones M0 to M4 | Agent proposal, accepted by Hao | Decided |
+| 2026-11-13 | Farm maps authored in Tiled | Agent proposal, accepted by Hao | Decided |

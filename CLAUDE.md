@@ -19,6 +19,7 @@ Hao is Executive Producer and Creative Director. Agents propose and implement; H
 | Current state, active work, next action | `docs/HANDOFF.md` |
 | Game rules, pillars, open questions, decision log | `docs/gdd.md` |
 | Farmer agent contract, budgets, failure modes, production-role map | `docs/configuration.md` |
+| Engine, code layout, milestones, versions | `docs/architecture.md` |
 | Systems diagram | `docs/systems-diagram.md` |
 | Gate dates, tasks, Risk Register | `docs/project-plan.md` |
 | Model latency/cost measurements | `spike/README.md` |
@@ -41,7 +42,9 @@ Every rule in the GDD and Configuration Document carries an origin label: **[Hao
 
 - `docs/`: design and planning documents (above).
 - `spike/`: model measurement scripts and results (Python, run with `uv`).
-- `game/`: Phaser 3 + TypeScript client (Vite); created by the concept-demo task.
+- `core/`: engine-free TypeScript rules shared by the client, the Worker, and the tests. Imports no Phaser, DOM, network, or clock.
+- `game/`: Phaser + TypeScript client (Vite). `worker/`: Cloudflare Worker + Durable Object for the farmer. `maps/`: Tiled maps.
+- These four are created at M0 (`docs/architecture.md`, Section 8).
 - `.claude/skills/`: `gnome-resume`, `gnome-handoff`. `.claude/agents/`: `gnome-reviewer`.
 - Loose notes, prompts, and pitch drafts live outside the repo in Hao's OneDrive folder `AI Pract Building Games/Final Game/`.
 

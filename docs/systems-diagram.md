@@ -37,4 +37,6 @@ flowchart LR
   MORN --> PV
 ```
 
+Implementation note: the night rules, trace extractor, context builder, validator, and rule-based farmer are all in the shared `core/` package, so the client and the Worker run the same code ([Technical plan](architecture.md), Section 4).
+
 What the farmer **never** receives: the player's path, position, dog hole used, stamina, strikes, remaining nights, fog memory, or intent. See [Configuration Document, Section A2](configuration.md#a2-world-state-and-what-the-agent-knows).

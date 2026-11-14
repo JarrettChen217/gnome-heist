@@ -5,7 +5,7 @@ AI-use disclosure: Claude (Claude Code) drafted this plan and risk register from
 | | |
 | --- | --- |
 | Gate | G1 Concept (Initial version) |
-| Version | 0.1, 2026-11-12 |
+| Version | 0.2, 2026-11-13 (build plan: milestones M0 to M4, shared rules core) |
 | Accountable owner | Hao, as Producer |
 | Moves to | Asana after the G1 decision (owners, acceptance criteria, dependencies, and the full Risk Register follow at G2/G3) |
 
@@ -31,22 +31,22 @@ Dates are America/New_York. **Course dates** come from the syllabus and the G1 d
 
 ## 2. First tasks through G2
 
-Owner is always me (accountable). "Delegated to" names the production agent role from the [Configuration Document](configuration.md), Part B.
+Owner is always me (accountable). "Delegated to" names the production agent role from the [Configuration Document](configuration.md), Part B. Milestone names (M0 to M4) refer to the [Technical plan](architecture.md), Section 8. On 2026-11-13 I dropped the scripted mock-up demo and moved the build forward, so T7 to T12 start right after the G1 post.
 
 | ID | Task | GDF role | Delegated to | Acceptance criteria | Depends on | Target date | Status |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | T1 | Create repository with Initial GDD, Configuration Document, plan, diagram | Producer | Producer, Design Lead | Docs in repo; open questions marked; linked from the G1 post | — | Nov 15 | In progress |
 | T2 | Measure model latency and tokens (20 calls, realistic input) | Tech Lead | Tech Lead | p50/p95 latency, tokens, and cost per session recorded with price source; budgets filled in | Model access (C2) | Nov 13 | Done 2026-11-12 ([results](../spike/README.md)) |
-| T3 | G1 deck and recording | Creative Director | Producer (draft deck and script) | 3 to 5 minutes; all 11 items shown; unlisted link works signed out | T1, T2 | Nov 15 | Not started |
+| T3 | G1 deck and recording | Creative Director | Producer (draft deck and script) | 3 to 5 minutes; all 11 items shown; unlisted link works signed out. Recorded from the deck; a 15 to 20 s clip of the real greybox build is added only if it is playable in time, labeled as an early build | T1, T2 | Nov 15 | Deck done; recording not started |
 | T4 | Paper test: one night and one morning, with me playing the farmer by the rule and by judgment | Design Lead | Design Lead (test sheet) | One session noted: what the player did, where they hesitated, what changed | T1 | Nov 19 | Not started |
-| T5 | Production agent team v1: repo `AGENTS.md`, `gnome-reviewer` subagent, one skill | Tech Lead | Tech Lead | Reviewer runs on one real PR; skill used once, with evidence in the PR | T1 | Nov 19 | Not started |
+| T5 | Production agent team v1: repo `CLAUDE.md`, `gnome-reviewer` subagent, `gnome-resume` and `gnome-handoff` skills | Tech Lead | Tech Lead | Reviewer runs on one real PR; skill used once, with evidence in the PR | T1 | Nov 19 | Files created 2026-11-13; not yet used |
 | T6 | Move this plan into Asana after the G1 decision | Producer | Producer (draft) | Tasks with owner, role, acceptance criteria, dependencies; PPP posted | G1 decision | Nov 18 | Not started |
-| T7 | Game skeleton: Phaser project, greybox farm, movement, collision, deployed preview | Tech Lead | Tech Lead | Preview URL loads in a fresh browser; CI runs on PR | T5 | Nov 19 | Not started |
-| T8 | Night rules: soft ground, footprints, gates, pedestals, stamina, lit/sight/dog zones, spotting, end night | Tech Lead | Tech Lead, QA | Deterministic tests for each rule pass in CI | T7 | Nov 21 | Not started |
-| T9 | Fog of war with "last seen" | Tech Lead | Tech Lead, QA | Stale defenses shown faded with night tag; test that moved defenses stay stale until seen | T7 | Nov 21 | Not started |
-| T10 | Trace extractor, rule-based farmer, budget validator, morning sequence | Tech Lead | Tech Lead, Narrative | Same input gives same plan; budget, safe-zone and reachability tests; one full night and morning playable | T8 | Nov 22 | Not started |
-| T11 | Worker: deployed model call, one Durable Object per session, validator, forced-timeout fallback, logging | Tech Lead | Tech Lead, QA | Checkpoint demo: live call, two sessions with separate memory, injected timeout falls back | T2, T10 | Nov 23 | Not started |
-| T12 | Five-night session, win and loss, agent/rule switch, session log export | Tech Lead | Tech Lead | A full session plays end to end in each mode | T11 | Nov 25 | Not started |
+| T7 | M0 skeleton: npm workspace (`core/`, `game/`, `worker/`, `maps/`), `core/` types and interfaces, greybox farm in Tiled, Phaser boots and draws it with movement and collision, deployed preview | Tech Lead | Tech Lead | Preview URL loads in a fresh browser; CI runs typecheck, tests and build on PR; `core/` imports no Phaser, DOM, network or clock | T1 | Nov 16 | Not started |
+| T8 | M1 night rules in `core/`, wired into the client: dog holes and safe zones, soft ground and footprints, gates, padlocks, fences, pedestals, stamina and red prompt, lit/sight/dog zones, spotting, end night, trace list | Tech Lead | Tech Lead, QA | Deterministic tests for each rule row in GDD 5.2, 5.4 and 5.6 pass in CI; one night playable in the preview | T7 | Nov 18 | Not started |
+| T9 | M2 fog of war with "last seen" | Tech Lead | Tech Lead, QA | Stale defenses shown faded with night tag; test that moved defenses stay stale until seen | T8 | Nov 20 | Not started |
+| T10 | M2 rule-based farmer, plan validator, farmer context, morning sequence (all rules in `core/`) | Tech Lead | Tech Lead, Narrative | Same input gives same plan; budget, safe-zone and reachability tests; knowledge-boundary test; one full night and morning playable | T8 | Nov 21 | Not started |
+| T11 | M3 Worker: deployed model call, one Durable Object per session, the `core/` validator, failover, forced-timeout fallback (and the client's local rule farmer if the Worker is unreachable), logging; re-measure with the budget contract (C9) | Tech Lead | Tech Lead, QA | Checkpoint demo: live call, two sessions with separate memory, injected timeout falls back | T2, T10 | Nov 22 | Not started |
+| T12 | M2/M3 five-night session, win and loss, agent/rule switch, session log export | Tech Lead | Tech Lead | A full session plays end to end in each mode | T10 (rule mode), T11 (agent mode) | Nov 25 | Not started |
 | T13 | Budgeted live evaluation, agent vs rule on recorded trace sequences | QA, BI | QA, BI | Table: invalid rate, fallback rate, latency, cost, agent-equals-rule rate, with N and spending | T12 | Nov 26 | Not started |
 | T14 | External playtest with one player; Initial Playtest Log | Design Lead, QA, BI | Design Lead (consent script, sheet) | Consent recorded; observations before interpretation; one finding linked to a change or question | T12 | Nov 27 | Not started |
 | T15 | Update GDD and Configuration Document; scope-lock plan; updated Risk Register | Producer, Design Lead, Tech Lead | All roles (drafts) | Labels updated to implemented/verified; exclusions and fallback triggers stated | T13, T14 | Nov 28 | Not started |
