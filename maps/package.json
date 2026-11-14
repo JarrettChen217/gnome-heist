@@ -1,0 +1,8 @@
+{
+  "//": "AI-use disclosure: Claude (Claude Code) wrote this file under my direction for M0 (T7, T11a).",
+  "name": "@gnome-heist/maps",
+  "private": true,
+  "type": "module",
+  "exports": { "./*": "./*" },
+  "scripts": { "generate": "node tools/make-greybox.mjs" }
+}

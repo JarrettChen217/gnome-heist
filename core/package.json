@@ -1,0 +1,7 @@
+{
+  "//": "AI-use disclosure: Claude (Claude Code) wrote this file under my direction for M0 (T7, T11a).",
+  "name": "@gnome-heist/core",
+  "private": true,
+  "type": "module",
+  "exports": { ".": "./src/index.ts" }
+}

@@ -1,0 +1,9 @@
+// AI-use disclosure: Claude (Claude Code) wrote this file under my direction for M0 (T7, T11a).
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ES2023"],
+    "types": ["@cloudflare/workers-types", "@cloudflare/vitest-plugin/types"]
+  },
+  "include": ["src", "test", "env.d.ts"]
+}

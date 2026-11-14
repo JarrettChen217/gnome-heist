@@ -9,7 +9,7 @@ AI-use disclosure: Claude (Claude Code) drafted this technical plan from my deci
 | Accountable owner | Hao, as Tech Lead, with Creative Director approval |
 | Companion documents | [GDD](gdd.md) · [Configuration Document](configuration.md) · [Systems diagram](systems-diagram.md) · [Project Plan](project-plan.md) |
 
-**Status.** Planned. No code exists yet. Labels follow the GDD: **[Hao]**, **[Hao, on agent proposal]**, **[Proposed]**, **[Open]**.
+**Status.** M0 (T7, T11a) built on branch `feat/m0-skeleton` on 2026-11-13 and checked locally; not yet deployed. Everything from M1 on is planned. Labels follow the GDD: **[Hao]**, **[Hao, on agent proposal]**, **[Proposed]**, **[Open]**.
 
 ## 1. Decisions
 
@@ -123,9 +123,9 @@ Every dependency is pinned to an exact version at M0; nothing is left at `latest
 | Tool | Version | Note |
 | --- | --- | --- |
 | Phaser | **4.2.1** (2026-07-09) | Release candidates from 2025-04, stable since 4.0.0 (2026-04-10), then 4.1.0 and 4.2.0. Fallback: 3.90.0 (2025-05-23), the last 3.x. |
-| Node | **24 LTS**, exact version in `.nvmrc` | Current Wrangler needs Node ≥ 22.12; Vite 8 needs ^20.19 or ≥ 22.12. The same version locally, in CI, and for deploys. Installing it on the development Mac needs Hao's OK. |
-| Vite | 8.x, exact version at M0 | — |
-| Wrangler, TypeScript, Vitest, `@cloudflare/vitest-plugin`, `ai` and its provider packages | exact compatible versions at M0 | For Vertex in a Worker, the edge entry point `@ai-sdk/google-vertex/edge` with credentials from Worker bindings. |
+| Node | **24.22.3** (24 LTS), in `.nvmrc`; npm 11.19.1 in `packageManager` | Current Wrangler needs Node ≥ 22.12; Vite 8 needs ^20.19 or ≥ 22.12. The same version locally, in CI, and for deploys. Installing it on the development Mac needs Hao's OK. |
+| Vite | 8.3.8 | — |
+| Wrangler 4.162.0, TypeScript 7.0.2, Vitest 4.1.12, `@cloudflare/vitest-plugin` 1.8.2, `@cloudflare/workers-types` 5.20261114.1, `@types/node` 24.19.2 | Pinned at M0. Wrangler matches the version `@cloudflare/vitest-plugin` depends on, so tests and `wrangler dev` run the same workerd. The older name `@cloudflare/vitest-pool-workers` is deprecated. `ai` and its provider packages are pinned in T11b. | For Vertex in a Worker, the edge entry point `@ai-sdk/google-vertex/edge` with credentials from Worker bindings. |
 
 **Phaser 4 for coding agents.** Most examples online are Phaser 3. The v3-to-v4 migration guide ([`changelog/v4/4.0/MIGRATION-GUIDE.md`](https://github.com/phaserjs/phaser/blob/v4.2.1/changelog/v4/4.0/MIGRATION-GUIDE.md)) says the standard API (sprites, text, tilemaps, camera scroll and zoom) should work unchanged; the breaking changes are in rendering. Do not use these v3 forms:
 
@@ -139,6 +139,8 @@ Every dependency is pinned to an exact version at M0; nothing is left at `latest
 Project choices (not engine requirements): use native `Map` and `Set` rather than `Phaser.Structs.Map`, which 4.2.1 still exports; use embedded tilesets only, since the 4.2.1 Tiled parser does not load external tileset files; keep characters and tall objects in one display list so depth by feet y sorts them together; if a custom font is used, wait until it has loaded before creating text.
 
 `tsc` catches most removed APIs. **M0 acceptance for the engine:** the greybox farm loads from a real `.tmj` file in the Tiled subset (image paths and custom properties included); a per-tile fog overlay and a last-seen snapshot draw correctly and stay aligned with the map while the camera moves; a sprite passes behind and in front of a tall object by y; the camera follows; HUD text renders, updates, and stays fixed on screen; after a window resize, all of these are checked again. A blocker in any of these during M0 means switching to 3.90.0 then, while it is cheap.
+
+**M0 engine check result (2026-11-13, local `wrangler dev`, Chrome, WebGL renderer).** Phaser 4.2.1 passed every item, so the 3.90.0 fallback was not needed. Checked in the browser: the greybox farm loads from `maps/farm.tmj` through Phaser's Tiled loader, with the tileset image path resolved from the map and ground kinds read from tile properties by `core/loadFarm`; walking stops flush against a hedge and a closed gate; a player passing a lamp post is drawn behind it above its base and in front of it below; the camera follows (`roundPixels` on); a per-tile fog overlay with faded "seen n1" copies stays aligned with the tiles while the camera moves; the HUD text updates and stays fixed. After shrinking the game to 900 x 600, the canvas, zoom, HUD position, following and fog were checked again. Not yet checked: a fresh browser on a deployed preview URL (deploying needs Hao's OK), and a custom font (none is used yet).
 
 ## 8. Milestones [Hao, on agent proposal]
 

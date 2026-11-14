@@ -1,0 +1,7 @@
+// AI-use disclosure: Claude (Claude Code) wrote this file under my direction for M0 (T7, T11a).
+// Tests may use Node (to read maps/farm.tmj and scan core/src); kept apart so core/src stays DOM- and Node-free.
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": { "lib": ["ES2023"], "types": ["node"] },
+  "include": ["test"]
+}

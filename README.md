@@ -4,7 +4,7 @@ AI-use disclosure: Claude (Claude Code) drafted the documents in this repository
 
 A short single-player stealth game: sneak onto the farm next door at night to steal the farmer's garden gnomes, while he, an AI agent, reads the traces you leave and spends a small daily budget of stamina and money on his defenses each morning.
 
-Final project for *AI in Practice: Game Design and Development* (Fall 2026). Current stage: **G1 Concept**. There is no code yet; the build plan (Phaser 4 + TypeScript, a shared rules package, milestones M0 to M4) is in the technical plan.
+Final project for *AI in Practice: Game Design and Development* (Fall 2026). Current stage: **G1 Concept**. The M0 skeleton (greybox farm in Phaser 4, the shared rules package `core/`, and the Worker skeleton) is on branch `feat/m0-skeleton`; how to run it is in [game/README.md](game/README.md). The build plan and milestones are in the technical plan.
 
 | Document | Version |
 | --- | --- |

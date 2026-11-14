@@ -1,0 +1,6 @@
+// AI-use disclosure: Claude (Claude Code) wrote this file under my direction for M0 (T7, T11a).
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": { "lib": ["ES2023", "DOM", "DOM.Iterable"], "types": ["vite/client"] },
+  "include": ["src", "vite.config.ts"]
+}
