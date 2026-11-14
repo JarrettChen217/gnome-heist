@@ -12,6 +12,7 @@ import {
   lineOfSight,
   openRouteCost,
   startNight,
+  tick,
   tileDistance,
   visibleTiles,
 } from '../src/index.ts';
@@ -227,6 +228,24 @@ describe('GDD 5.6 traces and the NightResult', () => {
     expect(exit(closedAgain).traces).toEqual([]);
   });
 
+  it('closing a gate he left open is also a trace', () => {
+    const s = sessionFor(farm);
+    const world = withGate(s.world, 'gate1', { open: true });
+    const n = holdE(farm, nightAt(farm, 3, 1, { ...s, world }), 1).night;
+    expect(n.world.gates[0]!.open).toBe(false);
+    expect(exit(n).traces).toEqual([{ id: 't1', kind: 'gate', target: 'gate1' }]);
+    expect(exit(n).changes).toEqual([{ kind: 'gate', id: 'gate1', open: false }]);
+  });
+
+  it('re-locking a padlock he left open is a gate trace', () => {
+    const s = sessionFor(farm);
+    const world = withGate(s.world, 'gate2', { open: true, padlock: 'open' });
+    const n = holdE(farm, nightAt(farm, 7, 2, { ...s, world }), 1).night;
+    expect(n.world.gates[1]).toMatchObject({ padlock: 'locked', open: false });
+    expect(exit(n).traces).toEqual([{ id: 't1', kind: 'gate', target: 'gate2' }]);
+    expect(exit(n).changes).toEqual([{ kind: 'padlock', id: 'gate2', locked: true }]);
+  });
+
   it('open lock if not re-locked; a re-lock leaves no lock trace', () => {
     const picked = holdE(farm, nightAt(farm, 7, 2), 1).night;
     expect(exit(picked).traces).toEqual([{ id: 't1', kind: 'openLock', target: 'gate2' }]);
@@ -342,6 +361,14 @@ describe('GDD 5.5 and 5.9 danger and being spotted', () => {
     expect(result).toMatchObject({ spotted: true, gnomeTaken: null });
     expect(result.traces[0]).toEqual({ id: 't1', kind: 'sighting', target: 'tile_3_1' });
     expect(result.traces.some((t) => t.kind === 'emptyPedestal')).toBe(false);
+  });
+
+  it('a long frame cannot carry the player across a danger tile', () => {
+    const f = farmFrom(['#########', 'D.......#', '#########']);
+    const n = nightAt(f, 1, 1, sessionFor(f, []));
+    const lit = { ...n, danger: n.danger.map((d, i) => (i === idx(f, 4, 1) ? ('window' as const) : d)) };
+    const r = tick(f, lit, { moveX: 1, moveY: 0, interact: false }, 1);
+    expect(r.night.ended).toEqual({ reason: 'spotted', tile: { x: 4, y: 1 }, by: 'window' });
   });
 
   it('a tile is judged by its centre: the box may overlap a lit tile while the feet are not on it', () => {

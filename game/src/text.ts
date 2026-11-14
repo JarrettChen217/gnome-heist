@@ -45,7 +45,7 @@ const TRACE: Record<string, string> = {
 export function resultLines(end: NightEnd, result: NightResult): string[] {
   const head =
     end.reason === 'spotted'
-      ? `Spotted (${end.by === 'window' ? 'the farmhouse window' : end.by === 'lamp' ? 'a lamp' : 'the dog'})! Night over, one strike.`
+      ? `Spotted (${end.by === 'window' ? 'the farmhouse window' : end.by === 'lamp' ? 'a lamp' : 'the dog'})! Night over.`
       : result.gnomeTaken
         ? `You got away with a gnome (${result.gnomeTaken}).`
         : 'You slipped out empty-handed.';

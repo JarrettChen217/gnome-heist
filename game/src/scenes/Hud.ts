@@ -37,7 +37,7 @@ export class HudScene extends Phaser.Scene {
     const s = this.registry.get('hud') as NightHudState | undefined;
     if (s === undefined) return;
     const pips = '●'.repeat(s.stamina) + '○'.repeat(Math.max(0, s.maxStamina - s.stamina));
-    this.status.setText(`Night ${s.night}   Stamina ${pips}   Strikes 0/3${s.carrying ? '   Carrying a gnome' : ''}`);
+    this.status.setText(`Night ${s.night}   Stamina ${pips}   ${s.carrying ? '   Carrying a gnome' : ''}`);
 
     const p = s.message ?? s.prompt;
     this.prompt.setText(p?.text ?? '').setVisible(p !== null && s.phase === 'night');

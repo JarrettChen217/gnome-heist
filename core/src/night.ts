@@ -229,6 +229,7 @@ export function tick(farm: FarmDef, night: NightState, input: NightInput, dtSeco
   let p = night.player;
   let bumped = false;
   let footprints = night.footprints;
+  let spottedAt: Tile | null = null;
   const step = dist / steps;
   for (let i = 0; i < steps; i++) {
     const rx = moveAxis(night, p, 'x', dx * step);
@@ -244,6 +245,11 @@ export function tick(farm: FarmDef, night: NightState, input: NightInput, dtSeco
       footprints = [...footprints, idx];
       events.push({ type: 'footprint', tile: t });
     }
+    // Checked at every sub-step, so a long frame cannot carry the player across a danger tile.
+    if (night.danger[idx]) {
+      spottedAt = t;
+      break;
+    }
   }
   if (bumped) events.push({ type: 'bumped' });
   const facing =
@@ -251,7 +257,7 @@ export function tick(farm: FarmDef, night: NightState, input: NightInput, dtSeco
   let next: NightState = { ...night, player: p, footprints, facing };
 
   // Spotted: the centre of the player's tile is in danger (GDD 5.9, 5.11). The night ends at once.
-  const here = tileOf(p);
+  const here = spottedAt ?? tileOf(p);
   const danger = next.danger[tileIndex(farm, here.x, here.y)];
   if (danger) {
     const end = { reason: 'spotted', tile: here, by: danger } as const;
@@ -310,6 +316,8 @@ export function endNight(farm: FarmDef, night: NightState): NightResult {
     if (a.padlock !== b.padlock) {
       changes.push({ kind: 'padlock', id: g.id, locked: b.padlock === 'locked' });
       if (b.padlock === 'open') raw.push({ kind: 'openLock', target: g.id });
+      // Re-locking a padlock he left open also changes the gate from how he left it (GDD 5.6).
+      else raw.push({ kind: 'gate', target: g.id });
     } else if (a.padlock === 'none' && a.open !== b.open) {
       raw.push({ kind: 'gate', target: g.id });
       changes.push({ kind: 'gate', id: g.id, open: b.open });

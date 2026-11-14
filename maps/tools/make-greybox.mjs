@@ -47,8 +47,7 @@ const TILES = [
   ['stone', 'stone', [150, 150, 145]],
   ['hedge', 'blocked', [38, 82, 44]],
   ['house', 'blocked', [128, 70, 56]],
-  // Stone, so no footprints mark which entry was used (Configuration Document A2).
-  ['dogHole', 'stone', [52, 38, 26]],
+  ['dogHole', 'soft', [52, 38, 26]],
   ['flowers', null, null], // decoration only
 ];
 const GROUND_OF = { '#': 2, H: 3, '.': 1, ',': 0, D: 4, G: 1, P: 1, F: 0, g: 0, L: 1, K: 1, B: 0 };
