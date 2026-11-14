@@ -1,10 +1,12 @@
 // AI-use disclosure: Claude (Claude Code) wrote this file under my direction for M0 (T7, T11a); it covers the placeholders, not the T10 rules.
 
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { buildFarmerContext, newSession, ruleFarmer, validatePlan } from '../src/index.ts';
-import type { FarmDef, Trace } from '../src/index.ts';
+import { buildFarmerContext, loadFarm, newSession, ruleFarmer, validatePlan } from '../src/index.ts';
+import type { Trace } from '../src/index.ts';
 
-const session = newSession({} as FarmDef, 7);
+const farm = loadFarm(JSON.parse(readFileSync(new URL('../../maps/farm.tmj', import.meta.url), 'utf8')));
+const session = newSession(farm, 7);
 const traces: Trace[] = [{ id: 't1', kind: 'brokenFence', target: 'fence_east' }];
 const ctx = buildFarmerContext({ farmer: session.farmer, tracesToday: traces });
 
@@ -37,5 +39,16 @@ describe('buildFarmerContext', () => {
     const sneaky = [{ ...traces[0]!, playerStamina: 2 } as Trace];
     const json = JSON.stringify(buildFarmerContext({ farmer: leaky, tracesToday: sneaky }));
     expect(json).toBe(JSON.stringify(ctx));
+  });
+
+  it('keeps a footprint count, and only on footprints', () => {
+    const t: Trace[] = [
+      { id: 't1', kind: 'footprints', target: 'area_sw', count: 4 },
+      { id: 't2', kind: 'gate', target: 'gate_lawn_west', count: 9 },
+    ];
+    expect(buildFarmerContext({ farmer: session.farmer, tracesToday: t }).tracesToday).toEqual([
+      { id: 't1', kind: 'footprints', target: 'area_sw', count: 4 },
+      { id: 't2', kind: 'gate', target: 'gate_lawn_west' },
+    ]);
   });
 });

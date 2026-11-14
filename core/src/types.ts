@@ -1,4 +1,4 @@
-// AI-use disclosure: Claude (Claude Code) wrote this file under my direction for M0 (T7); the shapes follow docs/architecture.md Section 4 and docs/configuration.md A3.
+// AI-use disclosure: Claude (Claude Code) wrote this file under my direction for M0 (T7) and extended it for the night rules (T8); the shapes follow docs/architecture.md Section 4 and docs/configuration.md A3.
 //
 // Engine-free types shared by the client, the Worker, and the tests.
 // Positions are in tile units. Most shapes are M0 stubs: fields that belong
@@ -59,6 +59,8 @@ export interface FarmDef {
 export interface NightInput {
   readonly moveX: number;
   readonly moveY: number;
+  /** E is held down this tick. */
+  readonly interact: boolean;
 }
 
 export type DefenseKind = 'lamp' | 'doghouse' | 'padlock';
@@ -74,7 +76,7 @@ export interface Defense {
 export interface FarmerState {
   readonly stamina: number;
   readonly money: number;
-  /** Starting placement is decided in T8/T10; empty in M0. */
+  /** His defenses. The starting set is still open (see `initialLayout`). */
   readonly layout: readonly Defense[];
   /** Up to 3 previous mornings (Configuration Document A5); filled in T10. */
   readonly memory: readonly MorningSummary[];
@@ -86,39 +88,116 @@ export interface MorningSummary {
   readonly line: string;
 }
 
+/** A gate's state. A plain gate has no padlock; a padlocked gate is locked (and closed) or picked (and open). */
+export interface GateState {
+  readonly id: string;
+  readonly open: boolean;
+  readonly padlock: 'none' | 'locked' | 'open';
+}
+
+/** One kicked gap in a fence. */
+export interface FenceGap {
+  readonly fence: string;
+  readonly x: number;
+  readonly y: number;
+}
+
+/** The farm's physical state between nights: gates, fence gaps, gnomes still on their pedestals. */
+export interface WorldState {
+  readonly gates: readonly GateState[];
+  readonly fenceGaps: readonly FenceGap[];
+  /** Pedestal ids that still hold a gnome. */
+  readonly gnomes: readonly string[];
+}
+
 export interface SessionState {
   readonly night: number;
   readonly strikes: number;
   readonly farmer: FarmerState;
+  readonly world: WorldState;
   readonly seed: number;
 }
 
+export type DangerKind = 'window' | 'lamp' | 'dog';
+
+export type ActionKind = 'openGate' | 'closeGate' | 'pickLock' | 'relock' | 'kickFence' | 'dig' | 'endNight';
+
+/** Why an action cannot be done right now. */
+export type BlockReason = 'noStamina' | 'selfLock' | 'handsFull' | 'inGateway';
+
+/** The action E would do now, as the prompt shows it (GDD 5.4, 12). */
+export interface Interaction {
+  readonly action: ActionKind;
+  /** Object id: a gate, fence, pedestal, or dog hole. */
+  readonly target: string;
+  readonly tile: Tile;
+  readonly cost: number;
+  readonly holdSeconds: number;
+  readonly blocked: BlockReason | null;
+}
+
+export type NightEnd =
+  | { readonly reason: 'exit'; readonly hole: string }
+  | { readonly reason: 'spotted'; readonly tile: Tile; readonly by: DangerKind };
+
 export interface NightState {
   readonly night: number;
+  /** The dog hole the player came in by. Client-side only: it never goes into the NightResult. */
+  readonly entry: string;
   /** Player feet position, tile units. */
   readonly player: Vec;
   readonly stamina: number;
-  /** Solid tiles, row-major; derived from the farm and the night's gate and fence state. */
+  readonly world: WorldState;
+  /** The world as the farmer left it this evening; traces are the differences. */
+  readonly startWorld: WorldState;
+  /** Last direction walked, one axis (unit step); breaks ties between equally near objects. */
+  readonly facing: Tile;
+  /** Pedestal id of the gnome being carried. */
+  readonly carrying: string | null;
+  /** Soft tiles stepped on tonight, as tile indices in the order first entered. */
+  readonly footprints: readonly number[];
+  readonly hold: { readonly action: ActionKind; readonly target: string; readonly seconds: number } | null;
+  /** After an action completes, E must be released before the next one starts. */
+  readonly interactLatched: boolean;
+  readonly ended: NightEnd | null;
+  /** Danger per tile, row-major; fixed for the night (dangers stand still, GDD 2). */
+  readonly danger: readonly (DangerKind | null)[];
+  /** Solid tiles, row-major; follows gates and fence gaps. */
   readonly solid: readonly boolean[];
   readonly width: number;
   readonly height: number;
 }
 
-export type NightEvent = { readonly type: 'bumped' };
+export type NightEvent =
+  | { readonly type: 'bumped' }
+  | { readonly type: 'footprint'; readonly tile: Tile }
+  | { readonly type: 'action'; readonly action: ActionKind; readonly target: string }
+  | { readonly type: 'refused'; readonly action: ActionKind; readonly target: string; readonly reason: BlockReason }
+  | { readonly type: 'spotted'; readonly tile: Tile; readonly by: DangerKind }
+  | { readonly type: 'ended'; readonly end: NightEnd };
 
-/** One entry of the trace list (GDD 5.6). Concrete kinds are filled in T8. */
+/** One entry of the trace list (GDD 5.6). */
 export interface Trace {
   readonly id: string;
   readonly kind: 'footprints' | 'gate' | 'openLock' | 'brokenFence' | 'emptyPedestal' | 'sighting';
+  /** An area, gate, fence or pedestal id, or `tile_X_Y` for a sighting. */
   readonly target: string;
+  /** Footprints only: soft tiles with prints in that area. */
+  readonly count?: number;
 }
+
+/** Final state of one changed object (Technical plan Section 4.1, `endNight`). */
+export type NightChange =
+  | { readonly kind: 'gate'; readonly id: string; readonly open: boolean }
+  | { readonly kind: 'padlock'; readonly id: string; readonly locked: boolean }
+  | { readonly kind: 'fence'; readonly id: string; readonly gaps: readonly Tile[] }
+  | { readonly kind: 'pedestal'; readonly id: string; readonly hasGnome: boolean };
 
 /** What the client sends at the end of a night (GDD 5.6, Technical plan Section 4.1). */
 export interface NightResult {
   readonly night: number;
   readonly traces: readonly Trace[];
-  /** Final state of every changed gate, padlock, fence and pedestal; T8. */
-  readonly changes: readonly { readonly id: string; readonly state: string }[];
+  readonly changes: readonly NightChange[];
   readonly gnomeTaken: string | null;
   readonly spotted: boolean;
 }

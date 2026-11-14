@@ -98,7 +98,7 @@
       {
        "name": "kind",
        "type": "string",
-       "value": "soft"
+       "value": "stone"
       },
       {
        "name": "name",
@@ -302,7 +302,7 @@
     2,
     2,
     2,
-    2,
+    1,
     2,
     2,
     3,
@@ -1467,8 +1467,8 @@
      "id": 21,
      "name": "bush_court",
      "type": "",
-     "x": 208,
-     "y": 96,
+     "x": 192,
+     "y": 112,
      "width": 16,
      "height": 16,
      "rotation": 0,

@@ -1,7 +1,8 @@
-// AI-use disclosure: Claude (Claude Code) wrote this file under my direction for M0 (T7); session transitions are stubs until T8 to T10.
+// AI-use disclosure: Claude (Claude Code) wrote this file under my direction for M0 (T7) and T8; resolveNight, commitPlan and projectPlayerView stay stubs until T9 and T10.
 
 import { FARMER_START_MONEY, FARMER_STAMINA } from './rules.ts';
 import type { FarmDef, NightResult, NightState, Plan, PlayerView, SessionState } from './types.ts';
+import { initialLayout, initialWorld } from './world.ts';
 
 export class NotImplementedError extends Error {
   constructor(what: string, task: string) {
@@ -10,18 +11,16 @@ export class NotImplementedError extends Error {
   }
 }
 
-/** Night 1 with the starting budgets. The farmer's starting layout is placed in T8/T10. */
-export function newSession(_farm: FarmDef, seed: number): SessionState {
+/** Night 1 with the starting budgets and the starting layout (see `initialLayout` for the open question). */
+export function newSession(farm: FarmDef, seed: number): SessionState {
+  const layout = initialLayout(farm);
   return {
     night: 1,
     strikes: 0,
     seed,
-    farmer: { stamina: FARMER_STAMINA, money: FARMER_START_MONEY, layout: [], memory: [] },
+    farmer: { stamina: FARMER_STAMINA, money: FARMER_START_MONEY, layout, memory: [] },
+    world: initialWorld(farm, layout),
   };
-}
-
-export function endNight(_night: NightState): NightResult {
-  throw new NotImplementedError('endNight', 'T8');
 }
 
 export function resolveNight(_session: SessionState, _result: NightResult): SessionState {

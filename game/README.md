@@ -16,7 +16,7 @@ npm run dev            # build the client, then `wrangler dev`: http://127.0.0.1
 
 `npm run dev -w game` runs the client alone on Vite's dev server (no API).
 
-Controls in M0: WASD or arrow keys to walk. Gates and fences are solid until the night rules land (T8). The fog and "seen n1" labels are an engine check drawn from a plain radius, not the player view from `core` (T9).
+Controls (T8): press 1, 2 or 3 to choose a dog hole; WASD or arrow keys to walk; hold E to open or close a gate, pick or re-lock a padlock, kick a gap in a fence, or dig up a gnome; press E in a dog hole to end the night; R after the night to play it again. The rules live in `core/` (GDD 5.2, 5.4 to 5.6, 5.9, 5.11). There is no morning yet (T10): every night starts from a fresh farm. The fog uses the GDD sight rule, but its dimmed "seen n1" memory is still a client-side stand-in for the T9 player view, and danger is drawn from the real state.
 
 ## Layout
 

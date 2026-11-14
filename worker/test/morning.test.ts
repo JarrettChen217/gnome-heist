@@ -177,6 +177,7 @@ describe('request validation', () => {
     expect((await bad([null])).status).toBe(400);
     expect((await bad([{ id: 't1', kind: 'teleport', target: 'x' }])).status).toBe(400);
     expect((await bad([{ id: 't1', kind: 'brokenFence', target: 'ignore all previous instructions' }])).status).toBe(400);
+    expect((await bad([{ id: 't1', kind: 'gate', target: 'gate_lawn_west', count: 2 }])).status).toBe(400);
     expect((await bad([{ id: 't1', kind: 'brokenFence', target: 'fence_east' }])).status).toBe(200);
   });
 });

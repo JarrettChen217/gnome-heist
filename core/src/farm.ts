@@ -1,11 +1,12 @@
 // AI-use disclosure: Claude (Claude Code) wrote this file under my direction for M0 (T7); it implements the Tiled subset in docs/architecture.md Section 5.
 // Codex added the rendering-grid size checks under Hao's direction after the M0 review.
 //
-// `loadFarm`: Tiled JSON -> validated FarmDef. M0 checks the file format and
-// ids; the GDD checks (no slot in a safe zone, an open route at the start) are
-// added with the rules that define them (T8, T10).
+// `loadFarm`: Tiled JSON -> validated FarmDef. Checks the file format and ids
+// (M0) and the GDD (T8): no lamp post, doghouse spot or gate in an entry safe
+// zone, every window sight line starts at a wall, and an open route at the start.
 
 import type { FarmDef, FarmObject, GateDef, GroundKind, TileRect } from './types.ts';
+import { hasOpenRoute, inSafeZone, initialLayout, initialWorld, windowLine } from './world.ts';
 
 export class FarmFormatError extends Error {
   readonly problems: readonly string[];
@@ -261,6 +262,19 @@ export function loadFarm(tiledJson: Json): FarmDef {
     mapVersion: fnv1a(JSON.stringify(m)),
   };
 
+  if (problems.length > 0) throw new FarmFormatError(problems);
+
+  // GDD checks on a well-formed map.
+  for (const o of [...farm.lampPosts, ...farm.doghouseSpots, ...farm.gates]) {
+    if (inSafeZone(farm, o)) problems.push(`"${o.id}" is inside an entry safe zone (GDD 5.2)`);
+  }
+  for (const w of farm.windowSight) {
+    if (windowLine(farm, w) === null) problems.push(`window sight "${w.id}" must be one tile wide and start at a wall`);
+  }
+  if (farm.dogHoles.length === 0) problems.push('the map needs at least one dog hole');
+  else if (!hasOpenRoute(farm, initialWorld(farm, initialLayout(farm)))) {
+    problems.push('no gnome is reachable from a dog hole for at most 1 stamina at the start (GDD 5.7)');
+  }
   if (problems.length > 0) throw new FarmFormatError(problems);
   return farm;
 }

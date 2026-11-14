@@ -15,18 +15,25 @@ function copyAction(a: PlanAction): PlanAction {
   }
 }
 
+/** Field by field; `count` only for footprints. */
+function copyTrace(t: Trace): Trace {
+  return t.kind === 'footprints' && typeof t.count === 'number'
+    ? { id: t.id, kind: t.kind, target: t.target, count: t.count }
+    : { id: t.id, kind: t.kind, target: t.target };
+}
+
 /**
  * Builds the farmer's context as a new object from an explicit allowlist
  * (Technical plan Section 4.2). Never spread a larger object into it.
  */
 export function buildFarmerContext(input: { farmer: FarmerState; tracesToday: readonly Trace[] }): FarmerContext {
   return {
-    tracesToday: input.tracesToday.map((t) => ({ id: t.id, kind: t.kind, target: t.target })),
+    tracesToday: input.tracesToday.map(copyTrace),
     layout: input.farmer.layout.map((d) => ({ id: d.id, kind: d.kind, slot: d.slot })),
     stamina: input.farmer.stamina,
     money: input.farmer.money,
     memory: input.farmer.memory.map((m) => ({
-      traces: m.traces.map((t) => ({ id: t.id, kind: t.kind, target: t.target })),
+      traces: m.traces.map(copyTrace),
       actions: m.actions.map(copyAction),
       line: m.line,
     })),

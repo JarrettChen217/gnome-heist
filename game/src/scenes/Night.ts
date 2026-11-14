@@ -1,37 +1,59 @@
-// AI-use disclosure: Claude (Claude Code) wrote this file under my direction for M0 (T7); the fog here is an engine check, not the T9 player view.
+// AI-use disclosure: Claude (Claude Code) wrote this file under my direction for M0 (T7) and wired in the T8 night rules; the fog here is a pre-T9 stand-in, not the PlayerView.
 // Codex fixed rectangular fence placement under Hao's direction after the M0 review.
 import * as Phaser from 'phaser';
-import { loadFarm, newSession, startNight, tick } from '@gnome-heist/core';
-import type { FarmDef, FarmObject, NightState } from '@gnome-heist/core';
-import { MIN_CAMERA_ZOOM, DEBUG_FOG_RADIUS_TILES, STEP_SECONDS, TILE_PX } from '../constants.ts';
+import { PLAYER_STAMINA, currentInteraction, endNight, loadFarm, newSession, startNight, tick, tileOf, tilesOf, visibleTiles } from '@gnome-heist/core';
+import type { FarmDef, FarmObject, Interaction, NightEnd, NightResult, NightState, SessionState, Tile } from '@gnome-heist/core';
+import { MIN_CAMERA_ZOOM, STEP_SECONDS, TILE_PX } from '../constants.ts';
 import { fenceSegments } from '../fence.ts';
+import { REFUSAL, promptText, resultLines } from '../text.ts';
+import type { PromptText } from '../text.ts';
 
-/** One drawn farm object, with a faded "last seen" copy for the fog check. */
+/** One drawn farm object. `key` gives its texture from the night state; the ghost keeps the last texture seen. */
 interface Prop {
-  readonly tiles: readonly { x: number; y: number }[];
+  readonly tiles: readonly Tile[];
   readonly live: Phaser.GameObjects.Image;
   readonly ghost: Phaser.GameObjects.Image;
   readonly tag: Phaser.GameObjects.Text;
+  readonly key: (n: NightState) => string | null;
 }
 
+export type Phase = 'choose' | 'night' | 'ended';
+
 export interface NightHudState {
+  phase: Phase;
   night: number;
   stamina: number;
-  tile: { x: number; y: number };
+  maxStamina: number;
+  carrying: boolean;
+  holes: string[];
+  prompt: PromptText | null;
+  /** 0..1 while E is held on an action. */
+  progress: number;
+  message: PromptText | null;
+  result: string[] | null;
 }
 
 /** Depth from the y of an object's feet, so the player passes behind and in front of tall things. */
 const depthOf = (feetYpx: number) => 10 + feetYpx;
+const DANGER_COLOUR = { window: 0x8fc7ff, lamp: 0xffe27a, dog: 0xff9a4a } as const;
 
 export class NightScene extends Phaser.Scene {
   private farm!: FarmDef;
+  private session!: SessionState;
   private night!: NightState;
+  private phase: Phase = 'choose';
+  private result: NightResult | null = null;
   private player!: Phaser.GameObjects.Image;
+  private carried!: Phaser.GameObjects.Image;
   private fog!: Phaser.GameObjects.Graphics;
+  private dangerLayer!: Phaser.GameObjects.Graphics;
+  private printsLayer!: Phaser.GameObjects.Graphics;
   private props: Prop[] = [];
   private explored!: Uint8Array;
-  private keys!: Record<'up' | 'down' | 'left' | 'right' | 'w' | 'a' | 's' | 'd', Phaser.Input.Keyboard.Key>;
+  private keys!: Record<string, Phaser.Input.Keyboard.Key>;
   private acc = 0;
+  private message: { text: PromptText; until: number } | null = null;
+  private printsDrawn = 0;
 
   constructor() {
     super('Night');
@@ -39,22 +61,19 @@ export class NightScene extends Phaser.Scene {
 
   create(): void {
     // The same .tmj the rules read: Phaser renders it, core/loadFarm validates it.
-    const json = this.cache.tilemap.get('farm').data as unknown;
-    this.farm = loadFarm(json);
-    this.night = startNight(newSession(this.farm, 1), this.farm);
+    this.farm = loadFarm(this.cache.tilemap.get('farm').data as unknown);
     console.info(`[gnome-heist] map version ${this.farm.mapVersion}`);
-    this.explored = new Uint8Array(this.farm.width * this.farm.height);
 
     const map = this.make.tilemap({ key: 'farm' });
     const tileset = map.addTilesetImage('greybox', 'greybox');
     if (tileset === null) throw new Error('tileset "greybox" missing from the map');
     map.createLayer('ground', tileset, 0, 0)?.setDepth(0);
     map.createLayer('decoration', tileset, 0, 0)?.setDepth(1);
+    this.dangerLayer = this.add.graphics().setDepth(2);
+    this.printsLayer = this.add.graphics().setDepth(3);
 
-    this.addProps();
-    this.player = this.add.image(0, 0, 'player').setOrigin(0.5, 1);
-    this.syncPlayer();
-
+    this.player = this.add.image(0, 0, 'player').setOrigin(0.5, 1).setVisible(false);
+    this.carried = this.add.image(0, 0, 'gnome').setOrigin(0.5, 1).setVisible(false);
     this.fog = this.add.graphics().setDepth(100000);
 
     const cam = this.cameras.main;
@@ -62,19 +81,47 @@ export class NightScene extends Phaser.Scene {
     this.fitZoom();
     this.scale.on(Phaser.Scale.Events.RESIZE, this.fitZoom, this);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.scale.off(Phaser.Scale.Events.RESIZE, this.fitZoom, this));
-    // Phaser 4: startFollow without the second argument turns the camera's roundPixels off.
-    cam.startFollow(this.player, true);
 
     const kb = this.input.keyboard;
     if (kb === null) throw new Error('keyboard input unavailable');
     const K = Phaser.Input.Keyboard.KeyCodes;
-    this.keys = {
-      up: kb.addKey(K.UP), down: kb.addKey(K.DOWN), left: kb.addKey(K.LEFT), right: kb.addKey(K.RIGHT),
-      w: kb.addKey(K.W), a: kb.addKey(K.A), s: kb.addKey(K.S), d: kb.addKey(K.D),
-    };
+    this.keys = Object.fromEntries(
+      Object.entries({ up: K.UP, down: K.DOWN, left: K.LEFT, right: K.RIGHT, w: K.W, a: K.A, s: K.S, d: K.D, e: K.E, r: K.R, one: K.ONE, two: K.TWO, three: K.THREE }).map(
+        ([name, code]) => [name, kb.addKey(code)],
+      ),
+    );
 
+    this.newSessionAndChoose();
     this.scene.launch('Hud');
-    this.publishDebug();
+  }
+
+  /** M1: every night starts from a fresh session (the morning that carries changes over is T10). */
+  private newSessionAndChoose(): void {
+    this.session = newSession(this.farm, 1);
+    this.night = startNight(this.session, this.farm, this.farm.dogHoles[0]!.id);
+    this.phase = 'choose';
+    this.result = null;
+    this.explored = new Uint8Array(this.farm.width * this.farm.height);
+    this.printsDrawn = 0;
+    this.printsLayer.clear();
+    this.player.setVisible(false);
+    this.carried.setVisible(false);
+    for (const p of this.props) [p.live, p.ghost, p.tag].forEach((o) => o.destroy());
+    this.props = [];
+    this.addProps();
+    this.drawDanger();
+    this.cameras.main.stopFollow();
+    this.cameras.main.centerOn((this.farm.width * TILE_PX) / 2, (this.farm.height * TILE_PX) / 2);
+  }
+
+  private beginNight(entry: string): void {
+    this.night = startNight(this.session, this.farm, entry);
+    this.phase = 'night';
+    this.acc = 0;
+    this.player.setVisible(true);
+    this.syncPlayer();
+    // Phaser 4: startFollow without the second argument turns the camera's roundPixels off.
+    this.cameras.main.startFollow(this.player, true);
   }
 
   /** Integer zoom large enough that the map fills the window, so the camera always has room to follow. */
@@ -86,102 +133,162 @@ export class NightScene extends Phaser.Scene {
 
   private addProps(): void {
     const f = this.farm;
-    const add = (o: FarmObject, key: string, originY = 1) => {
+    const layout = this.session.farmer.layout;
+    const add = (o: FarmObject, key: (n: NightState) => string | null, originY = 1) => {
       // Feet at the bottom edge of the object's tiles.
       const x = (o.rect.x + o.rect.w / 2) * TILE_PX;
       const y = (o.rect.y + o.rect.h) * TILE_PX;
-      const live = this.add.image(x, y, key).setOrigin(0.5, originY).setDepth(depthOf(y));
-      const ghost = this.add.image(x, y, key).setOrigin(0.5, originY).setDepth(depthOf(y)).setAlpha(0.4).setVisible(false);
+      const first = key(this.night) ?? 'pedestalEmpty';
+      const live = this.add.image(x, y, first).setOrigin(0.5, originY).setDepth(depthOf(y));
+      const ghost = this.add.image(x, y, first).setOrigin(0.5, originY).setDepth(depthOf(y)).setAlpha(0.4).setVisible(false);
       const tag = this.add
         .text(x, y - live.height - 1, 'seen n1', { fontFamily: 'monospace', fontSize: '24px', color: '#d8d8c8' })
         .setScale(0.25)
         .setOrigin(0.5, 1)
         .setDepth(100001)
         .setVisible(false);
-      const tiles = [];
-      for (let ty = o.rect.y; ty < o.rect.y + o.rect.h; ty++) for (let tx = o.rect.x; tx < o.rect.x + o.rect.w; tx++) tiles.push({ x: tx, y: ty });
-      this.props.push({ tiles, live, ghost, tag });
+      this.props.push({ tiles: tilesOf(o), live, ghost, tag, key });
     };
-    f.lampPosts.forEach((o) => add(o, 'lampPost'));
-    f.doghouseSpots.forEach((o) => add(o, 'doghouseSpot'));
-    f.pedestals.forEach((o) => add(o, 'pedestal'));
-    f.bushes.forEach((o) => add(o, 'bush'));
+    const has = (kind: string, slot: string) => layout.some((d) => d.kind === kind && d.slot === slot);
+    f.lampPosts.forEach((o) => add(o, () => (has('lamp', o.id) ? 'lampPost' : 'lampPostDark')));
+    f.doghouseSpots.forEach((o) => add(o, () => (has('doghouse', o.id) ? 'doghouse' : 'doghouseSpot')));
+    f.pedestals.forEach((o) => add(o, (n) => (n.world.gnomes.includes(o.id) ? 'pedestal' : 'pedestalEmpty')));
+    f.bushes.forEach((o) => add(o, () => 'bush'));
     f.gates.forEach((o) => {
-      add(o, 'gate');
-      if (o.padlocked) add(o, 'padlock', 0);
+      const gate = (n: NightState) => n.world.gates.find((g) => g.id === o.id)!;
+      add(o, (n) => (gate(n).open ? 'gateOpen' : 'gate'));
+      add(o, (n) => (gate(n).padlock === 'none' ? null : gate(n).padlock === 'locked' ? 'padlock' : 'padlockOpen'), 0);
     });
-    f.fences.forEach((o) => {
-      fenceSegments(o).forEach((segment) => add(segment, 'fence'));
+    f.fences.forEach((o) =>
+      fenceSegments(o).forEach((seg) => add(seg, (n) => (n.world.fenceGaps.some((g) => g.x === seg.rect.x && g.y === seg.rect.y) ? 'fenceGap' : 'fence'))),
+    );
+  }
+
+  /** Danger is drawn on the ground (GDD 5.5, 12). Pre-T9 it shows the real state; T9 draws it from the PlayerView. */
+  private drawDanger(): void {
+    const g = this.dangerLayer.clear();
+    this.night.danger.forEach((d, i) => {
+      if (d === null) return;
+      const x = (i % this.farm.width) * TILE_PX;
+      const y = Math.floor(i / this.farm.width) * TILE_PX;
+      g.fillStyle(DANGER_COLOUR[d], 0.35).fillRect(x, y, TILE_PX, TILE_PX);
+      g.lineStyle(1, DANGER_COLOUR[d], 0.8).strokeRect(x + 0.5, y + 0.5, TILE_PX - 1, TILE_PX - 1);
     });
   }
 
-  override update(_time: number, deltaMs: number): void {
+  override update(time: number, deltaMs: number): void {
     const k = this.keys;
-    const input = {
-      moveX: (k.right.isDown || k.d.isDown ? 1 : 0) - (k.left.isDown || k.a.isDown ? 1 : 0),
-      moveY: (k.down.isDown || k.s.isDown ? 1 : 0) - (k.up.isDown || k.w.isDown ? 1 : 0),
-    };
-    // Fixed steps; at most a quarter second per frame so a stalled tab does not jump.
-    this.acc = Math.min(this.acc + deltaMs / 1000, 0.25);
-    while (this.acc >= STEP_SECONDS) {
-      this.night = tick(this.night, input, STEP_SECONDS).night;
-      this.acc -= STEP_SECONDS;
+    if (this.phase === 'choose') {
+      const pick = [k['one'], k['two'], k['three']].findIndex((key) => key !== undefined && Phaser.Input.Keyboard.JustDown(key));
+      const hole = pick >= 0 ? this.farm.dogHoles[pick] : undefined;
+      if (hole) this.beginNight(hole.id);
+    } else if (this.phase === 'ended') {
+      if (k['r'] && Phaser.Input.Keyboard.JustDown(k['r'])) this.newSessionAndChoose();
+    } else {
+      const down = (...names: string[]) => names.some((n) => k[n]?.isDown === true);
+      const input = {
+        moveX: (down('right', 'd') ? 1 : 0) - (down('left', 'a') ? 1 : 0),
+        moveY: (down('down', 's') ? 1 : 0) - (down('up', 'w') ? 1 : 0),
+        // A tap shorter than a frame still counts as a press (ending the night is a press).
+        interact: down('e') || (k['e'] !== undefined && Phaser.Input.Keyboard.JustDown(k['e'])),
+      };
+      // Fixed steps; at most a quarter second per frame so a stalled tab does not jump.
+      this.acc = Math.min(this.acc + deltaMs / 1000, 0.25);
+      while (this.acc >= STEP_SECONDS && this.phase === 'night') {
+        const r = tick(this.farm, this.night, input, STEP_SECONDS);
+        this.night = r.night;
+        this.acc -= STEP_SECONDS;
+        for (const e of r.events) {
+          if (e.type === 'refused') this.flash({ text: REFUSAL[e.reason], red: true }, time);
+          if (e.type === 'ended') this.finish(e.end);
+        }
+      }
+      this.syncPlayer();
     }
-    this.syncPlayer();
-    this.drawFog();
-    this.registry.set('hud', this.hudState());
+    this.drawPrints();
+    this.drawFogAndProps();
+    this.registry.set('hud', this.hudState(time));
     this.publishDebug();
+  }
+
+  private finish(end: NightEnd): void {
+    this.phase = 'ended';
+    this.result = endNight(this.farm, this.night);
+    console.info('[gnome-heist] night result', JSON.stringify(this.result));
+    if (end.reason === 'spotted') this.cameras.main.shake(250, 0.004);
+  }
+
+  private flash(text: PromptText, time: number): void {
+    this.message = { text, until: time + 1500 };
   }
 
   private syncPlayer(): void {
     const x = this.night.player.x * TILE_PX;
     const y = this.night.player.y * TILE_PX;
     this.player.setPosition(x, y).setDepth(depthOf(y));
+    this.carried.setPosition(x, y - this.player.height).setDepth(depthOf(y) + 0.1).setVisible(this.night.carrying !== null && this.phase !== 'choose');
   }
 
-  private playerTile() {
-    return { x: Math.floor(this.night.player.x), y: Math.floor(this.night.player.y) };
-  }
-
-  private hudState(): NightHudState {
-    return { night: this.night.night, stamina: this.night.stamina, tile: this.playerTile() };
+  /** Footprints appear as you make them (GDD 12). */
+  private drawPrints(): void {
+    const prints = this.night.footprints;
+    for (; this.printsDrawn < prints.length; this.printsDrawn++) {
+      const i = prints[this.printsDrawn]!;
+      const x = (i % this.farm.width) * TILE_PX;
+      const y = Math.floor(i / this.farm.width) * TILE_PX;
+      this.printsLayer.fillStyle(0x2a1d12, 0.8).fillEllipse(x + 5, y + 6, 3, 5).fillEllipse(x + 10, y + 10, 3, 5);
+    }
   }
 
   /**
-   * ENGINE CHECK: a per-tile overlay drawn in world space (no masks, no render
-   * textures). Visible = within a plain radius; explored = dimmed, with faded
-   * "last seen" copies of objects; unexplored = black.
+   * Pre-T9 fog: sight from core (GDD 5.11: 5 tiles, blocked by hedges, bushes
+   * and the house); explored tiles are dimmed and show faded copies of what was
+   * last seen there. Before the night starts, the whole farm is dark.
    */
-  private drawFog(): void {
+  private drawFogAndProps(): void {
     const { width: W, height: H } = this.farm;
-    const p = this.night.player;
-    const r2 = DEBUG_FOG_RADIUS_TILES * DEBUG_FOG_RADIUS_TILES;
-    const visible = new Uint8Array(W * H);
-    for (let y = 0; y < H; y++) {
-      for (let x = 0; x < W; x++) {
-        const dx = x + 0.5 - p.x;
-        const dy = y + 0.5 - p.y;
-        if (dx * dx + dy * dy <= r2) {
-          visible[y * W + x] = 1;
-          this.explored[y * W + x] = 1;
-        }
-      }
-    }
+    const visible = this.phase === 'choose' ? new Array<boolean>(W * H).fill(false) : visibleTiles(this.farm, tileOf(this.night.player));
+    visible.forEach((v, i) => {
+      if (v) this.explored[i] = 1;
+    });
     this.fog.clear();
-    for (let y = 0; y < H; y++) {
-      for (let x = 0; x < W; x++) {
-        const i = y * W + x;
-        if (visible[i]) continue;
-        this.fog.fillStyle(0x05060a, this.explored[i] ? 0.6 : 1).fillRect(x * TILE_PX, y * TILE_PX, TILE_PX, TILE_PX);
-      }
+    for (let i = 0; i < W * H; i++) {
+      if (visible[i]) continue;
+      this.fog.fillStyle(0x05060a, this.explored[i] ? 0.6 : 1).fillRect((i % W) * TILE_PX, Math.floor(i / W) * TILE_PX, TILE_PX, TILE_PX);
     }
     for (const prop of this.props) {
+      const key = prop.key(this.night);
       const seen = prop.tiles.some((t) => visible[t.y * W + t.x]);
       const known = prop.tiles.some((t) => this.explored[t.y * W + t.x]);
-      prop.live.setVisible(seen);
-      prop.ghost.setVisible(!seen && known);
-      prop.tag.setVisible(!seen && known);
+      if (key !== null) prop.live.setTexture(key);
+      prop.live.setVisible(seen && key !== null);
+      if (seen && key !== null) prop.ghost.setTexture(key);
+      prop.ghost.setVisible(!seen && known && key !== null);
+      prop.tag.setVisible(!seen && known && key !== null);
     }
+  }
+
+  private interaction(): Interaction | null {
+    return this.phase === 'night' ? currentInteraction(this.farm, this.night) : null;
+  }
+
+  private hudState(time: number): NightHudState {
+    const i = this.interaction();
+    const hold = this.night.hold;
+    const progress = i && hold && hold.action === i.action && hold.target === i.target && i.holdSeconds > 0 ? hold.seconds / i.holdSeconds : 0;
+    if (this.message && time > this.message.until) this.message = null;
+    return {
+      phase: this.phase,
+      night: this.night.night,
+      stamina: this.night.stamina,
+      maxStamina: PLAYER_STAMINA,
+      carrying: this.night.carrying !== null,
+      holes: this.farm.dogHoles.map((h) => h.id),
+      prompt: promptText(i, this.night.carrying),
+      progress,
+      message: this.message?.text ?? null,
+      result: this.phase === 'ended' && this.night.ended && this.result ? resultLines(this.night.ended, this.result) : null,
+    };
   }
 
   /** Read-only snapshot for automated checks in the browser (window.__gnomeDebug). */
@@ -189,9 +296,22 @@ export class NightScene extends Phaser.Scene {
     const cam = this.cameras.main;
     (window as unknown as { __gnomeDebug: unknown }).__gnomeDebug = {
       mapVersion: this.farm.mapVersion,
+      phase: this.phase,
       player: { ...this.night.player },
-      tile: this.playerTile(),
-      camera: { scrollX: cam.scrollX, scrollY: cam.scrollY, zoom: cam.zoom, width: cam.width, height: cam.height, roundPixels: cam.roundPixels, worldView: { x: cam.worldView.x, y: cam.worldView.y, w: cam.worldView.width, h: cam.worldView.height } },
+      tile: tileOf(this.night.player),
+      stamina: this.night.stamina,
+      carrying: this.night.carrying,
+      hold: this.night.hold,
+      interaction: this.interaction(),
+      ended: this.night.ended,
+      world: this.night.world,
+      footprints: this.night.footprints.length,
+      result: this.result,
+      camera: {
+        zoom: cam.zoom,
+        roundPixels: cam.roundPixels,
+        worldView: { x: cam.worldView.x, y: cam.worldView.y, w: cam.worldView.width, h: cam.worldView.height },
+      },
       depth: { player: this.player.depth },
     };
   }

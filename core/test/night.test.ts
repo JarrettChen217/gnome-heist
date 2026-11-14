@@ -1,4 +1,4 @@
-// AI-use disclosure: Claude (Claude Code) wrote this file under my direction for M0 (T7); it covers only walking and collision (the night rules are T8).
+// AI-use disclosure: Claude (Claude Code) wrote this file under my direction for M0 (T7); walking and collision on the real greybox farm (the other night rules are in rules.test.ts, T8).
 
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
@@ -10,7 +10,7 @@ const night0 = startNight(newSession(farm, 1), farm);
 const at = (x: number, y: number): NightState => ({ ...night0, player: { x, y } });
 const walk = (n: NightState, moveX: number, moveY: number, seconds: number, dt = 1 / 60) => {
   let s = n;
-  for (let t = 0; t < seconds; t += dt) s = tick(s, { moveX, moveY }, dt).night;
+  for (let t = 0; t < seconds; t += dt) s = tick(farm, s, { moveX, moveY, interact: false }, dt).night;
   return s;
 };
 
@@ -21,7 +21,7 @@ describe('walking and collision (M0)', () => {
   });
 
   it('moves at the walking speed on open ground', () => {
-    const n = tick(at(3.5, 10.5), { moveX: 1, moveY: 0 }, 0.25).night;
+    const n = tick(farm, at(3.5, 10.5), { moveX: 1, moveY: 0, interact: false }, 0.25).night;
     expect(n.player.x).toBeCloseTo(4.5);
     expect(n.player.y).toBe(10.5);
   });
@@ -51,7 +51,7 @@ describe('walking and collision (M0)', () => {
   });
 
   it('does not tunnel through a wall on a long frame', () => {
-    const n = tick(at(6.5, 10.5), { moveX: 1, moveY: 0 }, 2).night;
+    const n = tick(farm, at(6.5, 10.5), { moveX: 1, moveY: 0, interact: false }, 2).night;
     expect(n.player.x).toBeLessThan(8);
   });
 

@@ -1,4 +1,4 @@
-// AI-use disclosure: Claude (Claude Code) wrote this script under my direction for M0 (T7); it generates the greybox farm and tileset, which I can then edit in Tiled.
+// AI-use disclosure: Claude (Claude Code) wrote this script under my direction for M0 (T7) and adjusted it in T8; it generates the greybox farm and tileset, which I can then edit in Tiled.
 //
 // Writes maps/farm.tmj (Tiled JSON, the subset in docs/architecture.md Section 5)
 // and maps/greybox.png (a flat-colour tileset). Run: npm run generate -w maps
@@ -24,8 +24,8 @@ const LAYOUT = [
   '#,,,,,,.#HHHHHH#.,,,,,,#',
   '#.......G......P.......#',
   '#...L...#..L...#...K...#',
-  '#.......#,,g,B,#.......#',
-  '#########......####P####',
+  '#.......#,,g,,,#.......#',
+  '#########...B..####P####',
   '#,,,,,,,#......#,,,,,,,#',
   '#,,,,,,.#..L...#.,,,g,,#',
   'D.......G......F.......#',
@@ -47,7 +47,8 @@ const TILES = [
   ['stone', 'stone', [150, 150, 145]],
   ['hedge', 'blocked', [38, 82, 44]],
   ['house', 'blocked', [128, 70, 56]],
-  ['dogHole', 'soft', [52, 38, 26]],
+  // Stone, so no footprints mark which entry was used (Configuration Document A2).
+  ['dogHole', 'stone', [52, 38, 26]],
   ['flowers', null, null], // decoration only
 ];
 const GROUND_OF = { '#': 2, H: 3, '.': 1, ',': 0, D: 4, G: 1, P: 1, F: 0, g: 0, L: 1, K: 1, B: 0 };
@@ -61,7 +62,7 @@ const NAMES = {
   P: { '15,4': 'gate_court_east', '19,7': 'gate_east_beds' },
   L: { '4,5': 'post_nw', '11,5': 'post_court', '11,9': 'post_lawn', '4,14': 'post_sw', '19,14': 'post_se' },
   K: { '19,5': 'spot_ne', '13,13': 'spot_lawn' },
-  B: { '13,6': 'bush_court', '17,11': 'bush_se', '5,16': 'bush_sw' },
+  B: { '12,7': 'bush_court', '17,11': 'bush_se', '5,16': 'bush_sw' },
 };
 for (let y = 0; y < H; y++) {
   for (let x = 0; x < W; x++) {

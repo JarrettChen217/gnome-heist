@@ -18,7 +18,7 @@ const FORBIDDEN: [string, RegExp][] = [
   ['timers', /\bset(Timeout|Interval)\b/],
   ['unseeded randomness', /Math\.random/],
   ['network: fetch', /\bfetch\s*\(/],
-  ['DOM: window/document', /\b(window|document)\b/],
+  ['DOM: window/document access', /\b(window|document)\s*[.[]/],
 ];
 
 describe('core/ dependency rule', () => {

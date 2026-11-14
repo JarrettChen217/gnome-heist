@@ -1,4 +1,4 @@
-// AI-use disclosure: Claude (Claude Code) wrote this file under my direction for M0 (T11a); it is the walking skeleton of the morning protocol in docs/architecture.md Section 4.3.
+// AI-use disclosure: Claude (Claude Code) wrote this file under my direction for M0 (T11a) and added the footprint-count check in T8; it is the walking skeleton of the morning protocol in docs/architecture.md Section 4.3.
 import { DurableObject } from 'cloudflare:workers';
 import { FARMER_STAMINA, FARMER_START_MONEY, buildFarmerContext } from '@gnome-heist/core';
 import type { FarmerState, NightResult, Plan, Trace } from '@gnome-heist/core';
@@ -59,6 +59,9 @@ function parseRequest(body: unknown): MorningRequest | string {
     if (!TRACE_KINDS.includes(r['kind'] as Trace['kind'])) return 'trace kind is not a known kind';
     if (typeof r['id'] !== 'string' || !ID_RE.test(r['id']) || typeof r['target'] !== 'string' || !ID_RE.test(r['target'])) {
       return 'trace id and target must be 1 to 64 of [A-Za-z0-9_-]';
+    }
+    if (r['count'] !== undefined && (r['kind'] !== 'footprints' || !Number.isInteger(r['count']) || (r['count'] as number) < 1)) {
+      return 'count is a positive integer, on footprints only';
     }
   }
   return b as unknown as MorningRequest;

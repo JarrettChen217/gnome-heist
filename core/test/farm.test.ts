@@ -76,6 +76,14 @@ describe('loadFarm rejects maps outside the Tiled subset', () => {
     ['gate without padlocked', (m) => (layer(m, 'gates').objects[0].properties.length = 1), /padlocked/],
     ['flipped tile', (m) => (layer(m, 'ground').data[0] |= 0x80000000), /no kind/],
     ['unknown ground kind', (m) => (m.tilesets[0].tiles[0].properties[0].value = 'lava'), /unknown kind/],
+    // GDD checks (T8)
+    ['lamp post in a safe zone', (m) => Object.assign(layer(m, 'lampPosts').objects[0], { x: 2 * 16, y: 10 * 16 }), /post_nw" is inside an entry safe zone/],
+    ['window line not at a wall', (m) => Object.assign(layer(m, 'windowSight').objects[0], { y: 5 * 16 }), /must be one tile wide and start at a wall/],
+    [
+      'no open route at the start',
+      (m) => (layer(m, 'pedestals').objects = [{ ...layer(m, 'pedestals').objects[0], x: 10 * 16, y: 1 * 16 }]),
+      /no gnome is reachable/,
+    ],
   ])('%s', (_name, mutate, pattern) => {
     expect(problemsOf(mutate).join('\n')).toMatch(pattern);
   });
