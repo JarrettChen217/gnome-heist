@@ -74,7 +74,7 @@ An empty `actions` list is allowed. `inspected` lists the places the morning ani
 - Inventing defenses, slots, or ids that are not in the farm description.
 - A plan that costs more stamina than he has (2) or more coins than he has.
 - Placing or moving anything onto a dog hole or within 2 tiles of it (entry safe zone).
-- Any plan that leaves no unlit, unguarded route from some dog hole to some remaining gnome (the reachability invariant).
+- Any plan that leaves no safe route (unlit, unguarded, out of the window's sight; GDD 5.11) from some dog hole to some remaining gnome (the reachability invariant; see GDD Q9 for the case the player's own theft causes).
 - A `line` that states the player's real path or position, or refers to information outside its input.
 - A `line` that is offensive or breaks character.
 
@@ -90,7 +90,7 @@ Named context sources, in prompt order:
 4. `traces_today`: the extractor's trace list.
 5. `memory`: up to 3 previous mornings, each as {traces summary, actions taken, line}.
 
-Memory policy: the game, not the model, holds memory. Each morning it appends one summary, built only from that morning's filtered trace list and the committed plan, and keeps only the last 3. Memory lives in that session's isolated state and is deleted when the session ends. No player identity is stored. [Hao, on agent proposal]
+Memory policy: the game, not the model, holds memory. Each morning it appends one summary, built only from that morning's filtered trace list and the committed plan, and keeps only the last 3. Memory lives in that session's isolated state and is deleted when the session ends: at once on the client's finish notice, or by a Durable Object alarm 24 hours after the last request if no notice arrives (closed tab, offline mode). No player identity is stored. [Hao, on agent proposal]
 
 Retrieval: none planned. The whole context is small enough to send each time.
 
@@ -104,7 +104,7 @@ Retrieval: none planned. The whole context is small enough to send each time.
 | Output | JSON with a response schema; max output about 200 tokens. |
 | Where it runs | A Cloudflare Worker, which also serves the client on the same origin; one Durable Object per play session holds the farmer's state (layout, budget, memory, revision, morning log). Requests carry a `morningId` and revision so a morning is committed once ([Technical plan](architecture.md), Section 4.3). For Vertex, the edge entry point of the AI SDK provider with credentials from Worker bindings (C7). The context builder, validator, and rule-based farmer are one engine-free TypeScript package, `core/`, shared with the client and the tests ([Technical plan](architecture.md), Section 4). [Hao, on agent proposal, 2026-11-13] API keys and endpoints stay in Worker secrets (`wrangler secret put`; locally a gitignored `.dev.vars`) and never reach the browser or the repository. |
 | Two supported models | **Primary:** Claude Sonnet 5.5, thinking off. **Secondary:** Gemini 3.5 Flash-Lite, thinking low. Both stay supported, configured, and covered by the live evaluation. [Hao, 2026-11-12] |
-| Provider switching rules | The primary is set per session (`FARMER_PROVIDER`) and logged with every morning, so comparisons never mix providers silently. One output schema for all providers, kept simple because Vertex accepts only a subset of JSON Schema; semantic checks stay in the validator. **One morning, one deadline:** 4 s from the moment the request reaches the Durable Object, covering authentication, the model calls, validation, and the commit. SDK retries are off (`maxRetries: 0`) and every call gets an abort signal tied to the deadline. **At most two model attempts:** (1) the primary; (2) the secondary (`FARMER_SECONDARY`), only if the primary failed fast (a provider or connection error, or output that does not parse or match the schema, within 1.5 s) and at least 1.5 s remain. There is no same-provider retry. Anything else (a timeout, a second failure, a plan the validator rejects, too little time left) goes to the rule-based farmer. A result that arrives after the deadline is logged and never committed. The log records which of the three acted. Playtests use the primary only, so the player-facing comparison stays agent vs. rule; the model comparison runs in the automated evaluation (T13). [Hao, 2026-11-12, on agent proposal; tightened into one rule on 2026-11-13, on agent proposal after the outside review] |
+| Provider switching rules | The primary is set per session (`FARMER_PROVIDER`) and logged with every morning, so comparisons never mix providers silently. One output schema for all providers, kept simple because Vertex accepts only a subset of JSON Schema; semantic checks stay in the validator. **One morning, one deadline:** a 4 s target from the moment the request reaches the Durable Object, covering authentication, the model calls, validation, and the commit. Model calls must stop by an internal cut-off at 3.5 s, leaving about 0.5 s for the rule-based farmer, validation, and the single commit. SDK retries are off (`maxRetries: 0`) and every call gets an abort signal tied to the cut-off. The 4 s is an application target, not a guarantee about network or storage time; the client's 6 s timeout is the backstop. **At most two model attempts:** (1) the primary; (2) the secondary (`FARMER_SECONDARY`), only if the primary failed fast (a provider or connection error, or output that does not parse or match the schema, within 1.5 s) and at least 1.5 s remain. There is no same-provider retry. Anything else (a timeout, a second failure, a plan the validator rejects, too little time left) goes to the rule-based farmer. A **model** result that arrives after the cut-off is logged and never committed; the rule-based plan that replaced it is committed once, and the revision moves forward once. The log records which of the three acted. Playtests use the primary only, so the player-facing comparison stays agent vs. rule; the model comparison runs in the automated evaluation (T13). [Hao, 2026-11-12, on agent proposal; tightened into one rule on 2026-11-13, on agent proposal after the outside review] |
 
 Draft system instruction (v1, not yet tested):
 
@@ -117,7 +117,7 @@ Draft system instruction (v1, not yet tested):
 | Schema | Reject anything that does not parse or match the schema. |
 | Legality | Ids exist; slot kind matches the defense; nothing in an entry safe zone; every `inspected` id is a trace in this morning's list. |
 | Budget | Total stamina ≤ his stamina; coins ≤ his money. |
-| Reachability | Breadth-first search on the farm graph after applying the plan, with the route rules of GDD 5.11: at least one dog hole reaches at least one remaining gnome without lit, dog-alert, or locked tiles. Not run once the session is over (no morning then). |
+| Reachability | Breadth-first search on the farm graph after applying the plan, with the route rules of GDD 5.11: at least one dog hole reaches at least one remaining gnome by a safe route (no lit, dog-alert, or window-sight tiles; no locked gates). Not run once the session is over (no morning then). |
 | Line | At most 80 characters; word filter. |
 | Timeout | 4 s for the whole morning (A6). In the sweep, Sonnet 5.5 off had p95 2.69 s. The call runs during the morning's opening beat (about 3 s, GDD 5.8 step 0), which does not depend on the model's output; the walk to the inspected traces can only start after the plan arrives. The client waits about 6 s before running the rule-based farmer locally and staying on it for the rest of the session. To re-measure from the deployed Worker (C9). |
 | Retry | No same-provider retry; the only second attempt is the secondary under the rule in A6. |
@@ -148,8 +148,9 @@ Draft system instruction (v1, not yet tested):
 Same input, same budget, no model [Hao, on agent proposal]:
 
 1. If a fence was broken or a padlock left open, repair it (1 stamina).
-2. If he has a coin and stamina left, buy a lamp and place it on the free post nearest the area with the most fresh footprints (ties broken by fixed area order).
-3. Otherwise, with stamina left, move his nearest lamp to that post.
+2. If there are fresh footprints and he has a coin and stamina left, buy a lamp and place it on the free post nearest the area with the most fresh footprints (ties broken by fixed area order). If that post would be rejected, try the next nearest, in order of distance and then id.
+3. Otherwise, if there are fresh footprints and he has stamina left, move his nearest lamp to that post, with the same order.
+   With no fresh footprints, he skips steps 2 and 3.
 4. Skip any action that the safe-zone or reachability check would reject.
 5. Ties are broken by the lowest id; if no action is possible, he does nothing and keeps his coins. His plan goes through the same validator as the agent's.
 
@@ -161,8 +162,8 @@ It reads only today's traces, so it has no memory. In comparisons, the game runs
 | --- | --- | --- |
 | Model calls per session | at most 4 mornings (no morning after the last night), at most 2 attempts each (primary, then secondary under the A6 rule); every attempt counts toward the cap of 10 | GDD: 5 nights |
 | Latency per call | Sonnet 5.5 off: p50 1.75 s, p95 2.69 s, max 2.85 s. Flash-Lite low: p50 1.43 s, p95 1.73 s. Timeout 4 s. | 20 timed calls per configuration, 2026-11-12, laptop to provider, one night-3 input, earlier two-move contract (schema v0.3) |
-| Input and output tokens per call | Sonnet 5.5 off: 1,687 input, 126 output. Flash-Lite low: 1,090 input, 93 output. The budget contract adds a few dozen input tokens. | Same runs (tokenizers differ by provider) |
-| Cost per session | Sonnet 5.5 off: about $0.023 for 5 calls (a session has at most 4 mornings, so this is an upper estimate), under $0.05 at the 10-call cap. Flash-Lite low: about $0.003 for 5 calls. | Anthropic pricing page ($2 / $10 per 1M input/output tokens) and Vertex AI pricing page, global ($0.30 / $2.50), both read 2026-11-12. Anthropic usage is paid by me; Vertex is course-funded. |
+| Input and output tokens per call | Sonnet 5.5 off: 1,687 input, 126 output. Flash-Lite low: 1,090 input, 93 output. Token counts for the budget contract are not measured yet (C9). | Same runs (tokenizers differ by provider) |
+| Cost per session | Sonnet 5.5 off: about $0.023 for 5 calls at the earlier contract's average; the budget contract's cost is not measured yet (C9), under $0.05 at the 10-call cap. Flash-Lite low: about $0.003 for 5 calls. | Anthropic pricing page ($2 / $10 per 1M input/output tokens) and Vertex AI pricing page, global ($0.30 / $2.50), both read 2026-11-12. Anthropic usage is paid by me; Vertex is course-funded. |
 | Spending limit | Session refuses further calls after 10; target under $0.05 per session; daily cap set in the provider console | — |
 
 Limits of this measurement: one input, one day, 20 calls per configuration, called from a laptop rather than the Worker, and the earlier two-move contract. Gemini 3.1 Pro, Gemini 3.8 Flash and Gemini 4 had p95 latencies of 9.5 to 30 s that day and are excluded for now. These numbers support the current models as a provisional default only; they do not cover the new schema, the Worker, or Vertex authentication from a Worker. C9 re-measures in three steps.

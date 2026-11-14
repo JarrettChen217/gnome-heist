@@ -123,7 +123,7 @@ Each morning the farmer spends a small budget. [Hao]
 - **Catalog in v1:** lamp (lights the tiles around a lamp post), doghouse (the dog's alert radius around it), padlock (on a gate). He starts with 1 lamp and 1 padlock. Decoy gnomes and traps come later, not in v1. [Hao for the catalog; Proposed for the starting set]
 - Lamps go on predefined lamp posts, doghouses on predefined spots, padlocks on gates.
 - There are more gnomes than lamps, so he cannot cover everything at once. If he lights every gnome he can, a false trail can draw a lamp away. [Hao]
-- **He never seals the farm.** At least one unlit, unguarded route must stay open from some dog hole to some remaining gnome, and nothing may be placed in an entry's safe zone. The game enforces both, not the agent. A route follows the rules in Section 5.11. Once the session is over (Section 5.10) there is no morning, so the check is not needed. [Hao, on agent proposal]
+- **He never seals the farm.** At least one safe route (unlit, unguarded, out of the window's sight; Section 5.11) must stay open from some dog hole to some remaining gnome, and nothing may be placed in an entry's safe zone. The game enforces both, not the agent. A route follows the rules in Section 5.11. Once the session is over (Section 5.10) there is no morning, so the check is not needed. [Hao, on agent proposal]
 - How he chooses is specified in the [Configuration Document](configuration.md).
 
 ### 5.8 Morning sequence
@@ -152,13 +152,17 @@ Placeholder values, to be tuned in playtests. [Hao, on agent proposal]
 | Rule | v1 value |
 | --- | --- |
 | Movement and collision | Continuous movement; collision by whole tiles |
-| Routes (for the reachability check and the self-lock check) | 4-neighbour steps between tiles, no cutting corners. Passable: open ground, a closed plain gate (it can be opened for free), a broken fence. Not passable: a locked padlocked gate, an intact fence, hedges, the house. Lit tiles and tiles in a dog's radius do not count for the farmer's "unlit, unguarded" route. |
+| Routes | 4-neighbour steps between tiles, no cutting corners. Passable: open ground, a closed plain gate (it can be opened for free), a broken fence. Not passable: a locked padlocked gate, an intact fence, hedges, the house. |
+| Safe route (the farmer's never-seal check) | A route that also avoids every danger tile: lit tiles, the window's sight line, and dogs' radii |
+| Self-lock check | Uses routes only, not safe routes: it asks whether you can walk out at all. Walking through danger gets you spotted, which ends the night, so it does not strand you. |
 | Distance | Straight-line distance between tile centers |
 | Lamp | Lights tiles within 2 |
 | Dog | Alert radius 2 around the doghouse |
 | Player sight | 5 tiles; hedges, bushes, and the house block the line of sight |
 | Spotted | The center of the player's tile is on a lit tile, on the window's sight line, or inside a dog's radius |
 | Footprints | One per soft tile entered, counted per named area (the areas are drawn in the map) |
+
+Exact boundary semantics (the unit of `dt`, how a continuous position maps to a tile, whether a range includes its edge, a line of sight that grazes a corner) are fixed in code as named constants with tests in T8, then copied back here.
 
 ## 6. Intended dynamics
 
@@ -246,6 +250,7 @@ The farmer sees a trace list, his own layout, his remaining stamina and money, a
 | Q6 | Is a 24 × 18 farm large enough to feel like exploring, and small enough to finish by Gold (Dec 5)? | 24 × 18. | Greybox prototype |
 | Q7 | Does night 5 ending without 5 gnomes count as a loss or a partial result? | Partial result with score. | Rule-farmer prototype |
 | Q8 | Is a plain gate's free open and close too easy? | Free, but takes about 1 s in the open. | First external playtest |
+| Q9 | If the player's own theft leaves no safe route (they took the only unguarded gnome), every plan, even doing nothing, breaks the never-seal rule, and the rule-based farmer has no legal plan. Should the rule become "the farmer's actions never make it worse": he may not close the last safe route; if none is left after the night, his plan must reopen one when his budget allows (for example, by moving a lamp), and otherwise must not make it worse? | Yes, as stated; the rule-based farmer gets a first step that reopens a route. [Open] No M0 or M1 work depends on it. | Before T10 (Nov 21) |
 
 ## 17. Decision log
 
@@ -276,3 +281,4 @@ The farmer sees a trace list, his own layout, his remaining stamina and money, a
 | 2026-11-13 | A re-lock that would lock the player in is refused at no cost | Agent proposal, accepted by Hao | Decided |
 | 2026-11-13 | The morning opens with a fixed beat (about 3 s) that covers the model call; he inspects only traces in that morning's list | Agent proposal, accepted by Hao | Decided |
 | 2026-11-13 | Rule parameters (Section 5.11), the end-of-night order (Section 5.10), and the offline rule | Agent proposal, accepted by Hao | Decided (values are placeholders) |
+| 2026-11-13 | The never-seal check uses safe routes that also avoid the window's sight line; the self-lock check asks only whether you can walk out; exact boundary semantics are fixed in code in T8 | Agent proposal after the second outside review, accepted by Hao | Decided |

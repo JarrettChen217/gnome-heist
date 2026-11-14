@@ -87,9 +87,10 @@ Tests check the **serialized request body that would be sent to the model**: two
 - **Morning request.** The client sends `POST /session/{id}/morning` with `morningId`, `expectedRevision`, `mapVersion`, and the `NightResult`. The Durable Object:
   1. returns the stored result unchanged if this `morningId` was already committed (a retried request never charges, refills, or calls twice);
   2. rejects a request whose `expectedRevision` or `mapVersion` does not match;
-  3. records the morning as pending before any model call, because a Durable Object can interleave other requests while it awaits an outside `fetch()`;
-  4. runs the failover rule (A6), validates, and commits only if the revision is still the expected one; then returns the plan, the new layout, and the new revision.
+  3. allows **one pending morning per session**. A repeated request with the same `morningId` and the same body while that morning is pending gets "pending" back and starts no second model call; a request with the same `morningId` but a different body, or a different `morningId` for the same revision, is rejected. The pending record is written before any model call (a Durable Object can interleave other requests while it awaits an outside `fetch()`) and keeps the original deadline, so a retry never resets it. If the Worker is interrupted, an alarm at the deadline commits the rule-based plan, so a morning never stays pending;
+  4. runs the failover rule (A6), validates, and commits exactly once, only if the revision is still the expected one; then returns the plan, the new layout, and the new revision.
 - **Offline rule.** If the client gets no answer in time (network timeout about 6 s, above the Worker's 4 s budget), it runs `ruleFarmer` from `core/` locally and **switches the rest of this session to local rule mode**: later online responses for the session are ignored, and the log records the mode change. Reconciling a local morning back into the Durable Object is out of scope for v1.
+- **End of session.** When a session ends online, the client sends a finish notice (no model call) and the Durable Object deletes the session's memory. Sessions that never send one (closed tab, offline mode) are deleted by a Durable Object alarm 24 hours after their last request.
 
 ### 4.4 The player's view
 
@@ -130,11 +131,14 @@ Every dependency is pinned to an exact version at M0; nothing is left at `latest
 
 - `setMask` with a `BitmapMask` (removed; masks are Filters now), FX such as Bloom or Shine, custom pipelines, `setPipeline('Light2D')` (now `setLighting(true)`);
 - `setTintFill` (now `setTint(c).setTintMode(Phaser.TintModes.FILL)`);
-- `Geom.Point` (now `Vector2`), `Struct.Set` and `Struct.Map` (now native `Set` and `Map`);
-- `Math.TAU` meaning π/2 (in v4 it is 2π; `tsc` will not catch this);
-- relying on `roundPixels` being on (the default is now off; set it explicitly).
+- `Phaser.Geom.Point` (now `Phaser.Math.Vector2`); `Phaser.Structs.Set` (no longer exported);
+- `scene.textures.generate` and `Phaser.Create.GenerateTexture` (removed; draw greybox textures with Graphics and `generateTexture`, or load image files);
+- `Phaser.Math.TAU` meaning π/2 (in v4 it is 2π; `tsc` will not catch this);
+- relying on `roundPixels` being on: the game default is now off, and `camera.startFollow(target)` without its second argument also sets the camera's `roundPixels` to false, so pass it explicitly.
 
-`tsc` catches most removed APIs. **M0 acceptance for the engine:** the greybox farm loads from Tiled; a per-tile fog overlay and a last-seen snapshot draw correctly; a sprite passes behind and in front of a tall object by y; the camera follows; HUD text renders; the window resizes. A blocker in any of these during M0 means switching to 3.90.0 then, while it is cheap.
+Project choices (not engine requirements): use native `Map` and `Set` rather than `Phaser.Structs.Map`, which 4.2.1 still exports; use embedded tilesets only, since the 4.2.1 Tiled parser does not load external tileset files; keep characters and tall objects in one display list so depth by feet y sorts them together; if a custom font is used, wait until it has loaded before creating text.
+
+`tsc` catches most removed APIs. **M0 acceptance for the engine:** the greybox farm loads from a real `.tmj` file in the Tiled subset (image paths and custom properties included); a per-tile fog overlay and a last-seen snapshot draw correctly and stay aligned with the map while the camera moves; a sprite passes behind and in front of a tall object by y; the camera follows; HUD text renders, updates, and stays fixed on screen; after a window resize, all of these are checked again. A blocker in any of these during M0 means switching to 3.90.0 then, while it is cheap.
 
 ## 8. Milestones [Hao, on agent proposal]
 
@@ -142,7 +146,7 @@ Each milestone ends in something playable or testable. Target dates are my own, 
 
 | Milestone | Contents | Tasks | Target |
 | --- | --- | --- | --- |
-| M0 Skeleton | Workspace, Node pinned, `core/` types and transitions stubbed, Tiled subset and a greybox farm, Phaser 4 boots and passes the engine checks (Section 7), CI, and a **walking skeleton** of the Worker: deployed, one Durable Object per session, the morning endpoint answering with `ruleFarmer`, two isolated sessions, an injected timeout falling back | T7, T11a | Nov 16 to 17 |
+| M0 Skeleton | Workspace, Node pinned, `core/` types and transitions stubbed (the Worker's `ruleFarmer` is a placeholder that returns a fixed valid plan until T10), Tiled subset and a greybox farm, Phaser 4 boots and passes the engine checks (Section 7), CI, and a **walking skeleton** of the Worker: deployed, one Durable Object per session, the morning endpoint answering with `ruleFarmer`, two isolated sessions, an injected timeout falling back | T7, T11a | Nov 16 to 17 |
 | M1 Night | All night rules in `core/` with tests and in the client: dog holes and safe zones, gates, padlocks and the self-lock check, fences, gnomes, stamina and red prompt, dangers on the ground, spotting, end night, `NightResult`; a self-playtest replaces the paper test | T8, T4 | Nov 18 |
 | M3a First real call | The first model call from the deployed Worker with the final schema (a few paid calls, run only with Hao's OK) | T11b | Nov 19 |
 | M2 Full game on the rule-based farmer | Fog with "last seen" and `PlayerView`, the morning sequence with its opening beat, the budget, five nights, strikes, win and loss | T9, T10, T12a | Nov 21 |
