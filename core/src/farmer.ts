@@ -1,7 +1,19 @@
 // AI-use disclosure: Claude (Claude Code) wrote this file under my direction for M0 (T7, T11a); ruleFarmer and validatePlan are placeholders until T10.
 
 import { MAX_LINE_LENGTH } from './rules.ts';
-import type { FarmerContext, FarmerState, Plan, Trace, ValidationResult } from './types.ts';
+import type { FarmerContext, FarmerState, Plan, PlanAction, Trace, ValidationResult } from './types.ts';
+
+/** Field by field, so extra fields from a model's output never reach memory or the next prompt. */
+function copyAction(a: PlanAction): PlanAction {
+  switch (a.type) {
+    case 'buy':
+      return { type: 'buy', target: a.target, to: a.to };
+    case 'move':
+      return { type: 'move', target: a.target, to: a.to };
+    case 'repair':
+      return { type: 'repair', target: a.target, to: 'none' };
+  }
+}
 
 /**
  * Builds the farmer's context as a new object from an explicit allowlist
@@ -15,7 +27,7 @@ export function buildFarmerContext(input: { farmer: FarmerState; tracesToday: re
     money: input.farmer.money,
     memory: input.farmer.memory.map((m) => ({
       traces: m.traces.map((t) => ({ id: t.id, kind: t.kind, target: t.target })),
-      actions: m.actions.map((a) => ({ ...a })),
+      actions: m.actions.map(copyAction),
       line: m.line,
     })),
   };

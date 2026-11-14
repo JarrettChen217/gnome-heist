@@ -125,7 +125,12 @@ Every dependency is pinned to an exact version at M0; nothing is left at `latest
 | Phaser | **4.2.1** (2026-07-09) | Release candidates from 2025-04, stable since 4.0.0 (2026-04-10), then 4.1.0 and 4.2.0. Fallback: 3.90.0 (2025-05-23), the last 3.x. |
 | Node | **24.22.3** (24 LTS), in `.nvmrc`; npm 11.19.1 in `packageManager` | Current Wrangler needs Node ≥ 22.12; Vite 8 needs ^20.19 or ≥ 22.12. The same version locally, in CI, and for deploys. Installing it on the development Mac needs Hao's OK. |
 | Vite | 8.3.8 | — |
-| Wrangler 4.162.0, TypeScript 7.0.2, Vitest 4.1.12, `@cloudflare/vitest-plugin` 1.8.2, `@cloudflare/workers-types` 5.20261114.1, `@types/node` 24.19.2 | Pinned at M0. Wrangler matches the version `@cloudflare/vitest-plugin` depends on, so tests and `wrangler dev` run the same workerd. The older name `@cloudflare/vitest-pool-workers` is deprecated. `ai` and its provider packages are pinned in T11b. | For Vertex in a Worker, the edge entry point `@ai-sdk/google-vertex/edge` with credentials from Worker bindings. |
+| Wrangler | 4.162.0 | The version `@cloudflare/vitest-plugin` depends on, so tests and `wrangler dev` run the same workerd. |
+| `@cloudflare/vitest-plugin` | 1.8.2 | Worker tests in the Workers runtime. The older name `@cloudflare/vitest-pool-workers` is deprecated. |
+| TypeScript | 7.0.2 | — |
+| Vitest | 4.1.12 | The plugin supports Vitest ^4.1 or ^5. |
+| `@cloudflare/workers-types`, `@types/node` | 5.20261114.1, 24.19.2 | — |
+| `ai` and its provider packages | pinned in T11b | For Vertex in a Worker, the edge entry point `@ai-sdk/google-vertex/edge` with credentials from Worker bindings. |
 
 **Phaser 4 for coding agents.** Most examples online are Phaser 3. The v3-to-v4 migration guide ([`changelog/v4/4.0/MIGRATION-GUIDE.md`](https://github.com/phaserjs/phaser/blob/v4.2.1/changelog/v4/4.0/MIGRATION-GUIDE.md)) says the standard API (sprites, text, tilemaps, camera scroll and zoom) should work unchanged; the breaking changes are in rendering. Do not use these v3 forms:
 

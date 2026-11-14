@@ -40,6 +40,7 @@ export class NightScene extends Phaser.Scene {
     const json = this.cache.tilemap.get('farm').data as unknown;
     this.farm = loadFarm(json);
     this.night = startNight(newSession(this.farm, 1), this.farm);
+    console.info(`[gnome-heist] map version ${this.farm.mapVersion}`);
     this.explored = new Uint8Array(this.farm.width * this.farm.height);
 
     const map = this.make.tilemap({ key: 'farm' });

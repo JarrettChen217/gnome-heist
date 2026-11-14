@@ -76,8 +76,9 @@ export async function decideMorning(
   timing: Timing,
   now: () => number,
   log: (entry: Record<string, unknown>) => void = () => {},
+  /** When the request reached the Durable Object; the cut-off counts from here (A6). */
+  start: number = now(),
 ): Promise<Decision> {
-  const start = now();
   const attempts: AttemptLog[] = [];
   const left = () => timing.cutoffMs - (now() - start);
 

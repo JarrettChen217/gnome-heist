@@ -26,9 +26,15 @@ describe('walking and collision (M0)', () => {
     expect(n.player.y).toBe(10.5);
   });
 
-  it('stops flush against a hedge', () => {
+  it('stops flush against a closed gate', () => {
     // Row 10 west: the plain gate at (8,10) is closed, so it is solid in M0.
     const n = walk(at(6.5, 10.5), 1, 0, 2);
+    expect(n.player.x).toBeCloseTo(8 - PLAYER_HALF_EXTENT);
+  });
+
+  it('stops flush against a hedge', () => {
+    // Row 12: the hedge column at x = 8.
+    const n = walk(at(6.5, 12.5), 1, 0, 2);
     expect(n.player.x).toBeCloseTo(8 - PLAYER_HALF_EXTENT);
   });
 
