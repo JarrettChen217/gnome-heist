@@ -11,10 +11,13 @@ AI-use disclosure: Claude (Claude Code) drafted this technical plan from my deci
 
 **Status.** M0 (T7, T11a) built on branch `feat/m0-skeleton` on 2026-11-13 and checked locally; not yet deployed. Everything from M1 on is planned. Labels follow the GDD: **[Hao]**, **[Hao, on agent proposal]**, **[Proposed]**, **[Open]**.
 
+**Current sequence (Hao, 2026-11-13):** develop and run locally with `npm run dev` first; discuss cloud hosting later. Keep the existing Worker implementation for local development. Deployed-preview verification is deferred and does not block local night-rule work. Cloudflare remains the earlier hosting proposal, not a required next action; no alternative hosting or paid model calls are authorized by this decision.
+
 ## 1. Decisions
 
 | Decision | Origin |
 | --- | --- |
+| Work locally first using `npm run dev`; defer cloud deployment and revisit hosting after local development. | Hao, 2026-11-13 |
 | Build the real game from the start. No scripted mock-up demo: the G1 pitch uses the deck, plus a short clip of the real greybox build only if one is playable by then. | Hao, on agent proposal, 2026-11-13 |
 | Browser game in **TypeScript + Phaser 4.2.1**. If the M0 checks (Section 7) find a blocker, drop to Phaser 3.90.0 during M0. | Hao, on agent proposal, 2026-11-13 |
 | All game rules live in one **engine-free TypeScript package, `core/`**, used unchanged by the Phaser client, the Worker, and the tests. | Hao, on agent proposal, 2026-11-13 |

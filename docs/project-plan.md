@@ -55,7 +55,7 @@ Owner is always me (accountable). "Delegated to" names the production agent role
 | T15 | Update GDD and Configuration Document; scope-lock plan; updated Risk Register | Producer, Design Lead, Tech Lead | All roles (drafts) | Labels updated to implemented/verified; exclusions and fallback triggers stated | T13, T14 | Nov 28 | Not started |
 | T16 | G2/G3 recording and deck | Creative Director | Producer (draft) | 3 to 5 minutes; shows build, evidence, decisions | T15 | Nov 28 | Not started |
 
-Internal checkpoints: the deployed Worker skeleton exists by **Nov 17** (T11a), and a real deployed model call by **Nov 19** (T11b), so deployment problems surface early. By **Nov 21**, one night and one morning are playable with the rule-based farmer and the three checkpoint items work. If the game side slips, I apply the cut list in GDD Section 13; art cuts do not unblock the Worker, so it is not left until the end.
+**Sequence update [Hao, 2026-11-13]:** work locally first with `npm run dev`; discuss cloud hosting later. T7/T11a's deployed-URL checks remain unverified and are deferred, rather than a prerequisite for local T8/T10 work. Local previews are sufficient for current development; no GitHub Pages deployment is selected. The earlier internal deployment targets (Nov 17 for T11a and Nov 19 for T11b) are suspended pending that discussion. Course dates above are unchanged; check the original checkpoint requirements before claiming a local-only demo satisfies them. Paid model calls still need separate approval.
 
 ## 3. Initial Risk Register
 
