@@ -24,7 +24,7 @@ flowchart LR
   end
   TX --> CTX
 
-  VAL{"Validator<br/>schema · legal ids · within budget<br/>no dog-hole safe zone · a route stays open<br/>line check · 4 s timeout"}
+  VAL{"Validator<br/>schema · legal ids · within budget<br/>no dog-hole safe zone · an open route (≤ 1 stamina) stays<br/>line check · 4 s timeout"}
   LLM --> VAL
   FB["Fallback: Gemini Flash-Lite once, on a fast primary error,<br/>otherwise the rule-based farmer<br/>(also the scripted baseline; runs in the browser if the server is unreachable)"]
   VAL -- "invalid or late" --> FB

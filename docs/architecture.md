@@ -43,7 +43,7 @@ Because rules live in `core/`, the engine choice is reversible: replacing Phaser
 ```
 gnome-heist/
   core/     engine-free rules: map model, session and night state, timers, stamina, detection,
-            traces, player view, farmer context, plan validator, reachability, rule-based farmer
+            traces, player view, farmer context, plan validator, open-route check, rule-based farmer
   game/     Phaser client: scenes, rendering, input, camera, HUD, audio; calls core/
   worker/   Cloudflare Worker + Durable Object: morning endpoint, model call, failover, logging,
             static assets for game/; calls core/
@@ -113,7 +113,7 @@ Supported subset; `loadFarm` rejects anything else:
 - **Fog and danger overlays** are drawn per tile from `PlayerView` (a tile layer or simple rectangles), without masks or render textures, which keeps them away from the parts of Phaser 4 that changed most.
 - **Art:** greybox first. The hand-drawn ink look (GDD 2) comes in the M4 art pass, mainly as textures drawn ahead of time, with optional seeded decorative noise. No custom shader on the critical path. The art pass replaces visuals only; collision, sight, and map semantics do not change.
 - **Deployment:** one Worker serves the client's static assets and the API on the same origin; the code stays in separate `game/` and `worker/` packages. Keys only in Worker secrets.
-- **Tests:** plain Vitest for `core/` (one test per rule row in GDD 5.2, 5.4, 5.6, 5.7 and 5.11; validator fixtures; reachability; the knowledge-boundary test; the end-of-night order; `PlayerView`). Worker tests run in the Workers runtime through Cloudflare's Vitest integration (`@cloudflare/vitest-plugin`) from the first Durable Object onward, with the model mocked: duplicate `morningId`, stale revision, two sessions, injected timeout, late result.
+- **Tests:** plain Vitest for `core/` (one test per rule row in GDD 5.2, 5.4, 5.6, 5.7 and 5.11; validator fixtures; the open-route and self-lock checks; the knowledge-boundary test; the end-of-night order; `PlayerView`). Worker tests run in the Workers runtime through Cloudflare's Vitest integration (`@cloudflare/vitest-plugin`) from the first Durable Object onward, with the model mocked: duplicate `morningId`, stale revision, two sessions, injected timeout, late result.
 - **CI:** GitHub Actions runs `tsc` in strict mode, tests, and build on every PR.
 
 ## 7. Versions and Phaser 4 notes [Hao, on agent proposal]

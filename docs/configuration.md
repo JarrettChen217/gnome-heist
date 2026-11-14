@@ -74,7 +74,7 @@ An empty `actions` list is allowed. `inspected` lists the places the morning ani
 - Inventing defenses, slots, or ids that are not in the farm description.
 - A plan that costs more stamina than he has (2) or more coins than he has.
 - Placing or moving anything onto a dog hole or within 2 tiles of it (entry safe zone).
-- Any plan that leaves no safe route (unlit, unguarded, out of the window's sight; GDD 5.11) from some dog hole to some remaining gnome (the reachability invariant; see GDD Q9 for the case the player's own theft causes).
+- Any plan that adds a barrier (buys a padlock, re-locks a padlock, repairs a fence) after which no remaining gnome can be reached from some dog hole for at most 1 stamina (the open-route rule, GDD 5.7 and 5.11). Covering routes with lamps or the dog is allowed, and a plan without barriers is never rejected by this rule.
 - A `line` that states the player's real path or position, or refers to information outside its input.
 - A `line` that is offensive or breaks character.
 
@@ -108,7 +108,7 @@ Retrieval: none planned. The whole context is small enough to send each time.
 
 Draft system instruction (v1, not yet tested):
 
-> You are the farmer in Gnome Heist. Someone keeps sneaking onto your farm at night and stealing your garden gnomes. Each morning you see only the traces listed below, your own layout, your stamina and money, and your notes from earlier mornings. You never saw the intruder's route. Spend your budget to make tonight harder: buy a defense (1 coin and 1 stamina), move one you own (1 stamina), or repair something (1 stamina). Some traces may be fake. You may not touch the dog holes or block every route to your remaining gnomes. Answer only with JSON matching the schema. Your `line` is one short, grumpy, funny sentence about what you noticed, and it must not claim knowledge you do not have.
+> You are the farmer in Gnome Heist. Someone keeps sneaking onto your farm at night and stealing your garden gnomes. Each morning you see only the traces listed below, your own layout, your stamina and money, and your notes from earlier mornings. You never saw the intruder's route. Spend your budget to make tonight harder: buy a defense (1 coin and 1 stamina), move one you own (1 stamina), or repair something (1 stamina). Some traces may be fake. You hate seeing your things broken. You may not touch the dog holes or lock every remaining gnome away. Answer only with JSON matching the schema. Your `line` is one short, grumpy, funny sentence about what you noticed, and it must not claim knowledge you do not have.
 
 ### A7. Validation, timeout, retry, fallback
 
@@ -117,7 +117,7 @@ Draft system instruction (v1, not yet tested):
 | Schema | Reject anything that does not parse or match the schema. |
 | Legality | Ids exist; slot kind matches the defense; nothing in an entry safe zone; every `inspected` id is a trace in this morning's list. |
 | Budget | Total stamina ≤ his stamina; coins ≤ his money. |
-| Reachability | Breadth-first search on the farm graph after applying the plan, with the route rules of GDD 5.11: at least one dog hole reaches at least one remaining gnome by a safe route (no lit, dog-alert, or window-sight tiles; no locked gates). Not run once the session is over (no morning then). |
+| Open route | Only for plans that add a barrier: shortest-path search on the farm graph after applying the plan, with the route rules of GDD 5.11, where a closed padlocked gate or an intact fence costs 1 stamina; at least one dog hole must reach at least one remaining gnome at a cost of at most 1. Danger is ignored. Not run once the session is over. |
 | Line | At most 80 characters; word filter. |
 | Timeout | 4 s for the whole morning (A6). In the sweep, Sonnet 5.5 off had p95 2.69 s. The call runs during the morning's opening beat (about 3 s, GDD 5.8 step 0), which does not depend on the model's output; the walk to the inspected traces can only start after the plan arrives. The client waits about 6 s before running the rule-based farmer locally and staying on it for the rest of the session. To re-measure from the deployed Worker (C9). |
 | Retry | No same-provider retry; the only second attempt is the secondary under the rule in A6. |
@@ -130,7 +130,7 @@ Draft system instruction (v1, not yet tested):
 | --- | --- | --- |
 | Illegal or malformed plan | Validator rejects fixtures of each kind; fallback runs | Invalid-output rate per 100 mornings |
 | Overspending | Plans that cost 3 stamina or more coins than owned are rejected | Count of budget rejections |
-| Blocking an entry or sealing the farm | Safe-zone and reachability checks on crafted layouts | Count of rejections |
+| Blocking an entry or locking the farm | Safe-zone and open-route checks on crafted layouts, including a padlock purchase or fence repair that would close the last route of at most 1 stamina, and an empty plan after the player took the only cheaply reachable gnome (must stay legal) | Count of rejections |
 | Timeout or provider error | Injected delay larger than the timeout gives fallback, and the morning still completes | Share of mornings that used fallback |
 | Using knowledge it does not have | — | Lines judged for claims beyond input (human-labeled sample) |
 | Behaving like the rule | The rule-based farmer is deterministic: same input gives same output | Share of mornings where the agent's plan equals the rule's on the same input |
@@ -151,7 +151,7 @@ Same input, same budget, no model [Hao, on agent proposal]:
 2. If there are fresh footprints and he has a coin and stamina left, buy a lamp and place it on the free post nearest the area with the most fresh footprints (ties broken by fixed area order). If that post would be rejected, try the next nearest, in order of distance and then id.
 3. Otherwise, if there are fresh footprints and he has stamina left, move his nearest lamp to that post, with the same order.
    With no fresh footprints, he skips steps 2 and 3.
-4. Skip any action that the safe-zone or reachability check would reject.
+4. Skip any action that the safe-zone or open-route check would reject.
 5. Ties are broken by the lowest id; if no action is possible, he does nothing and keeps his coins. His plan goes through the same validator as the agent's.
 
 It reads only today's traces, so it has no memory. In comparisons, the game runs either the agent or the rule for a whole session, chosen by a switch.
