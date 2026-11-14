@@ -1,4 +1,4 @@
-AI-use disclosure: Claude (Claude Code) drafted this document from my decisions and its own proposals; I reviewed it and own every boundary decision in it.
+AI-use disclosure: Claude (Claude Code) drafted this document from my decisions and its own proposals; Codex clarified the moved-padlock check with my approval. I reviewed it and own every boundary decision in it.
 
 # Gnome Heist: Initial Configuration Document
 
@@ -74,7 +74,7 @@ An empty `actions` list is allowed. `inspected` lists the places the morning ani
 - Inventing defenses, slots, or ids that are not in the farm description.
 - A plan that costs more stamina than he has (2) or more coins than he has.
 - Placing or moving anything onto a dog hole or within 2 tiles of it (entry safe zone).
-- Any plan that adds a barrier (buys a padlock, re-locks a padlock, repairs a fence) after which no remaining gnome can be reached from some dog hole for at most 1 stamina (the open-route rule, GDD 5.7 and 5.11). Covering routes with lamps or the dog is allowed, and a plan without barriers is never rejected by this rule.
+- Any plan that adds a barrier (buys a padlock, moves a padlock so its destination gate is locked, re-locks a padlock, repairs a fence) after which no remaining gnome can be reached from some dog hole for at most 1 stamina (the open-route rule, GDD 5.7 and 5.11). Covering routes with lamps or the dog is allowed, and a plan without barriers is never rejected by this rule.
 - A `line` that states the player's real path or position, or refers to information outside its input.
 - A `line` that is offensive or breaks character.
 
@@ -130,7 +130,7 @@ Draft system instruction (v1, not yet tested):
 | --- | --- | --- |
 | Illegal or malformed plan | Validator rejects fixtures of each kind; fallback runs | Invalid-output rate per 100 mornings |
 | Overspending | Plans that cost 3 stamina or more coins than owned are rejected | Count of budget rejections |
-| Blocking an entry or locking the farm | Safe-zone and open-route checks on crafted layouts, including a padlock purchase or fence repair that would close the last route of at most 1 stamina, and an empty plan after the player took the only cheaply reachable gnome (must stay legal) | Count of rejections |
+| Blocking an entry or locking the farm | Safe-zone and open-route checks on crafted layouts, including a padlock purchase, a padlock move that locks its destination gate, or a fence repair that would close the last route of at most 1 stamina; a padlock move that leaves a route of at most 1 stamina must pass this check; an empty plan after the player took the only cheaply reachable gnome must stay legal | Count of rejections |
 | Timeout or provider error | Injected delay larger than the timeout gives fallback, and the morning still completes | Share of mornings that used fallback |
 | Using knowledge it does not have | — | Lines judged for claims beyond input (human-labeled sample) |
 | Behaving like the rule | The rule-based farmer is deterministic: same input gives same output | Share of mornings where the agent's plan equals the rule's on the same input |

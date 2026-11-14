@@ -1,4 +1,4 @@
-AI-use disclosure: Claude (Claude Code) drafted this document from my design notes and its own proposals; every item is labeled with who decided it, and I reviewed and approved the decided items.
+AI-use disclosure: Claude (Claude Code) drafted this document from my design notes and its own proposals; Codex clarified the moved-padlock check with my approval. Every item is labeled with who decided it, and I reviewed and approved the decided items.
 
 # Gnome Heist: Initial Game Design Document
 
@@ -123,7 +123,7 @@ Each morning the farmer spends a small budget. [Hao]
 - **Catalog in v1:** lamp (lights the tiles around a lamp post), doghouse (the dog's alert radius around it), padlock (on a gate). He starts with 1 lamp and 1 padlock. Decoy gnomes and traps come later, not in v1. [Hao for the catalog; Proposed for the starting set]
 - Lamps go on predefined lamp posts, doghouses on predefined spots, padlocks on gates.
 - There are more gnomes than lamps, so he cannot cover everything at once. If he lights every gnome he can, a false trail can draw a lamp away. [Hao]
-- **He never blocks the farm physically.** Any plan that adds a barrier (buying a padlock, re-locking a picked padlock, or repairing a fence) is rejected if, afterwards, no remaining gnome can be reached from some dog hole for at most 1 stamina (one padlock to pick or one fence to kick), which leaves the player 1 stamina to dig. Every other plan, including doing nothing, is legal, so the player's own theft can never make his morning illegal. Lamps, the dog, and the window may cover any route: danger is the farmer's to place, and the player answers it with false trails and sabotage. Nothing may be placed in an entry's safe zone. The game enforces these rules, not the agent. [Hao, 2026-11-13, replacing the earlier safe-route guarantee; the barrier form on agent proposal]
+- **He never blocks the farm physically.** Any plan that adds a barrier (buying a padlock, moving a padlock so its destination gate is locked, re-locking a picked padlock, or repairing a fence) is rejected if, afterwards, no remaining gnome can be reached from some dog hole for at most 1 stamina (one padlock to pick or one fence to kick), which leaves the player 1 stamina to dig. Every other plan, including doing nothing, is legal, so the player's own theft can never make his morning illegal. Lamps, the dog, and the window may cover any route: danger is the farmer's to place, and the player answers it with false trails and sabotage. Nothing may be placed in an entry's safe zone. The game enforces these rules, not the agent. [Hao, 2026-11-13, replacing the earlier safe-route guarantee; the barrier form on agent proposal]
 - **He hates broken things.** In character, he usually repairs a broken fence or an open padlock before doing anything else. This is his personality in the prompt, not a rule: the model may ignore damage, and that choice is itself a signal to the player. The rule-based farmer always repairs first. [Hao, on agent proposal]
 - How he chooses is specified in the [Configuration Document](configuration.md).
 
@@ -187,7 +187,7 @@ Within a session, the farmer's knowledge of your habits grows, and so does his s
 | Case | Handling |
 | --- | --- |
 | Player ends the night without entering | Empty trace list. The farmer may still buy or move with his budget. |
-| A barrier (padlock bought, padlock re-locked, fence repaired) would leave no open route (at most 1 stamina, Section 5.11), or a defense would touch an entry's safe zone | The validator rejects it. The fallback applies, and the case is logged. |
+| A barrier (padlock bought, padlock moved so its destination gate is locked, padlock re-locked, fence repaired) would leave no open route (at most 1 stamina, Section 5.11), or a defense would touch an entry's safe zone | The validator rejects it. The fallback applies, and the case is logged. |
 | The plan costs more than his stamina or money | The validator rejects it; fallback; logged. |
 | Agent output is invalid or late | The fallback farmer acts instead. The player sees the same morning sequence. The case is logged. |
 | Spotted while carrying a gnome | Gnome returned, strike recorded. |
@@ -287,3 +287,4 @@ The farmer sees a trace list, his own layout, his remaining stamina and money, a
 | 2026-11-13 | The never-seal check uses safe routes that also avoid the window's sight line; the self-lock check asks only whether you can walk out; exact boundary semantics are fixed in code in T8 | Agent proposal after the second outside review, accepted by Hao | Decided |
 | 2026-11-13 | Drop the safe-route guarantee: the farmer may cover every gnome with danger, but must keep an open route of at most 1 stamina; restore the fully defended night; add sabotage as a lure. This replaces the never-seal rows above for routes. | Hao (open-route form on agent proposal) | Decided |
 | 2026-11-13 | He hates broken things: repairing first is his personality in the prompt, not a forced rule | Agent proposal (soft, not forced), accepted by Hao | Decided |
+| 2026-11-13 | Moving a padlock so its destination gate is locked also triggers the existing open-route check; the check uses the layout after the whole plan | Codex proposal, accepted by Hao | Decided |
