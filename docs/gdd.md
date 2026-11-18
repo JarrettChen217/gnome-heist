@@ -54,6 +54,7 @@ Each morning the farmer, an AI agent, reads only the traces you left behind and 
 - v1 size about 24 × 18 tiles, with a camera that follows the player; 3 dog holes as entries, 5 gnome pedestals, 4 gates (some padlocked), at least one fence line, 2 to 3 distinct route families. [Hao, on agent proposal]
 - Ground types: **soft ground** (flowerbeds, mud) records footprints; **stone paths** record nothing, but they are usually longer and better lit. [Proposed]
 - Plenty of cover (bushes, hedges), readable at a glance. [Hao]
+- Tall grass borders the paths. Along overgrown stretches only the gardener’s cap or upper head shows. A gardener who enters a dense bush disappears from view, including any carried gnome. [Hao]
 
 ### 5.2 Entries: dog holes
 
@@ -91,6 +92,7 @@ Each morning the farmer, an AI agent, reads only the traces you left behind and 
 ### 5.5 Danger and cover
 
 - Danger is static and drawn on the ground: tiles a lamp lights, the sight line from the farmhouse window, the dog's alert radius around its doghouse. Stepping into any of these means you are spotted. [Proposed]
+- In the playable revision, a dense bush also shelters its occupant from lamps. The dog’s local alert still applies, including inside a bush. Ordinary tall grass only obscures the character visually. [Proposed]
 - Bushes block the window's sight line. Tiles behind a bush are safe, and the blocked sight line is drawn broken on the ground. [Proposed]
 - No patrols in v1. A dog that patrols is a later option for real-time tension. [Proposed]
 
@@ -157,7 +159,7 @@ Placeholder values, to be tuned in playtests. [Hao, on agent proposal]
 | Open route (the farmer's never-block check) | A route on which every closed padlocked gate or intact fence counts as passable for 1 stamina; the route must cost at most 1 stamina in total. Danger tiles are ignored. |
 | Self-lock check | Uses routes only, with no stamina allowance: it asks whether you can walk out at all. Walking through danger gets you spotted, which ends the night, so it does not strand you. |
 | Distance | Straight-line distance between tile centers |
-| Lamp | Lights tiles within 2 |
+| Lamp | Lights tiles within 2. Dense bush tiles shelter their occupant in the playable revision. |
 | Dog | Alert radius 2 around the doghouse |
 | Player sight | 5 tiles; hedges, bushes, and the house block the line of sight |
 | Spotted | The center of the player's tile is on a lit tile, on the window's sight line, or inside a dog's radius |
@@ -286,5 +288,6 @@ The farmer sees a trace list, his own layout, his remaining stamina and money, a
 | 2026-11-13 | Rule parameters (Section 5.11), the end-of-night order (Section 5.10), and the offline rule | Agent proposal, accepted by Hao | Decided (values are placeholders) |
 | 2026-11-13 | The never-seal check uses safe routes that also avoid the window's sight line; the self-lock check asks only whether you can walk out; exact boundary semantics are fixed in code in T8 | Agent proposal after the second outside review, accepted by Hao | Decided |
 | 2026-11-13 | Drop the safe-route guarantee: the farmer may cover every gnome with danger, but must keep an open route of at most 1 stamina; restore the fully defended night; add sabotage as a lure. This replaces the never-seal rows above for routes. | Hao (open-route form on agent proposal) | Decided |
+| 2026-11-18 | Raise vegetation around readable paths, include stretches that show only the player’s hat, and allow full concealment in walk-in bushes | Hao | Decided |
 | 2026-11-13 | He hates broken things: repairing first is his personality in the prompt, not a forced rule | Agent proposal (soft, not forced), accepted by Hao | Decided |
 | 2026-11-13 | Moving a padlock so its destination gate is locked also triggers the existing open-route check; the check uses the layout after the whole plan | Codex proposal, accepted by Hao | Decided |

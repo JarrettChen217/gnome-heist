@@ -1,4 +1,5 @@
 // AI-use disclosure: Claude (Claude Code) wrote this file under my direction for T8; it implements the route, distance, danger and sight rows of GDD 5.11 and the safe zone of GDD 5.2.
+// Codex added lamp concealment in bushes and the tall grass lookup under Hao's direction.
 //
 // Boundary semantics fixed here (GDD 5.11 asks for them to be fixed in code in T8):
 // - Distance is straight-line between tile centres; a range includes its edge (d <= r).
@@ -33,6 +34,7 @@ export const fenceAt = (farm: FarmDef, t: Tile) => objectAt(farm.fences, t);
 export const pedestalAt = (farm: FarmDef, t: Tile) => objectAt(farm.pedestals, t);
 export const dogHoleAt = (farm: FarmDef, t: Tile) => objectAt(farm.dogHoles, t);
 export const bushAt = (farm: FarmDef, t: Tile) => objectAt(farm.bushes, t);
+export const tallGrassAt = (farm: FarmDef, t: Tile) => objectAt(farm.tallGrass, t);
 
 /** Is any tile of `o` within the entry safe zone of a dog hole (GDD 5.2)? */
 export function inSafeZone(farm: FarmDef, o: FarmObject): boolean {
@@ -148,14 +150,17 @@ export function windowLine(farm: FarmDef, w: FarmObject): Tile[] | null {
   return null;
 }
 
-/** Danger on the ground for one night (GDD 5.5, 5.11). Lamps and the dog come from the farmer's layout. */
+/** Danger on the ground for one night (GDD 5.5, 5.11). The dog can detect the player inside bush cover. */
 export function dangerGrid(farm: FarmDef, layout: readonly Defense[]): (DangerKind | null)[] {
   const danger = new Array<DangerKind | null>(farm.width * farm.height).fill(null);
   const mark = (centre: Tile, radius: number, kind: DangerKind) => {
     for (let y = 0; y < farm.height; y++) {
       for (let x = 0; x < farm.width; x++) {
         const i = tileIndex(farm, x, y);
-        if (danger[i] === null && farm.ground[i] !== 'blocked' && tileDistance(centre, { x, y }) <= radius) danger[i] = kind;
+        const tile = { x, y };
+        if (danger[i] !== null || farm.ground[i] === 'blocked' || tileDistance(centre, tile) > radius) continue;
+        if (kind === 'lamp' && bushAt(farm, tile)) continue;
+        danger[i] = kind;
       }
     }
   };

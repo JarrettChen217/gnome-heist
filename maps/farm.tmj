@@ -9,8 +9,8 @@
  "height": 18,
  "tilewidth": 16,
  "tileheight": 16,
- "nextlayerid": 12,
- "nextobjectid": 31,
+ "nextlayerid": 13,
+ "nextobjectid": 69,
  "properties": [
   {
    "name": "disclosure",
@@ -177,7 +177,7 @@
     1,
     1,
     1,
-    2,
+    1,
     3,
     4,
     4,
@@ -186,22 +186,22 @@
     4,
     4,
     3,
-    2,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    3,
-    3,
-    1,
     1,
     1,
     1,
     1,
     1,
     2,
+    1,
+    3,
+    3,
+    1,
+    1,
+    1,
+    2,
+    1,
+    1,
+    1,
     3,
     4,
     4,
@@ -210,78 +210,16 @@
     4,
     4,
     3,
-    2,
     1,
     1,
     1,
     1,
     1,
+    2,
     1,
     3,
     3,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    3,
-    3,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    3,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    3,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    3,
-    3,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    3,
     1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    3,
     2,
     2,
     2,
@@ -289,51 +227,41 @@
     2,
     2,
     2,
-    3,
-    3,
-    3,
-    3,
-    3,
-    3,
-    3,
-    3,
-    3,
-    3,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
     2,
     2,
     2,
     1,
+    3,
+    3,
+    1,
+    2,
+    1,
+    2,
+    1,
+    1,
+    1,
+    3,
+    1,
     2,
     2,
-    3,
-    3,
-    3,
-    3,
+    1,
     2,
-    3,
-    3,
-    3,
-    3,
-    3,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
     1,
     3,
+    1,
+    1,
+    1,
     2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    3,
-    1,
-    1,
-    1,
-    1,
     1,
     1,
     1,
@@ -345,25 +273,102 @@
     1,
     1,
     1,
+    1,
+    3,
+    1,
     2,
+    1,
+    1,
+    2,
+    1,
+    3,
+    1,
+    1,
+    1,
+    2,
+    1,
+    1,
+    1,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    1,
+    2,
+    1,
+    1,
+    1,
+    1,
+    3,
+    3,
+    3,
     3,
     2,
-    2,
-    2,
-    2,
-    2,
-    2,
     3,
+    3,
+    3,
+    3,
+    3,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    3,
+    1,
     2,
     1,
     1,
     1,
     1,
+    3,
     1,
+    1,
+    1,
+    2,
+    1,
+    1,
+    1,
+    3,
+    3,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    3,
+    1,
+    2,
+    1,
+    1,
+    1,
+    1,
+    3,
+    1,
+    1,
+    1,
+    2,
+    1,
+    2,
     1,
     3,
     5,
     2,
+    1,
+    1,
+    1,
+    1,
+    2,
     2,
     2,
     2,
@@ -372,11 +377,6 @@
     2,
     2,
     2,
-    2,
-    2,
-    2,
-    2,
-    2,
     1,
     2,
     2,
@@ -384,65 +384,25 @@
     2,
     2,
     2,
-    2,
-    3,
-    3,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    2,
-    3,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    3,
-    3,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    2,
-    3,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
     1,
     3,
     3,
     2,
     2,
     2,
-    2,
-    2,
-    2,
+    1,
+    1,
+    1,
     2,
     3,
+    1,
+    2,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
     1,
     1,
     1,
@@ -450,7 +410,56 @@
     2,
     1,
     3,
+    3,
+    1,
     2,
+    1,
+    1,
+    1,
+    1,
+    2,
+    3,
+    1,
+    2,
+    2,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    2,
+    1,
+    3,
+    3,
+    1,
+    2,
+    1,
+    1,
+    1,
+    1,
+    2,
+    3,
+    1,
+    1,
+    2,
+    2,
+    2,
+    1,
+    3,
+    1,
+    1,
+    1,
+    2,
+    2,
+    2,
+    1,
+    3,
+    3,
+    1,
     2,
     2,
     2,
@@ -458,35 +467,9 @@
     2,
     2,
     3,
-    3,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    3,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    3,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    3,
-    3,
     1,
     1,
-    1,
-    1,
+    2,
     1,
     1,
     1,
@@ -494,6 +477,23 @@
     1,
     1,
     1,
+    2,
+    1,
+    1,
+    1,
+    3,
+    3,
+    1,
+    1,
+    1,
+    2,
+    2,
+    1,
+    1,
+    3,
+    1,
+    1,
+    2,
     1,
     1,
     1,
@@ -501,10 +501,10 @@
     1,
     1,
     1,
-    1,
-    1,
-    1,
-    1,
+    2,
+    2,
+    2,
+    2,
     5,
     3,
     1,
@@ -515,12 +515,12 @@
     1,
     1,
     3,
+    1,
+    1,
     2,
     2,
-    2,
-    2,
-    2,
-    2,
+    1,
+    1,
     3,
     1,
     1,
@@ -1516,6 +1516,240 @@
        "value": "bush_sw"
       }
      ]
+    },
+    {
+     "id": 31,
+     "name": "bush_west_trail",
+     "type": "",
+     "x": 80,
+     "y": 160,
+     "width": 16,
+     "height": 16,
+     "rotation": 0,
+     "visible": true,
+     "properties": [
+      {
+       "name": "id",
+       "type": "string",
+       "value": "bush_west_trail"
+      }
+     ]
+    },
+    {
+     "id": 32,
+     "name": "bush_nw_hedge",
+     "type": "",
+     "x": 16,
+     "y": 32,
+     "width": 16,
+     "height": 16,
+     "rotation": 0,
+     "visible": true,
+     "properties": [
+      {
+       "name": "id",
+       "type": "string",
+       "value": "bush_nw_hedge"
+      }
+     ]
+    },
+    {
+     "id": 33,
+     "name": "bush_nw_bed",
+     "type": "",
+     "x": 112,
+     "y": 96,
+     "width": 16,
+     "height": 16,
+     "rotation": 0,
+     "visible": true,
+     "properties": [
+      {
+       "name": "id",
+       "type": "string",
+       "value": "bush_nw_bed"
+      }
+     ]
+    },
+    {
+     "id": 34,
+     "name": "bush_ne_hedge",
+     "type": "",
+     "x": 352,
+     "y": 32,
+     "width": 16,
+     "height": 16,
+     "rotation": 0,
+     "visible": true,
+     "properties": [
+      {
+       "name": "id",
+       "type": "string",
+       "value": "bush_ne_hedge"
+      }
+     ]
+    },
+    {
+     "id": 35,
+     "name": "bush_ne_bed",
+     "type": "",
+     "x": 272,
+     "y": 96,
+     "width": 16,
+     "height": 16,
+     "rotation": 0,
+     "visible": true,
+     "properties": [
+      {
+       "name": "id",
+       "type": "string",
+       "value": "bush_ne_bed"
+      }
+     ]
+    },
+    {
+     "id": 36,
+     "name": "bush_court_east",
+     "type": "",
+     "x": 224,
+     "y": 112,
+     "width": 16,
+     "height": 16,
+     "rotation": 0,
+     "visible": true,
+     "properties": [
+      {
+       "name": "id",
+       "type": "string",
+       "value": "bush_court_east"
+      }
+     ]
+    },
+    {
+     "id": 37,
+     "name": "bush_court_west",
+     "type": "",
+     "x": 144,
+     "y": 128,
+     "width": 16,
+     "height": 16,
+     "rotation": 0,
+     "visible": true,
+     "properties": [
+      {
+       "name": "id",
+       "type": "string",
+       "value": "bush_court_west"
+      }
+     ]
+    },
+    {
+     "id": 38,
+     "name": "bush_lawn_west",
+     "type": "",
+     "x": 144,
+     "y": 208,
+     "width": 16,
+     "height": 16,
+     "rotation": 0,
+     "visible": true,
+     "properties": [
+      {
+       "name": "id",
+       "type": "string",
+       "value": "bush_lawn_west"
+      }
+     ]
+    },
+    {
+     "id": 39,
+     "name": "bush_lawn_east",
+     "type": "",
+     "x": 224,
+     "y": 240,
+     "width": 16,
+     "height": 16,
+     "rotation": 0,
+     "visible": true,
+     "properties": [
+      {
+       "name": "id",
+       "type": "string",
+       "value": "bush_lawn_east"
+      }
+     ]
+    },
+    {
+     "id": 40,
+     "name": "bush_sw_hedge",
+     "type": "",
+     "x": 112,
+     "y": 256,
+     "width": 16,
+     "height": 16,
+     "rotation": 0,
+     "visible": true,
+     "properties": [
+      {
+       "name": "id",
+       "type": "string",
+       "value": "bush_sw_hedge"
+      }
+     ]
+    },
+    {
+     "id": 41,
+     "name": "bush_sw_bed",
+     "type": "",
+     "x": 16,
+     "y": 224,
+     "width": 16,
+     "height": 16,
+     "rotation": 0,
+     "visible": true,
+     "properties": [
+      {
+       "name": "id",
+       "type": "string",
+       "value": "bush_sw_bed"
+      }
+     ]
+    },
+    {
+     "id": 42,
+     "name": "bush_se_hedge",
+     "type": "",
+     "x": 352,
+     "y": 128,
+     "width": 16,
+     "height": 16,
+     "rotation": 0,
+     "visible": true,
+     "properties": [
+      {
+       "name": "id",
+       "type": "string",
+       "value": "bush_se_hedge"
+      }
+     ]
+    },
+    {
+     "id": 43,
+     "name": "bush_se_meadow",
+     "type": "",
+     "x": 272,
+     "y": 256,
+     "width": 16,
+     "height": 16,
+     "rotation": 0,
+     "visible": true,
+     "properties": [
+      {
+       "name": "id",
+       "type": "string",
+       "value": "bush_se_meadow"
+      }
+     ]
     }
    ]
   },
@@ -1664,6 +1898,468 @@
        "name": "id",
        "type": "string",
        "value": "area_se"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": 12,
+   "name": "tallGrass",
+   "type": "objectgroup",
+   "draworder": "topdown",
+   "opacity": 1,
+   "visible": true,
+   "x": 0,
+   "y": 0,
+   "objects": [
+    {
+     "id": 44,
+     "name": "grass_west_trail",
+     "type": "",
+     "x": 32,
+     "y": 160,
+     "width": 48,
+     "height": 16,
+     "rotation": 0,
+     "visible": true,
+     "properties": [
+      {
+       "name": "id",
+       "type": "string",
+       "value": "grass_west_trail"
+      }
+     ]
+    },
+    {
+     "id": 45,
+     "name": "grass_nw_hedge",
+     "type": "",
+     "x": 80,
+     "y": 16,
+     "width": 48,
+     "height": 16,
+     "rotation": 0,
+     "visible": true,
+     "properties": [
+      {
+       "name": "id",
+       "type": "string",
+       "value": "grass_nw_hedge"
+      }
+     ]
+    },
+    {
+     "id": 46,
+     "name": "grass_nw_meadow",
+     "type": "",
+     "x": 16,
+     "y": 96,
+     "width": 48,
+     "height": 16,
+     "rotation": 0,
+     "visible": true,
+     "properties": [
+      {
+       "name": "id",
+       "type": "string",
+       "value": "grass_nw_meadow"
+      }
+     ]
+    },
+    {
+     "id": 47,
+     "name": "grass_nw_bed",
+     "type": "",
+     "x": 96,
+     "y": 32,
+     "width": 32,
+     "height": 16,
+     "rotation": 0,
+     "visible": true,
+     "properties": [
+      {
+       "name": "id",
+       "type": "string",
+       "value": "grass_nw_bed"
+      }
+     ]
+    },
+    {
+     "id": 48,
+     "name": "grass_nw_verge",
+     "type": "",
+     "x": 80,
+     "y": 96,
+     "width": 32,
+     "height": 16,
+     "rotation": 0,
+     "visible": true,
+     "properties": [
+      {
+       "name": "id",
+       "type": "string",
+       "value": "grass_nw_verge"
+      }
+     ]
+    },
+    {
+     "id": 49,
+     "name": "grass_ne_hedge",
+     "type": "",
+     "x": 256,
+     "y": 16,
+     "width": 48,
+     "height": 16,
+     "rotation": 0,
+     "visible": true,
+     "properties": [
+      {
+       "name": "id",
+       "type": "string",
+       "value": "grass_ne_hedge"
+      }
+     ]
+    },
+    {
+     "id": 50,
+     "name": "grass_ne_meadow",
+     "type": "",
+     "x": 272,
+     "y": 32,
+     "width": 32,
+     "height": 16,
+     "rotation": 0,
+     "visible": true,
+     "properties": [
+      {
+       "name": "id",
+       "type": "string",
+       "value": "grass_ne_meadow"
+      }
+     ]
+    },
+    {
+     "id": 51,
+     "name": "grass_ne_verge",
+     "type": "",
+     "x": 320,
+     "y": 96,
+     "width": 48,
+     "height": 16,
+     "rotation": 0,
+     "visible": true,
+     "properties": [
+      {
+       "name": "id",
+       "type": "string",
+       "value": "grass_ne_verge"
+      }
+     ]
+    },
+    {
+     "id": 52,
+     "name": "grass_ne_bed",
+     "type": "",
+     "x": 336,
+     "y": 80,
+     "width": 32,
+     "height": 16,
+     "rotation": 0,
+     "visible": true,
+     "properties": [
+      {
+       "name": "id",
+       "type": "string",
+       "value": "grass_ne_bed"
+      }
+     ]
+    },
+    {
+     "id": 53,
+     "name": "grass_court_east",
+     "type": "",
+     "x": 208,
+     "y": 128,
+     "width": 32,
+     "height": 16,
+     "rotation": 0,
+     "visible": true,
+     "properties": [
+      {
+       "name": "id",
+       "type": "string",
+       "value": "grass_court_east"
+      }
+     ]
+    },
+    {
+     "id": 54,
+     "name": "grass_court_wall",
+     "type": "",
+     "x": 224,
+     "y": 80,
+     "width": 16,
+     "height": 16,
+     "rotation": 0,
+     "visible": true,
+     "properties": [
+      {
+       "name": "id",
+       "type": "string",
+       "value": "grass_court_wall"
+      }
+     ]
+    },
+    {
+     "id": 55,
+     "name": "grass_court_west",
+     "type": "",
+     "x": 144,
+     "y": 96,
+     "width": 16,
+     "height": 32,
+     "rotation": 0,
+     "visible": true,
+     "properties": [
+      {
+       "name": "id",
+       "type": "string",
+       "value": "grass_court_west"
+      }
+     ]
+    },
+    {
+     "id": 56,
+     "name": "grass_lawn_upper",
+     "type": "",
+     "x": 208,
+     "y": 176,
+     "width": 32,
+     "height": 16,
+     "rotation": 0,
+     "visible": true,
+     "properties": [
+      {
+       "name": "id",
+       "type": "string",
+       "value": "grass_lawn_upper"
+      }
+     ]
+    },
+    {
+     "id": 57,
+     "name": "grass_lawn_lower",
+     "type": "",
+     "x": 208,
+     "y": 256,
+     "width": 32,
+     "height": 16,
+     "rotation": 0,
+     "visible": true,
+     "properties": [
+      {
+       "name": "id",
+       "type": "string",
+       "value": "grass_lawn_lower"
+      }
+     ]
+    },
+    {
+     "id": 58,
+     "name": "grass_lawn_west",
+     "type": "",
+     "x": 144,
+     "y": 224,
+     "width": 16,
+     "height": 32,
+     "rotation": 0,
+     "visible": true,
+     "properties": [
+      {
+       "name": "id",
+       "type": "string",
+       "value": "grass_lawn_west"
+      }
+     ]
+    },
+    {
+     "id": 59,
+     "name": "grass_lawn_meadow",
+     "type": "",
+     "x": 192,
+     "y": 240,
+     "width": 32,
+     "height": 16,
+     "rotation": 0,
+     "visible": true,
+     "properties": [
+      {
+       "name": "id",
+       "type": "string",
+       "value": "grass_lawn_meadow"
+      }
+     ]
+    },
+    {
+     "id": 60,
+     "name": "grass_sw_hedge",
+     "type": "",
+     "x": 16,
+     "y": 128,
+     "width": 48,
+     "height": 16,
+     "rotation": 0,
+     "visible": true,
+     "properties": [
+      {
+       "name": "id",
+       "type": "string",
+       "value": "grass_sw_hedge"
+      }
+     ]
+    },
+    {
+     "id": 61,
+     "name": "grass_sw_meadow",
+     "type": "",
+     "x": 64,
+     "y": 144,
+     "width": 48,
+     "height": 16,
+     "rotation": 0,
+     "visible": true,
+     "properties": [
+      {
+       "name": "id",
+       "type": "string",
+       "value": "grass_sw_meadow"
+      }
+     ]
+    },
+    {
+     "id": 62,
+     "name": "grass_sw_verge",
+     "type": "",
+     "x": 80,
+     "y": 192,
+     "width": 32,
+     "height": 16,
+     "rotation": 0,
+     "visible": true,
+     "properties": [
+      {
+       "name": "id",
+       "type": "string",
+       "value": "grass_sw_verge"
+      }
+     ]
+    },
+    {
+     "id": 63,
+     "name": "grass_sw_bed",
+     "type": "",
+     "x": 32,
+     "y": 256,
+     "width": 32,
+     "height": 16,
+     "rotation": 0,
+     "visible": true,
+     "properties": [
+      {
+       "name": "id",
+       "type": "string",
+       "value": "grass_sw_bed"
+      }
+     ]
+    },
+    {
+     "id": 64,
+     "name": "grass_se_hedge",
+     "type": "",
+     "x": 256,
+     "y": 128,
+     "width": 32,
+     "height": 16,
+     "rotation": 0,
+     "visible": true,
+     "properties": [
+      {
+       "name": "id",
+       "type": "string",
+       "value": "grass_se_hedge"
+      }
+     ]
+    },
+    {
+     "id": 65,
+     "name": "grass_se_upper",
+     "type": "",
+     "x": 352,
+     "y": 176,
+     "width": 16,
+     "height": 32,
+     "rotation": 0,
+     "visible": true,
+     "properties": [
+      {
+       "name": "id",
+       "type": "string",
+       "value": "grass_se_upper"
+      }
+     ]
+    },
+    {
+     "id": 66,
+     "name": "grass_se_meadow",
+     "type": "",
+     "x": 256,
+     "y": 208,
+     "width": 48,
+     "height": 16,
+     "rotation": 0,
+     "visible": true,
+     "properties": [
+      {
+       "name": "id",
+       "type": "string",
+       "value": "grass_se_meadow"
+      }
+     ]
+    },
+    {
+     "id": 67,
+     "name": "grass_se_verge",
+     "type": "",
+     "x": 256,
+     "y": 224,
+     "width": 32,
+     "height": 16,
+     "rotation": 0,
+     "visible": true,
+     "properties": [
+      {
+       "name": "id",
+       "type": "string",
+       "value": "grass_se_verge"
+      }
+     ]
+    },
+    {
+     "id": 68,
+     "name": "grass_se_lower",
+     "type": "",
+     "x": 320,
+     "y": 256,
+     "width": 48,
+     "height": 16,
+     "rotation": 0,
+     "visible": true,
+     "properties": [
+      {
+       "name": "id",
+       "type": "string",
+       "value": "grass_se_lower"
       }
      ]
     }

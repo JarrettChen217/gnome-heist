@@ -1,5 +1,6 @@
 // AI-use disclosure: Claude (Claude Code) wrote this file under my direction for M0 (T7) and T8 (stamina pips, prompts, entry choice, end-of-night panel).
 // Codex illustrated the entry selection for the first playable art review.
+// Codex added the dense bush cover status under Hao's direction.
 import * as Phaser from 'phaser';
 import type { NightHudState } from './Night.ts';
 
@@ -63,7 +64,8 @@ export class HudScene extends Phaser.Scene {
     this.status.setVisible(s.phase !== 'choose');
     this.corner.setVisible(s.phase !== 'choose');
     const pips = '●'.repeat(s.stamina) + '○'.repeat(Math.max(0, s.maxStamina - s.stamina));
-    this.status.setText(`Night ${s.night}   Stamina ${pips}   ${s.carrying ? '   Carrying a gnome' : ''}`);
+    const status = `Night ${s.night}   Stamina ${pips}${s.carrying ? '   Carrying a gnome' : ''}`;
+    this.status.setText(s.inBush && s.phase === 'night' ? `${status}\nBush cover · Dogs can hear you` : status);
 
     const p = s.message ?? s.prompt;
     this.prompt.setText(p?.text ?? '').setVisible(p !== null && s.phase === 'night');

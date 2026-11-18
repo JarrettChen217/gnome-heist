@@ -4,12 +4,13 @@ AI-use disclosure: Claude (Claude Code) and Codex maintain this handoff under Ha
 
 Keep this file short: replace the snapshot each time, and update only your own row in Active work. Durable detail belongs in commits, PRs, and the docs.
 
-## Snapshot (2026-11-18, Codex, gardener revision)
+## Snapshot (2026-11-18, Codex, farm cover)
 
-- Hao liked the farm style and asked for a cuter, smaller playable character. The first art checkpoint is at `443eae5` on `codex/night-farm-art-v1`.
-- The proposed gardener now wears a sage beret, teal overalls and an apricot scarf. At the existing map scale, visible height is 21–22 pixels across the sheet (previously 27–30). The revised cover depicts the same gardener.
-- Independent review checked all 32 distinct frames, the foot baseline and carry poses. The client production build passed. Chrome replayed the standalone HTML through choosing the west entrance, walking, digging the southwest gnome, carrying it to the exit and restarting.
-- Next art checkpoint: Hao compares the gardener's expression and size on the farm before any broader art work.
+- Hao approved the gardener's look and requested higher vegetation, legible paths, a hat-only passage and walk-in hiding spots. The previous art checkpoint is `b9b4f1a`.
+- The six farm areas have narrower stone routes, 25 tall-grass patches and 16 walk-in bushes. From the west hole, walk east through three tiles of grass and into a bush. Soft routes record footprints while longer stone detours remain clean. The occupied bush rustles and conceals a carried gnome along with the gardener. The implementation shelters the player from visual detection while preserving the dog's alert radius.
+- Local client build, Worker dry-run, strict typecheck and 174 tests passed. A Chrome replay of the standalone HTML checked tall-grass cropping, bush invisibility, emergence, concealment while carrying, banking the gnome and restarting. The local Vite preview was stopped at Hao's request.
+- Independent review flagged foreground leaves masking danger. The danger outline and bent-stem footprint cues now sort above the vegetation and below fog and the exposed cap.
+- Next art checkpoint: Hao can compare route readability with the feeling of entering and leaving cover using the offline build.
 
 ## Active work
 
@@ -21,7 +22,7 @@ Keep this file short: replace the snapshot each time, and update only your own r
 | M0 skeleton and Worker skeleton (T7, T11a) | Claude, for Hao | `feat/m0-skeleton` | `core/`, `game/`, `worker/`, `maps/`, `.github/`, root config, `docs/architecture.md`, `docs/project-plan.md` | Built, checked locally, reviewed; awaiting Hao: deploy, push/PR, acceptance |
 | M0 review fixes and local development decision | Codex, for Hao | `feat/m0-skeleton` | `core/`, `game/`, `worker/`, `vitest.config.ts`, `docs/architecture.md`, `docs/project-plan.md`, `docs/HANDOFF.md` | Fixes pushed at `f6af482`; 111 tests, strict typecheck and build passed; independent review found no material issues. Hao chose local development first and deferred cloud hosting. |
 | T8 night rules | Claude, for Hao | `feat/t8-night-rules` | `core/`, `game/`, `maps/`, `worker/src/session.ts`, `docs/project-plan.md`, `game/README.md` | Built, tested and reviewed locally; awaiting Hao on the open rule questions, then push/PR |
-| First playable art pass | Codex, for Hao | `codex/night-farm-art-v1` | `game/`, `maps/`, credits | Gardener revision ready for Hao’s character and scale review |
+| First playable art pass | Codex, for Hao | `codex/night-farm-art-v1` | `game/`, `maps/`, credits | Gardener look approved; redesigned farm and cover ready for playtest |
 
 ## Before posting (Hao)
 
@@ -41,4 +42,4 @@ Keep this file short: replace the snapshot each time, and update only your own r
 
 ## Next action
 
-Hao reviews the art sample and chooses whether to continue this visual direction. For the separate T8 work, Hao answers the questions above; apply any changes, copy the agreed values into GDD 5.11, and record the trace `count` in the Configuration Document. Then, with his OK, push `feat/m0-skeleton` and `feat/t8-night-rules` and open PRs so CI runs. Next build task: T10 (rule farmer, validator, end-of-night order, morning), then T9.
+Hao playtests the redesigned farm and the west cover passage. For the separate T8 work, Hao answers the questions above; apply any changes, copy the agreed values into GDD 5.11, and record the trace `count` in the Configuration Document. Then, with his OK, push `feat/m0-skeleton` and `feat/t8-night-rules` and open PRs so CI runs. Next build task: T10 (rule farmer, validator, end-of-night order, morning), then T9.

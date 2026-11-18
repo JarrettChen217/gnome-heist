@@ -5,7 +5,7 @@ import { deflateSync } from 'node:zlib';
 
 const tileSize = 16;
 const ink = '#141722';
-const grass = '#293b41';
+const grass = '#304348';
 const stone = '#495054';
 const leaf = '#294249';
 const wood = '#5c4447';
@@ -21,6 +21,12 @@ const decoration = map.layers.find((layer) => layer.name === 'decoration');
 const { width, height } = map;
 const at = (x, y) => x >= 0 && y >= 0 && x < width && y < height ? ground[y * width + x] : 0;
 const colors = new Map();
+const tallGrass = new Set();
+for (const patch of map.layers.find((layer) => layer.name === 'tallGrass')?.objects ?? []) {
+  for (let y = patch.y; y < patch.y + patch.height; y += tileSize) {
+    for (let x = patch.x; x < patch.x + patch.width; x += tileSize) tallGrass.add(y / tileSize * width + x / tileSize);
+  }
+}
 
 function rgba(color) {
   if (!colors.has(color)) {
@@ -114,10 +120,11 @@ function noise(x, y, seed = 0) {
   return (n ^ (n >>> 16)) >>> 0;
 }
 
-function tuft(image, x, y, highlight) {
-  image.line(x - 2, y - 1, x, y + 1, '#1f2e36');
-  image.line(x, y, x + 1, y - 2, highlight);
-  image.dot(x + 2, y - 1, '#394d4b');
+function tuft(image, x, y, size, lean) {
+  image.line(x - 2, y - 1, x + 2, y + 1, '#25363d');
+  image.line(x, y, x + lean, y - size, size > 3 ? '#5b7365' : '#495f56');
+  image.line(x, y, x - lean * 2, y - 2, '#354d49');
+  image.dot(x + lean * 2, y - 1, '#3d544e');
 }
 
 function plant(image, kind, x, y, seed) {
@@ -145,16 +152,17 @@ function paintGrass(image) {
   for (let y = 1; y < image.height; y++) {
     for (let x = 1; x < image.width; x++) {
       const grain = noise(x, y) % 57;
-      if (grain < 9) image.dot(x, y, grain < 4 ? '#25363e' : '#344549');
-      if (grain === 9 && (x + y) % 3 === 0) image.line(x, y, x + 2, y, '#27363c');
+      const wave = Math.sin((x + y * 0.7) * 0.08) + Math.sin((y - x * 0.4) * 0.11) + (grain - 28) / 56;
+      const drift = wave > 0.65 ? '#34494a' : wave < -0.8 ? '#2b3d46' : grass;
+      if (grain < 9) image.dot(x, y, grain < 4 ? '#28383e' : '#40534f');
+      else if (drift !== grass) image.dot(x, y, drift);
     }
   }
 
-  // Shallow garden beds are cut into grass. Leave grass around the paths and hedge feet.
-  const beds = [[20, 18, 83, 39, 'cabbage'], [281, 18, 72, 40, 'carrot'], [30, 133, 78, 21, 'flower'],
-    [282, 134, 70, 22, 'cabbage'], [27, 178, 77, 24, 'carrot'], [276, 181, 65, 19, 'flower'],
-    [162, 188, 63, 29, 'cabbage'], [24, 245, 77, 24, 'flower'], [280, 246, 73, 23, 'carrot'],
-    [154, 240, 62, 16, 'flower']];
+  const beds = [[78, 43, 44, 13, 'cabbage'], [274, 17, 47, 32, 'carrot'], [43, 126, 66, 20, 'flower'],
+    [315, 139, 27, 15, 'cabbage'], [62, 173, 45, 17, 'carrot'], [281, 180, 56, 24, 'flower'],
+    [196, 178, 41, 23, 'cabbage'], [28, 246, 50, 23, 'flower'], [258, 231, 40, 29, 'carrot'],
+    [194, 229, 37, 27, 'flower']];
   for (const [x, y, w, h, crop] of beds) {
     image.polygon([[x, y + 5], [x + 4, y + 2], [x + w - 8, y], [x + w, y + 6],
       [x + w - 3, y + h - 3], [x + 9, y + h], [x + 2, y + h - 3]], '#30323c');
@@ -171,16 +179,19 @@ function paintGrass(image) {
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
       if (at(x, y) !== 1) continue;
-      for (let i = 0; i < 5; i++) {
+      const overgrown = tallGrass.has(y * width + x);
+      const verge = at(x - 1, y) === 2 || at(x + 1, y) === 2 || at(x, y - 1) === 2 || at(x, y + 1) === 2;
+      for (let i = 0; i < (overgrown || verge ? 6 : 3); i++) {
         const jitter = noise(x, y, i);
         const px = x * tileSize + 2 + (jitter % 12);
         const py = y * tileSize + 3 + ((jitter >>> 12) % 11);
         if (beds.some(([bx, by, w, h]) => px >= bx + 5 && px < bx + w - 4 && py >= by + 3 && py < by + h - 2)) continue;
-        tuft(image, px, py, i ? '#3d5251' : '#4a6059');
+        const size = 2 + (jitter % (overgrown ? 5 : verge ? 4 : 2));
+        tuft(image, px, py, size, i % 2 ? 1 : -1);
         if (i === 0 && jitter % 9 === 0) {
-          image.dot(px, py - 3, '#a18482');
-          image.dot(px + 1, py - 3, '#b8999a');
-          image.dot(px, py - 2, '#b4a08b');
+          image.dot(px - 1, py - size, '#a18482');
+          image.dot(px, py - size, '#b8999a');
+          image.dot(px - 1, py - size + 1, '#b4a08b');
         }
       }
     }
@@ -188,7 +199,7 @@ function paintGrass(image) {
 }
 
 function paintPaths(image) {
-  const pavers = [stone, '#4e5359', '#4a4d57', '#51555d', '#53575a', '#454a54'];
+  const pavers = [stone, '#50555a', '#4d515a', '#555961', '#585b5e', '#494e57'];
   for (let y = 0; y < image.height; y++) {
     const course = (y + 2) % 18;
     const band = course < 5 ? 0 : course < 12 ? 1 : 2;
@@ -202,13 +213,16 @@ function paintPaths(image) {
       if (at(tx, ty) !== 2) continue;
       const px = x % tileSize;
       const py = y % tileSize;
+      const verge = (dx, dy) => at(tx + dx, ty + dy) === 1;
       const wear = (x * 7 + y * 13) % 5 === 0 ? 1 : 0;
-      const top = at(tx, ty - 1) === 1 && py < 1 + wear;
-      const bottom = at(tx, ty + 1) === 1 && py > 14 - wear;
-      const left = at(tx - 1, ty) === 1 && px < 1 + wear;
-      const right = at(tx + 1, ty) === 1 && px > 14 - wear;
-      if (top || bottom || left || right) {
-        if (noise(x, y, 7) % 4 === 0) image.dot(x, y, '#40474d');
+      const edge = Math.min(
+        verge(0, -1) ? py : 16, verge(0, 1) ? 15 - py : 16,
+        verge(-1, 0) ? px : 16, verge(1, 0) ? 15 - px : 16,
+      );
+      const notch = (px + py < 4 && verge(-1, -1)) || (15 - px + py < 4 && verge(1, -1)) ||
+        (px + 15 - py < 4 && verge(-1, 1)) || (30 - px - py < 4 && verge(1, 1));
+      if (edge < 2 + wear || notch) {
+        if (noise(x, y, 7) % 5 === 0) image.dot(x, y, edge < 1 ? '#3b4d4b' : '#4f5a59');
         continue;
       }
       const courseX = (x + stagger) % 29;
@@ -222,7 +236,8 @@ function paintPaths(image) {
       const roundedCorner = edgeY === 0 && edgeX === 0 || edgeY === rowHeight - 2 && edgeX === slabWidth - 2;
       const crack = edgeY === rowHeight - 1 || edgeX === slabWidth - 1 || roundedCorner;
       const chalk = !crack && (edgeY === 0 && edgeX < slabWidth - 3 || edgeX === 0 && slab % 3 === 0);
-      image.dot(x, y, crack ? '#363d47' : chalk ? '#5d6163' : pavers[slab % pavers.length]);
+      const grout = edge < 4 && slab % 3 === 0 ? '#45544f' : '#39414a';
+      image.dot(x, y, crack ? grout : chalk ? '#656664' : pavers[slab % pavers.length]);
       if (!crack && !chalk && noise(x, y, 1) % 33 === 0) image.dot(x, y, '#3f444e');
       if (slab % 5 === 0 && edgeX === slabWidth - 4 + (edgeY % 2) && edgeY >= rowHeight - 3) image.dot(x, y, '#3b414b');
     }
@@ -518,21 +533,55 @@ function drawSpot() {
   return p;
 }
 
-function drawBush() {
-  const p = new Pixels(16, 20);
-  p.ellipse(8, 17, 7, 2, '#19212d');
-  for (const [x, y, rx, ry] of [[7, 8, 4, 5], [11, 10, 4, 5], [4, 12, 4, 4], [9, 13, 5, 5]]) p.ellipse(x, y, rx, ry, ink);
-  for (const [x, y, rx, ry] of [[7, 7, 3, 3], [11, 9, 3, 3], [4, 11, 3, 3], [8, 13, 5, 4]]) {
-    p.ellipse(x, y, rx, ry, leaf);
-    p.line(x - 1, y, x, y - 2, '#526a60');
-    p.line(x + 1, y + 1, x + 2, y, '#385552');
-    p.dot(x - 2, y + 1, '#1d333c');
+function drawTallGrass(height, blades) {
+  const p = new Pixels(tileSize, height);
+  p.ellipse(5, height - 3, 4, 1, '#26393d');
+  p.ellipse(11, height - 2, 3, 1, '#283b40');
+  p.polygon([[0, 12], [2, 8], [4, 9], [5, 5], [8, 7], [11, 4], [13, 7], [15, 12],
+    [16, height - 5], [13, height - 3], [11, height - 3], [9, height - 1], [7, height - 3],
+    [5, height - 2], [2, height - 3], [0, height - 5]], '#2d4744');
+  for (const [i, [rootX, tipX, tipY]] of blades.entries()) {
+    const rootY = height - 3 - i % 3;
+    const shoulderX = Math.round((rootX + tipX) / 2);
+    const shoulderY = Math.round((rootY + tipY) / 2);
+    const tone = ['#406252', '#4b6d57', '#35594f'][i % 3];
+    p.line(tipX, tipY, shoulderX - 1, shoulderY, ink);
+    p.polygon([[tipX, tipY], [shoulderX + 2, shoulderY], [rootX + 2, rootY],
+      [rootX - 1, rootY], [shoulderX - 1, shoulderY + 1]], tone);
+    p.line(tipX, tipY, shoulderX, shoulderY, i % 2 ? '#789076' : '#617e67');
+    p.line(shoulderX, shoulderY + 1, rootX, rootY - 4, '#486b58');
+    p.line(rootX, rootY - 4, rootX + 1, rootY - 1, '#304b46');
   }
-  p.line(5, 16, 7, 14, '#1b2b37');
-  p.line(9, 15, 11, 13, '#1b2b37');
-  p.dot(5, 10, '#9b6f75');
-  p.dot(11, 11, '#805a6b');
-  p.dot(7, 5, '#8e6d72');
+  for (const [x, dx, rise, depth] of [[2, -2, 5, 3], [5, -3, 4, 2], [8, 3, 6, 1], [11, -3, 5, 3], [13, 2, 8, 2]]) {
+    const y = height - depth;
+    p.line(x, y, x + Math.sign(dx), y - 2, '#3d5b4e');
+    p.line(x + Math.sign(dx), y - 2, x + dx, y - rise, '#4d6e59');
+    p.dot(x + 1, y, '#30474a');
+  }
+  p.dot(3, height - 2, '#405851');
+  p.dot(7, height - 1, '#354f48');
+  return p;
+}
+
+function drawBush() {
+  const p = new Pixels(22, 32);
+  p.ellipse(11, 29, 9, 2, '#19212d');
+  const rosettes = [[9, 5, 6, 5], [14, 7, 6, 5], [5, 10, 5, 5], [13, 13, 6, 6], [17, 14, 4, 5],
+    [5, 18, 5, 6], [12, 19, 6, 6], [17, 22, 5, 5], [6, 24, 5, 5], [12, 26, 6, 4]];
+  p.polygon([[3, 6], [8, 1], [14, 2], [19, 6], [21, 13], [21, 24], [16, 29], [6, 30], [1, 25], [0, 18], [1, 10]], ink);
+  for (const [i, [x, y, rx, ry]] of rosettes.entries()) {
+    p.ellipse(x, y, rx, ry, ink);
+    p.ellipse(x, y + 1, rx - 1, ry - 1, ['#34534c', '#304c4b', '#29444a'][i % 3]);
+    p.ellipse(x - 1, y, rx - 2, ry - 2, ['#45665a', '#405d52', '#36564f'][i % 3]);
+    p.line(x - 2, y, x, y - 2, '#647f6a');
+    p.dot(x - 1, y - 1, '#526f5d');
+    p.line(x + 1, y + 2, x + 2, y + 1, '#253b42');
+  }
+  for (const [x, y] of [[9, 4], [5, 11], [14, 12], [18, 15], [6, 20], [13, 24]]) {
+    p.dot(x, y, '#926976');
+    p.dot(x + 1, y - 1, '#b8888b');
+    p.dot(x + 1, y, '#745260');
+  }
   return p;
 }
 
@@ -618,6 +667,9 @@ const props = {
   fence: drawFence(false), fenceGap: drawFence(true),
   pedestal: drawPedestal(gnome), pedestalEmpty: drawPedestal(), gnome,
   doghouse: drawDoghouse(), doghouseSpot: drawSpot(), bush: drawBush(),
+  tallGrass0: drawTallGrass(27, [[3, 0, 10], [6, 2, 2], [6, 7, 6], [9, 6, 0], [11, 12, 5], [12, 15, 3]]),
+  tallGrass1: drawTallGrass(26, [[4, 0, 7], [4, 3, 5], [8, 4, 1], [9, 11, 0], [11, 13, 7], [13, 15, 5]]),
+  tallGrass2: drawTallGrass(28, [[4, 0, 6], [5, 2, 1], [6, 7, 8], [10, 8, 2], [11, 14, 0], [12, 15, 7]]),
 };
 mkdirSync(propsUrl, { recursive: true });
 for (const [name, sprite] of Object.entries(props)) writeFileSync(new URL(`${name}.png`, propsUrl), png(sprite));

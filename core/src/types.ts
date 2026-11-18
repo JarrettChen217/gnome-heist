@@ -1,4 +1,5 @@
 // AI-use disclosure: Claude (Claude Code) wrote this file under my direction for M0 (T7) and extended it for the night rules (T8); the shapes follow docs/architecture.md Section 4 and docs/configuration.md A3.
+// Codex added tall grass regions to the farm definition under Hao's direction.
 //
 // Engine-free types shared by the client, the Worker, and the tests.
 // Positions are in tile units. Most shapes are M0 stubs: fields that belong
@@ -48,6 +49,8 @@ export interface FarmDef {
   readonly lampPosts: readonly FarmObject[];
   readonly doghouseSpots: readonly FarmObject[];
   readonly bushes: readonly FarmObject[];
+  /** Visual foliage from an optional object layer. */
+  readonly tallGrass: readonly FarmObject[];
   readonly windowSight: readonly FarmObject[];
   /** Named footprint areas; the id is the name the trace list uses. */
   readonly areas: readonly FarmObject[];

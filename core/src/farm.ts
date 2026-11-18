@@ -1,5 +1,6 @@
 // AI-use disclosure: Claude (Claude Code) wrote this file under my direction for M0 (T7); it implements the Tiled subset in docs/architecture.md Section 5.
 // Codex added the rendering-grid size checks under Hao's direction after the M0 review.
+// Codex added loading for the optional tall grass layer under Hao's direction.
 //
 // `loadFarm`: Tiled JSON -> validated FarmDef. Checks the file format and ids
 // (M0) and the GDD (T8): no lamp post, doghouse spot or gate in an entry safe
@@ -18,7 +19,7 @@ export class FarmFormatError extends Error {
 }
 
 export const TILE_LAYERS = ['ground', 'decoration'] as const;
-export const OBJECT_LAYERS = [
+const REQUIRED_OBJECT_LAYERS = [
   'dogHoles',
   'pedestals',
   'gates',
@@ -29,6 +30,7 @@ export const OBJECT_LAYERS = [
   'windowSight',
   'areas',
 ] as const;
+export const OBJECT_LAYERS = [...REQUIRED_OBJECT_LAYERS, 'tallGrass'] as const;
 type ObjectLayerName = (typeof OBJECT_LAYERS)[number];
 
 const GROUND_KINDS: readonly GroundKind[] = ['soft', 'stone', 'blocked'];
@@ -202,7 +204,7 @@ export function loadFarm(tiledJson: Json): FarmDef {
       problems.push(`unsupported layer "${name}"`);
     }
   }
-  for (const required of [...TILE_LAYERS, ...OBJECT_LAYERS]) {
+  for (const required of [...TILE_LAYERS, ...REQUIRED_OBJECT_LAYERS]) {
     if (!seenLayers.has(required)) problems.push(`missing layer "${required}"`);
   }
 
@@ -257,6 +259,7 @@ export function loadFarm(tiledJson: Json): FarmDef {
     lampPosts: plain('lampPosts'),
     doghouseSpots: plain('doghouseSpots'),
     bushes: plain('bushes'),
+    tallGrass: plain('tallGrass'),
     windowSight: plain('windowSight'),
     areas: plain('areas'),
     mapVersion: fnv1a(JSON.stringify(m)),

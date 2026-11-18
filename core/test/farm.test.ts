@@ -1,9 +1,10 @@
 // AI-use disclosure: Claude (Claude Code) wrote this file under my direction for M0 (T7).
 // Codex added unsupported tile-size regression cases under Hao's direction.
+// Codex added tall grass loading and legacy map regression cases under Hao's direction.
 
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { FarmFormatError, loadFarm } from '../src/index.ts';
+import { FarmFormatError, loadFarm, tallGrassAt } from '../src/index.ts';
 
 const raw = readFileSync(new URL('../../maps/farm.tmj', import.meta.url), 'utf8');
 const fresh = (): Record<string, any> => JSON.parse(raw);
@@ -42,6 +43,35 @@ describe('loadFarm on the greybox farm', () => {
   it('converts object pixels to whole tiles', () => {
     expect(farm.dogHoles.find((d) => d.id === 'hole_west')?.rect).toEqual({ x: 0, y: 10, w: 1, h: 1 });
     expect(farm.fences[0]?.rect).toEqual({ x: 15, y: 10, w: 1, h: 3 });
+  });
+
+  it('loads maps without a tall grass layer', () => {
+    const m = fresh();
+    m.layers = m.layers.filter((l: any) => l.name !== 'tallGrass');
+    const farm = loadFarm(m);
+    expect(farm.tallGrass).toEqual([]);
+    expect(tallGrassAt(farm, { x: 2, y: 3 })).toBeUndefined();
+  });
+
+  it('reads whole-tile tall grass regions', () => {
+    const m = fresh();
+    m.layers = m.layers.filter((l: any) => l.name !== 'tallGrass');
+    m.layers.push({
+      name: 'tallGrass',
+      type: 'objectgroup',
+      objects: [{
+        id: 999,
+        x: 32,
+        y: 48,
+        width: 32,
+        height: 16,
+        properties: [{ name: 'id', type: 'string', value: 'test_grass' }],
+      }],
+    });
+    const farm = loadFarm(m);
+    expect(farm.tallGrass).toEqual([{ id: 'test_grass', rect: { x: 2, y: 3, w: 2, h: 1 } }]);
+    expect(tallGrassAt(farm, { x: 3, y: 3 })).toBe(farm.tallGrass[0]);
+    expect(tallGrassAt(farm, { x: 4, y: 3 })).toBeUndefined();
   });
 
   it('gives a stable map version that changes with the file', () => {

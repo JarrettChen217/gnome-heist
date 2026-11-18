@@ -1,4 +1,5 @@
 // AI-use disclosure: Claude (Claude Code) wrote this test helper under my direction for T8.
+// Codex added tall grass to the test fixtures under Hao's direction.
 // Builds small FarmDefs from ASCII so each rule test sets up only what it needs.
 
 import { initialLayout, initialWorld, newSession, startNight, tick } from '../src/index.ts';
@@ -7,22 +8,22 @@ import type { Defense, FarmDef, FarmObject, GateDef, GroundKind, NightEvent, Nig
 /**
  * Legend: # hedge, . stone, , soft, D dog hole (stone), G plain gate, P padlocked gate,
  * F fence (one object per tile), g pedestal (soft), L lamp post, K doghouse spot,
- * B bush (soft), W window sight tile (stone; a run of W is one sight line).
- * Ids are numbered in reading order: hole1, gate1, fence1, ped1, post1, spot1, bush1.
+ * B bush (soft), T tall grass (soft), W window sight tile (stone; a run of W is one sight line).
+ * Ids are numbered in reading order: hole1, gate1, fence1, ped1, post1, spot1, bush1, grass1.
  * One area, "area_all", covers the map unless `areas` is given.
  */
 export function farmFrom(rows: string[], areas?: FarmObject[]): FarmDef {
   const H = rows.length;
   const W = rows[0]!.length;
   const ground: GroundKind[] = [];
-  const objs: Record<string, FarmObject[]> = { D: [], g: [], F: [], L: [], K: [], B: [] };
+  const objs: Record<string, FarmObject[]> = { D: [], g: [], F: [], L: [], K: [], B: [], T: [] };
   const gates: GateDef[] = [];
   const windowTiles: { x: number; y: number }[] = [];
-  const names: Record<string, string> = { D: 'hole', g: 'ped', F: 'fence', L: 'post', K: 'spot', B: 'bush' };
+  const names: Record<string, string> = { D: 'hole', g: 'ped', F: 'fence', L: 'post', K: 'spot', B: 'bush', T: 'grass' };
   rows.forEach((row, y) => {
     if (row.length !== W) throw new Error('ragged rows');
     [...row].forEach((c, x) => {
-      ground.push(c === '#' ? 'blocked' : c === ',' || c === 'g' || c === 'B' ? 'soft' : 'stone');
+      ground.push(c === '#' ? 'blocked' : [',', 'g', 'B', 'T'].includes(c) ? 'soft' : 'stone');
       const rect = { x, y, w: 1, h: 1 };
       if (c === 'G' || c === 'P') gates.push({ id: `gate${gates.length + 1}`, rect, padlocked: c === 'P' });
       else if (c === 'W') windowTiles.push({ x, y });
@@ -48,6 +49,7 @@ export function farmFrom(rows: string[], areas?: FarmObject[]): FarmDef {
     lampPosts: objs['L']!,
     doghouseSpots: objs['K']!,
     bushes: objs['B']!,
+    tallGrass: objs['T']!,
     windowSight,
     areas: areas ?? [{ id: 'area_all', rect: { x: 0, y: 0, w: W, h: H } }],
     mapVersion: 'test',

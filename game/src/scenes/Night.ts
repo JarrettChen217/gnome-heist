@@ -1,8 +1,9 @@
 // AI-use disclosure: Claude (Claude Code) wrote this file under my direction for M0 (T7) and wired in the T8 night rules; the fog here is a pre-T9 stand-in, not the PlayerView.
 // Codex fixed rectangular fence placement under Hao's direction after the M0 review.
 // Codex integrated directional player art and walk animation under Hao's direction.
+// Codex implemented tall grass rendering and bush feedback under Hao's direction.
 import * as Phaser from 'phaser';
-import { PLAYER_STAMINA, currentInteraction, endNight, loadFarm, newSession, startNight, tick, tileOf, tilesOf, visibleTiles } from '@gnome-heist/core';
+import { PLAYER_STAMINA, bushAt, currentInteraction, endNight, loadFarm, newSession, startNight, tallGrassAt, tick, tileOf, tilesOf, visibleTiles } from '@gnome-heist/core';
 import type { FarmDef, FarmObject, Interaction, NightEnd, NightResult, NightState, SessionState, Tile } from '@gnome-heist/core';
 import { MIN_CAMERA_ZOOM, STEP_SECONDS, TILE_PX } from '../constants.ts';
 import { fenceSegments } from '../fence.ts';
@@ -14,11 +15,12 @@ interface Prop {
   readonly tiles: readonly Tile[];
   readonly live: Phaser.GameObjects.Image;
   readonly ghost: Phaser.GameObjects.Image;
-  readonly tag: Phaser.GameObjects.Text;
+  readonly tag: Phaser.GameObjects.Text | null;
   readonly key: (n: NightState) => string | null;
 }
 
 export type Phase = 'choose' | 'night' | 'ended';
+type Cover = 'none' | 'tallGrass' | 'bush';
 
 export interface NightHudState {
   phase: Phase;
@@ -26,6 +28,7 @@ export interface NightHudState {
   stamina: number;
   maxStamina: number;
   carrying: boolean;
+  inBush: boolean;
   holes: string[];
   prompt: PromptText | null;
   /** 0..1 while E is held on an action. */
@@ -39,6 +42,12 @@ const depthOf = (feetYpx: number) => 10 + feetYpx;
 const DANGER_COLOUR = { window: 0x8fc7ff, lamp: 0xffe27a, dog: 0xff9a4a } as const;
 const WALK_FRAMES = 4;
 const WALK_FRAME_PX = 6;
+const FOG_DEPTH = 100000;
+const GRASS_HEAD_DEPTH = FOG_DEPTH + 1;
+const SEEN_TAG_DEPTH = FOG_DEPTH + 2;
+// In all player frames, rows 10 or 11 through 16 show the top of the beret.
+const GRASS_CROP_HEIGHT = 17;
+const GRASS_TEXTURES = ['tallGrass0', 'tallGrass1', 'tallGrass2'] as const;
 
 export class NightScene extends Phaser.Scene {
   private farm!: FarmDef;
@@ -50,8 +59,13 @@ export class NightScene extends Phaser.Scene {
   private walkDistancePx = 0;
   private fog!: Phaser.GameObjects.Graphics;
   private dangerLayer!: Phaser.GameObjects.Graphics;
+  private dangerOutline!: Phaser.GameObjects.Graphics;
+  private trampledLeaves!: Phaser.GameObjects.Graphics;
   private printsLayer!: Phaser.GameObjects.Graphics;
   private props: Prop[] = [];
+  private bushSprites = new Map<string, Phaser.GameObjects.Image>();
+  private occupiedBush: FarmObject | undefined;
+  private cover: Cover = 'none';
   private explored!: Uint8Array;
   private keys!: Record<string, Phaser.Input.Keyboard.Key>;
   private acc = 0;
@@ -73,10 +87,14 @@ export class NightScene extends Phaser.Scene {
     map.createLayer('ground', tileset, 0, 0)?.setDepth(0);
     map.createLayer('decoration', tileset, 0, 0)?.setDepth(1);
     this.dangerLayer = this.add.graphics().setDepth(2);
+    // Keep the danger border legible over tall leaves, under the fog and the exposed cap.
+    // Bent stems are the visible surface of a soft-ground footprint in dense foliage.
+    this.trampledLeaves = this.add.graphics().setDepth(FOG_DEPTH - 2);
+    this.dangerOutline = this.add.graphics().setDepth(FOG_DEPTH - 1);
     this.printsLayer = this.add.graphics().setDepth(3);
 
     this.player = this.add.sprite(0, 0, 'player-art', 0).setOrigin(0.5, 1).setVisible(false);
-    this.fog = this.add.graphics().setDepth(100000);
+    this.fog = this.add.graphics().setDepth(FOG_DEPTH);
 
     const cam = this.cameras.main;
     cam.setBounds(0, 0, this.farm.width * TILE_PX, this.farm.height * TILE_PX);
@@ -106,8 +124,17 @@ export class NightScene extends Phaser.Scene {
     this.explored = new Uint8Array(this.farm.width * this.farm.height);
     this.printsDrawn = 0;
     this.printsLayer.clear();
-    this.player.setVisible(false);
-    for (const p of this.props) [p.live, p.ghost, p.tag].forEach((o) => o.destroy());
+    this.trampledLeaves.clear();
+    this.player.setVisible(false).setCrop();
+    this.cover = 'none';
+    this.occupiedBush = undefined;
+    this.tweens.killTweensOf([...this.bushSprites.values()]);
+    this.bushSprites.clear();
+    for (const p of this.props) {
+      p.live.destroy();
+      p.ghost.destroy();
+      p.tag?.destroy();
+    }
     this.props = [];
     this.addProps();
     this.drawDanger();
@@ -120,7 +147,6 @@ export class NightScene extends Phaser.Scene {
     this.phase = 'night';
     this.acc = 0;
     this.walkDistancePx = 0;
-    this.player.setVisible(true);
     this.syncPlayer();
     // Phaser 4: startFollow without the second argument turns the camera's roundPixels off.
     this.cameras.main.startFollow(this.player, true);
@@ -138,7 +164,7 @@ export class NightScene extends Phaser.Scene {
   private addProps(): void {
     const f = this.farm;
     const layout = this.session.farmer.layout;
-    const add = (o: FarmObject, key: (n: NightState) => string | null, overlay = false) => {
+    const add = (o: FarmObject, key: (n: NightState) => string | null, { overlay = false, showTag = true } = {}) => {
       // Feet at the bottom edge of the object's tiles.
       const x = (o.rect.x + o.rect.w / 2) * TILE_PX;
       const feetY = (o.rect.y + o.rect.h) * TILE_PX;
@@ -149,23 +175,37 @@ export class NightScene extends Phaser.Scene {
       const first = key(this.night) ?? 'pedestalEmpty';
       const live = this.add.image(x, y, first).setOrigin(0.5, originY).setDepth(depth);
       const ghost = this.add.image(x, y, first).setOrigin(0.5, originY).setDepth(depth).setAlpha(0.4).setVisible(false);
-      const tag = this.add
-        .text(x, y - live.height - 1, 'seen n1', { fontFamily: 'monospace', fontSize: '24px', color: '#d8d8c8' })
-        .setScale(0.25)
-        .setOrigin(0.5, 1)
-        .setDepth(100001)
-        .setVisible(false);
+      const tag = showTag
+        ? this.add
+            .text(x, y - live.height - 1, 'seen n1', { fontFamily: 'monospace', fontSize: '24px', color: '#d8d8c8' })
+            .setScale(0.25)
+            .setOrigin(0.5, 1)
+            .setDepth(SEEN_TAG_DEPTH)
+            .setVisible(false)
+        : null;
       this.props.push({ tiles: tilesOf(o), live, ghost, tag, key });
+      return live;
     };
     const has = (kind: string, slot: string) => layout.some((d) => d.kind === kind && d.slot === slot);
     f.lampPosts.forEach((o) => add(o, () => (has('lamp', o.id) ? 'lampPost' : 'lampPostDark')));
     f.doghouseSpots.forEach((o) => add(o, () => (has('doghouse', o.id) ? 'doghouse' : 'doghouseSpot')));
     f.pedestals.forEach((o) => add(o, (n) => (n.world.gnomes.includes(o.id) ? 'pedestal' : 'pedestalEmpty')));
-    f.bushes.forEach((o) => add(o, () => 'bush'));
+    f.bushes.forEach((o) => this.bushSprites.set(o.id, add(o, () => 'bush', { showTag: false })));
+    const grassTiles = new Set<number>();
+    for (const patch of f.tallGrass) {
+      for (const tile of tilesOf(patch)) {
+        const index = tile.y * f.width + tile.x;
+        if (grassTiles.has(index)) continue;
+        grassTiles.add(index);
+        const texture = GRASS_TEXTURES[(tile.x + tile.y * 2) % GRASS_TEXTURES.length]!;
+        // Each tile sorts and enters fog independently, including tiles in the same patch.
+        add({ id: patch.id, rect: { ...tile, w: 1, h: 1 } }, () => texture, { showTag: false });
+      }
+    }
     f.gates.forEach((o) => {
       const gate = (n: NightState) => n.world.gates.find((g) => g.id === o.id)!;
       add(o, (n) => (gate(n).open ? 'gateOpen' : 'gate'));
-      add(o, (n) => (gate(n).padlock === 'none' ? null : gate(n).padlock === 'locked' ? 'padlock' : 'padlockOpen'), true);
+      add(o, (n) => (gate(n).padlock === 'none' ? null : gate(n).padlock === 'locked' ? 'padlock' : 'padlockOpen'), { overlay: true });
     });
     f.fences.forEach((o) =>
       fenceSegments(o).forEach((seg) => add(seg, (n) => (n.world.fenceGaps.some((g) => g.x === seg.rect.x && g.y === seg.rect.y) ? 'fenceGap' : 'fence'))),
@@ -175,12 +215,13 @@ export class NightScene extends Phaser.Scene {
   /** Danger is drawn on the ground (GDD 5.5, 12). Pre-T9 it shows the real state; T9 draws it from the PlayerView. */
   private drawDanger(): void {
     const g = this.dangerLayer.clear();
+    const outline = this.dangerOutline.clear();
     this.night.danger.forEach((d, i) => {
       if (d === null) return;
       const x = (i % this.farm.width) * TILE_PX;
       const y = Math.floor(i / this.farm.width) * TILE_PX;
       g.fillStyle(DANGER_COLOUR[d], 0.35).fillRect(x, y, TILE_PX, TILE_PX);
-      g.lineStyle(1, DANGER_COLOUR[d], 0.8).strokeRect(x + 0.5, y + 0.5, TILE_PX - 1, TILE_PX - 1);
+      outline.lineStyle(1, DANGER_COLOUR[d], 0.8).strokeRect(x + 0.5, y + 0.5, TILE_PX - 1, TILE_PX - 1);
     });
   }
 
@@ -242,7 +283,28 @@ export class NightScene extends Phaser.Scene {
     const directionRow = facing.x < 0 ? 1 : facing.x > 0 ? 2 : facing.y < 0 ? 3 : 0;
     const row = directionRow + (carrying === null ? 0 : 4);
     const column = this.phase === 'night' ? Math.floor(this.walkDistancePx / WALK_FRAME_PX) : 0;
-    this.player.setPosition(x, y).setDepth(depthOf(y)).setFrame(row * WALK_FRAMES + column);
+    const tile = tileOf(this.night.player);
+    const bush = bushAt(this.farm, tile);
+    if (bush && bush !== this.occupiedBush) this.rustleBush(bush);
+    this.occupiedBush = bush;
+    this.cover = bush ? 'bush' : tallGrassAt(this.farm, tile) ? 'tallGrass' : 'none';
+
+    this.player.setPosition(x, y).setFrame(row * WALK_FRAMES + column).setVisible(this.cover !== 'bush');
+    if (this.cover === 'tallGrass') {
+      // The cropped beret stays visible where rows of grass or tile fog overlap its pixels.
+      this.player.setCrop(0, 0, this.player.frame.width, GRASS_CROP_HEIGHT).setDepth(GRASS_HEAD_DEPTH);
+    } else {
+      this.player.setCrop().setDepth(depthOf(y));
+    }
+  }
+
+  private rustleBush(bush: FarmObject): void {
+    const leaves = this.bushSprites.get(bush.id);
+    if (leaves === undefined) return;
+    const x = (bush.rect.x + bush.rect.w / 2) * TILE_PX;
+    this.tweens.killTweensOf(leaves);
+    leaves.setX(x);
+    this.tweens.add({ targets: leaves, x: x + 1, duration: 75, ease: 'Sine.easeInOut', yoyo: true, repeat: 1 });
   }
 
   /** Footprints appear as you make them (GDD 12). */
@@ -252,6 +314,13 @@ export class NightScene extends Phaser.Scene {
       const i = prints[this.printsDrawn]!;
       const x = (i % this.farm.width) * TILE_PX;
       const y = Math.floor(i / this.farm.width) * TILE_PX;
+      const tile = { x: i % this.farm.width, y: Math.floor(i / this.farm.width) };
+      if (tallGrassAt(this.farm, tile) || bushAt(this.farm, tile)) {
+        this.trampledLeaves.fillStyle(0x253639).fillRect(x + 3, y + 9, 5, 2).fillRect(x + 9, y + 12, 4, 2);
+        this.trampledLeaves.fillStyle(0xb5a47c).fillRect(x + 3, y + 8, 3, 1).fillRect(x + 6, y + 9, 2, 1)
+          .fillRect(x + 9, y + 11, 2, 1).fillRect(x + 11, y + 12, 2, 1);
+        continue;
+      }
       // A raised rim, sole and separate heel read as footsteps even on furrowed soil.
       for (const [dx, dy] of [[4, 3], [9, 7]] as const) {
         this.printsLayer.fillStyle(0x886957, 0.9).fillRect(x + dx, y + dy + 1, 3, 3);
@@ -280,11 +349,11 @@ export class NightScene extends Phaser.Scene {
       const key = prop.key(this.night);
       const seen = prop.tiles.some((t) => visible[t.y * W + t.x]);
       const known = prop.tiles.some((t) => this.explored[t.y * W + t.x]);
-      if (key !== null) prop.live.setTexture(key);
+      if (key !== null && prop.live.texture.key !== key) prop.live.setTexture(key);
       prop.live.setVisible(seen && key !== null);
-      if (seen && key !== null) prop.ghost.setTexture(key);
+      if (seen && key !== null && prop.ghost.texture.key !== key) prop.ghost.setTexture(key);
       prop.ghost.setVisible(!seen && known && key !== null);
-      prop.tag.setVisible(!seen && known && key !== null);
+      prop.tag?.setVisible(!seen && known && key !== null);
     }
   }
 
@@ -303,6 +372,7 @@ export class NightScene extends Phaser.Scene {
       stamina: this.night.stamina,
       maxStamina: PLAYER_STAMINA,
       carrying: this.night.carrying !== null,
+      inBush: this.cover === 'bush',
       holes: this.farm.dogHoles.map((h) => h.id),
       prompt: promptText(i, this.night.carrying),
       progress,
@@ -319,6 +389,9 @@ export class NightScene extends Phaser.Scene {
       phase: this.phase,
       player: { ...this.night.player },
       playerFrame: this.player.frame.name,
+      cover: this.cover,
+      playerVisible: this.player.visible,
+      playerCropHeight: this.player.isCropped ? GRASS_CROP_HEIGHT : null,
       tile: tileOf(this.night.player),
       stamina: this.night.stamina,
       carrying: this.night.carrying,

@@ -104,7 +104,7 @@ Tests check the **serialized request body that would be sent to the model**: two
 Supported subset; `loadFarm` rejects anything else:
 
 - Orthogonal orientation, finite map, uncompressed tile arrays, embedded tilesets; map and tileset tiles must be 16 x 16 pixels (the client's current rendering grid); every object aligned to whole tiles.
-- Fixed layer names. Tile layers: `ground` (property `kind`: `soft`, `stone`, or `blocked`), `decoration`. Object layers: `dogHoles`, `pedestals`, `gates` (`padlocked` true or false), `fences`, `lampPosts`, `doghouseSpots`, `bushes`, `windowSight`, and `areas` (named footprint areas, which the farmer's trace list and the schema use as ids).
+- Fixed layer names. Tile layers: `ground` (property `kind`: `soft`, `stone`, or `blocked`), `decoration`. Object layers: `dogHoles`, `pedestals`, `gates` (`padlocked` true or false), `fences`, `lampPosts`, `doghouseSpots`, `bushes`, `windowSight`, and `areas` (named footprint areas, which the farmer's trace list and the schema use as ids). The optional `tallGrass` object layer contains walkable rectangles with foreground grass. Older maps load with no tall grass.
 - Every object has a unique, stable string `id` property; coordinates convert to tiles one way, in one shared function.
 - The Worker imports the map JSON at build time, not from a file system at run time. The client and the Worker both log the map version hash, and a morning request with the wrong hash is rejected.
 - Phaser renders the tile layers; `core/loadFarm` reads the same file for the rules.

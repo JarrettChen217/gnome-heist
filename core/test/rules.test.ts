@@ -1,4 +1,5 @@
 // AI-use disclosure: Claude (Claude Code) wrote these tests under my direction for T8; each block names the GDD rule row it covers.
+// Codex added tests for tall grass and bush cover under Hao's direction.
 
 import { describe, expect, it } from 'vitest';
 import {
@@ -318,6 +319,41 @@ describe('GDD 5.5 and 5.9 danger and being spotted', () => {
     // The window rectangle spans (2,1)-(2,3); the bush at (2,2) blocks it.
     const d = dangerGrid(f, []);
     expect([d[idx(f, 2, 1)], d[idx(f, 2, 2)], d[idx(f, 2, 3)]]).toEqual(['window', null, null]);
+  });
+
+  it('tall grass leaves the window sight line and player sight clear', () => {
+    const f = farmFrom([
+      '#####',
+      '#.W.#',
+      '#.T.#',
+      '#.W.#',
+      'D...#',
+      '#####',
+    ]);
+    const danger = dangerGrid(f, []);
+    expect([danger[idx(f, 2, 2)], danger[idx(f, 2, 3)]]).toEqual(['window', 'window']);
+    expect(lineOfSight(f, { x: 1, y: 2 }, { x: 3, y: 2 })).toBe(true);
+  });
+
+  it('walking into a bush hides the player from a lamp until they step into lit tall grass', () => {
+    const f = farmFrom(['#########', 'D.BT....#', '#..L....#', '#########']);
+    const session = sessionFor(f, [{ id: 'l', kind: 'lamp', slot: 'post1' }]);
+    const start = nightAt(f, 1, 1, session);
+    const covered = run(f, start, { moveX: 1 }, 0.25).night;
+    expect(covered.player.x).toBeCloseTo(2.5);
+    expect(covered.ended).toBeNull();
+    const exposed = run(f, covered, { moveX: 1 }, 0.25).night;
+    expect(exposed.ended).toEqual({ reason: 'spotted', tile: { x: 3, y: 1 }, by: 'lamp' });
+  });
+
+  it('the dog detects the player in a bush even when it conceals them from the lamp', () => {
+    const f = farmFrom(['########', 'D.B....#', '#.LK...#', '########']);
+    const session = sessionFor(f, [
+      { id: 'l', kind: 'lamp', slot: 'post1' },
+      { id: 'd', kind: 'doghouse', slot: 'spot1' },
+    ]);
+    const r = run(f, nightAt(f, 2, 1, session), {}, STEP);
+    expect(r.night.ended).toEqual({ reason: 'spotted', tile: { x: 2, y: 1 }, by: 'dog' });
   });
 
   it('a lamp lights tiles within 2, edge included; the dog alerts within 2', () => {
