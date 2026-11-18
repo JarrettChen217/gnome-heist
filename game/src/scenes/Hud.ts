@@ -1,9 +1,15 @@
 // AI-use disclosure: Claude (Claude Code) wrote this file under my direction for M0 (T7) and T8 (stamina pips, prompts, entry choice, end-of-night panel).
+// Codex illustrated the entry selection for the first playable art review.
 import * as Phaser from 'phaser';
 import type { NightHudState } from './Night.ts';
 
 /** Fixed on screen: its own scene and camera, so the night camera's scroll and zoom do not touch it. */
 export class HudScene extends Phaser.Scene {
+  private entry!: Phaser.GameObjects.Container;
+  private cover!: Phaser.GameObjects.Image;
+  private entryBand!: Phaser.GameObjects.Rectangle;
+  private title!: Phaser.GameObjects.Text;
+  private choices!: Phaser.GameObjects.Text;
   private status!: Phaser.GameObjects.Text;
   private prompt!: Phaser.GameObjects.Text;
   private bar!: Phaser.GameObjects.Graphics;
@@ -21,6 +27,11 @@ export class HudScene extends Phaser.Scene {
     this.bar = this.add.graphics();
     this.panel = this.add.text(0, 0, '', { ...style, backgroundColor: '#000000dd', padding: { x: 14, y: 12 }, lineSpacing: 4 }).setOrigin(0.5);
     this.corner = this.add.text(0, 0, 'WASD / arrows: walk · hold E: act · E in a dog hole: end the night', { ...style, fontSize: '13px' }).setOrigin(1, 1);
+    this.cover = this.add.image(0, 0, 'night-cover').setOrigin(0.5);
+    this.entryBand = this.add.rectangle(0, 0, 1, 1, 0x101724).setOrigin(0);
+    this.title = this.add.text(0, 0, 'Gnome Heist', { fontFamily: 'Georgia, serif', fontStyle: 'bold italic', fontSize: '44px', color: '#ffe4a0' });
+    this.choices = this.add.text(0, 0, '', { fontFamily: 'monospace', fontSize: '16px', color: '#ede6d7', lineSpacing: 6 });
+    this.entry = this.add.container(0, 0, [this.cover, this.entryBand, this.title, this.choices]);
     this.place();
     this.scale.on(Phaser.Scale.Events.RESIZE, this.place, this);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.scale.off(Phaser.Scale.Events.RESIZE, this.place, this));
@@ -28,6 +39,18 @@ export class HudScene extends Phaser.Scene {
 
   private place(): void {
     const { width, height } = this.scale;
+    const stacked = width < 780;
+    const bandHeight = stacked ? 130 : 100;
+    const top = Math.max(0, height - bandHeight);
+    const scale = Math.max(width / this.cover.width, top / this.cover.height);
+    const coverWidth = this.cover.width * scale;
+    // Keep the thief and gnome in a portrait crop. Clamp to the image edges.
+    const cropLeft = Phaser.Math.Clamp(coverWidth * 0.64 - width / 2, 0, coverWidth - width);
+    this.cover.setPosition(coverWidth / 2 - cropLeft, top / 2).setScale(scale);
+    this.choices.setFontSize(width < 370 ? 13 : 16);
+    this.entryBand.setPosition(0, top).setSize(width, bandHeight);
+    this.title.setPosition(stacked ? 16 : 32, top + (stacked ? 6 : 20));
+    this.choices.setPosition(stacked ? 16 : Math.max(330, width * 0.45), top + (stacked ? 66 : 24));
     this.corner.setPosition(width - 8, height - 8);
     this.prompt.setPosition(width / 2, height - 48);
     this.panel.setPosition(width / 2, height / 2);
@@ -36,6 +59,9 @@ export class HudScene extends Phaser.Scene {
   override update(): void {
     const s = this.registry.get('hud') as NightHudState | undefined;
     if (s === undefined) return;
+    this.entry.setVisible(s.phase === 'choose');
+    this.status.setVisible(s.phase !== 'choose');
+    this.corner.setVisible(s.phase !== 'choose');
     const pips = '●'.repeat(s.stamina) + '○'.repeat(Math.max(0, s.maxStamina - s.stamina));
     this.status.setText(`Night ${s.night}   Stamina ${pips}   ${s.carrying ? '   Carrying a gnome' : ''}`);
 
@@ -52,8 +78,9 @@ export class HudScene extends Phaser.Scene {
     }
 
     if (s.phase === 'choose') {
-      const holes = s.holes.map((h, i) => `  ${i + 1}  ${h}`).join('\n');
-      this.panel.setText(`Night ${s.night}. Choose your dog hole:\n\n${holes}`).setVisible(true);
+      const entrances = s.holes.map((id, i) => `[${i + 1}] ${id.replace(/^hole_/, '').toUpperCase()}`);
+      this.choices.setText(`Night ${s.night} · Choose your entrance\n${entrances.join('   ')}`);
+      this.panel.setVisible(false);
     } else if (s.phase === 'ended' && s.result) {
       this.panel.setText([...s.result, '', 'R: play the night again (the morning comes in T10)'].join('\n')).setVisible(true);
     } else this.panel.setVisible(false);

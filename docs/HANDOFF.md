@@ -1,20 +1,16 @@
-AI-use disclosure: Claude (Claude Code) and Codex maintain this handoff under Hao's direction; each snapshot is written from repository and session evidence. Claude wrote the T8 snapshot below.
+AI-use disclosure: Claude (Claude Code) and Codex maintain this handoff under Hao's direction; each snapshot is written from repository and session evidence.
 
 # Gnome Heist handoff
 
 Keep this file short: replace the snapshot each time, and update only your own row in Active work. Durable detail belongs in commits, PRs, and the docs.
 
-## Snapshot (2026-11-13, Claude, T8 night rules)
+## Snapshot (2026-11-18, Codex, first playable art pass)
 
-- **Stage:** G1 Concept. Post due Sun Nov 15, 11:59 p.m. America/New_York (CourseWorks). Braintrust replies Nov 18 (CourseWorks) or Nov 19 (G1 page); the sources disagree.
-- **Hao's standing decision:** local development first (`npm run dev`); cloud hosting, deployed-URL checks and GitHub Pages are deferred and not counted as done. No real model calls, no paid plan changes; push, PR, merge and deploy need his explicit OK.
-- **T8 (night rules):** on branch `feat/t8-night-rules`, cut from `feat/m0-skeleton` at `fffd3fe` (includes all M0 commits). Commits `edb914b` (rules, tests, client) and `81ce93e` (review fixes), then this handoff. Local only: not pushed, no PR.
-- **Implemented in `core/`:** gates (hold E), padlocks (pick, re-lock, self-lock refusal), fence gaps, digging and carrying a gnome, stamina with refusals, footprints, window/lamp/dog danger, spotting (night ends, carried gnome returns), `endNight` with traces and changes; GDD 5.11 route, open-route, distance and sight functions; `loadFarm` rejects slots in a safe zone, a window line not at a wall, and no open route at the start. Client: entry choice (keys 1-3), prompts with hold progress and red refusals, stamina pips, object states, danger on the ground, footprints, fog from the core sight rule, end-of-night trace panel.
-- **Verified locally at `81ce93e`:** `npm run typecheck`, `npm test` (169 passing: core rules in Node, client text, Worker in workerd), `npm run build`. Mutation checks at `edb914b`: exclusive range edges, no self-lock check, no gnome return on spotting, no E-release latch, no corner assist each fail a test. Chrome on the local dev server at `edb914b` (synthetic held keys through Phaser): a full night from `hole_west` taking `ped_sw`; a night spotted by the window carrying `ped_center` (gnome returned, sighting trace); a fence kick, the gap passed with the corner assist, a padlock picked, then a red "No stamina left". After `81ce93e` only an HTTP 200 check; the review fixes were not replayed in the browser.
-- **Reviewed:** `gnome-reviewer` (read-only) found no blocker; fixes for its medium/low code findings are in `81ce93e`. Its design findings are open items below.
-- **Not verified:** CI (no PR), self-lock refusal and lamps/dog in the browser (unit tests only; the starting layout has no lamp or dog), cloud deployment (deferred).
-- **Docs:** project plan T8 status; `game/README.md` controls. GDD 5.11 boundary values are not copied back yet: they wait for Hao's answers.
-- **G1 deck:** unchanged this session.
+- Local branch `codex/night-farm-art-v1` is based on the T8 handoff at `798b7cb`. The previous snapshot and rule-verification history are available at that commit.
+- Hao requested a first playable style checkpoint. The entry illustration, directional thief, carrying poses, farm tiles, interactive props and inked footprints are ready for his review. The four-column gait advances with actual distance. The 24 × 32 character cell and desktop camera framing are provisional art choices.
+- Local checks passed with Node 24.22.3: strict typecheck, 169 tests, production client build and Worker dry-run. A Chrome keyboard replay on Vite and on the standalone local HTML selected the west entrance, stopped facing right, dug the southwest gnome, returned with it, ended the night and restarted. The recorded route is from the playable client.
+- Independent review identified a widescreen sight-range regression and a portrait crop that cut off the gnome. Both fixes were applied. Chrome checked 1920 × 1080 camera zoom and 390 × 844 cover framing.
+- The first night still starts with an unlit lamp. The illustrated title scene shows the proposed moonlight and lantern palette. Style approval and human playtesting are pending.
 
 ## Active work
 
@@ -26,6 +22,7 @@ Keep this file short: replace the snapshot each time, and update only your own r
 | M0 skeleton and Worker skeleton (T7, T11a) | Claude, for Hao | `feat/m0-skeleton` | `core/`, `game/`, `worker/`, `maps/`, `.github/`, root config, `docs/architecture.md`, `docs/project-plan.md` | Built, checked locally, reviewed; awaiting Hao: deploy, push/PR, acceptance |
 | M0 review fixes and local development decision | Codex, for Hao | `feat/m0-skeleton` | `core/`, `game/`, `worker/`, `vitest.config.ts`, `docs/architecture.md`, `docs/project-plan.md`, `docs/HANDOFF.md` | Fixes pushed at `f6af482`; 111 tests, strict typecheck and build passed; independent review found no material issues. Hao chose local development first and deferred cloud hosting. |
 | T8 night rules | Claude, for Hao | `feat/t8-night-rules` | `core/`, `game/`, `maps/`, `worker/src/session.ts`, `docs/project-plan.md`, `game/README.md` | Built, tested and reviewed locally; awaiting Hao on the open rule questions, then push/PR |
+| First playable art pass | Codex, for Hao | `codex/night-farm-art-v1` | `game/`, `maps/`, credits | Local style review ready; awaiting Hao’s visual direction |
 
 ## Before posting (Hao)
 
@@ -45,4 +42,4 @@ Keep this file short: replace the snapshot each time, and update only your own r
 
 ## Next action
 
-Hao answers the T8 questions above; apply any changes, copy the agreed values into GDD 5.11, and record the trace `count` in the Configuration Document. Then, with his OK, push `feat/m0-skeleton` and `feat/t8-night-rules` and open PRs so CI runs. Next build task: T10 (rule farmer, validator, end-of-night order, morning), then T9.
+Hao reviews the art sample and chooses whether to continue this visual direction. For the separate T8 work, Hao answers the questions above; apply any changes, copy the agreed values into GDD 5.11, and record the trace `count` in the Configuration Document. Then, with his OK, push `feat/m0-skeleton` and `feat/t8-night-rules` and open PRs so CI runs. Next build task: T10 (rule farmer, validator, end-of-night order, morning), then T9.

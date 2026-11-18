@@ -1,9 +1,8 @@
 // AI-use disclosure: Claude (Claude Code) wrote this script under my direction for M0 (T7) and adjusted it in T8; it generates the greybox farm and tileset, which I can then edit in Tiled.
 //
 // Writes maps/farm.tmj (Tiled JSON, the subset in docs/architecture.md Section 5)
-// and maps/greybox.png (a flat-colour tileset). Run: npm run generate -w maps
-// After the first hand edit in Tiled, the .tmj is the source and this script
-// is no longer re-run on it.
+// and maps/greybox.png (a flat-colour tileset). This is the original layout
+// generator. The current .tmj is the layout source for make-night-art.mjs.
 
 import { writeFileSync } from 'node:fs';
 import { deflateSync } from 'node:zlib';

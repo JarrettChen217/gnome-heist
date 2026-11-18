@@ -1,8 +1,8 @@
 {
-  "//": "AI-use disclosure: Claude (Claude Code) wrote this file under my direction for M0 (T7, T11a).",
+  "//": "AI-use disclosure: Claude (Claude Code) wrote this file for M0 (T7, T11a); Codex wired night art regeneration under Hao's direction.",
   "name": "@gnome-heist/maps",
   "private": true,
   "type": "module",
   "exports": { "./*": "./*" },
-  "scripts": { "generate": "node tools/make-greybox.mjs" }
+  "scripts": { "generate": "node tools/make-night-art.mjs" }
 }

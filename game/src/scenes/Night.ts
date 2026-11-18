@@ -1,5 +1,6 @@
 // AI-use disclosure: Claude (Claude Code) wrote this file under my direction for M0 (T7) and wired in the T8 night rules; the fog here is a pre-T9 stand-in, not the PlayerView.
 // Codex fixed rectangular fence placement under Hao's direction after the M0 review.
+// Codex integrated directional player art and walk animation under Hao's direction.
 import * as Phaser from 'phaser';
 import { PLAYER_STAMINA, currentInteraction, endNight, loadFarm, newSession, startNight, tick, tileOf, tilesOf, visibleTiles } from '@gnome-heist/core';
 import type { FarmDef, FarmObject, Interaction, NightEnd, NightResult, NightState, SessionState, Tile } from '@gnome-heist/core';
@@ -36,6 +37,8 @@ export interface NightHudState {
 /** Depth from the y of an object's feet, so the player passes behind and in front of tall things. */
 const depthOf = (feetYpx: number) => 10 + feetYpx;
 const DANGER_COLOUR = { window: 0x8fc7ff, lamp: 0xffe27a, dog: 0xff9a4a } as const;
+const WALK_FRAMES = 4;
+const WALK_FRAME_PX = 6;
 
 export class NightScene extends Phaser.Scene {
   private farm!: FarmDef;
@@ -43,8 +46,8 @@ export class NightScene extends Phaser.Scene {
   private night!: NightState;
   private phase: Phase = 'choose';
   private result: NightResult | null = null;
-  private player!: Phaser.GameObjects.Image;
-  private carried!: Phaser.GameObjects.Image;
+  private player!: Phaser.GameObjects.Sprite;
+  private walkDistancePx = 0;
   private fog!: Phaser.GameObjects.Graphics;
   private dangerLayer!: Phaser.GameObjects.Graphics;
   private printsLayer!: Phaser.GameObjects.Graphics;
@@ -65,15 +68,14 @@ export class NightScene extends Phaser.Scene {
     console.info(`[gnome-heist] map version ${this.farm.mapVersion}`);
 
     const map = this.make.tilemap({ key: 'farm' });
-    const tileset = map.addTilesetImage('greybox', 'greybox');
-    if (tileset === null) throw new Error('tileset "greybox" missing from the map');
+    const tileset = map.addTilesetImage('nightFarm', 'nightFarm');
+    if (tileset === null) throw new Error('tileset "nightFarm" missing from the map');
     map.createLayer('ground', tileset, 0, 0)?.setDepth(0);
     map.createLayer('decoration', tileset, 0, 0)?.setDepth(1);
     this.dangerLayer = this.add.graphics().setDepth(2);
     this.printsLayer = this.add.graphics().setDepth(3);
 
-    this.player = this.add.image(0, 0, 'player').setOrigin(0.5, 1).setVisible(false);
-    this.carried = this.add.image(0, 0, 'gnome').setOrigin(0.5, 1).setVisible(false);
+    this.player = this.add.sprite(0, 0, 'player-art', 0).setOrigin(0.5, 1).setVisible(false);
     this.fog = this.add.graphics().setDepth(100000);
 
     const cam = this.cameras.main;
@@ -105,7 +107,6 @@ export class NightScene extends Phaser.Scene {
     this.printsDrawn = 0;
     this.printsLayer.clear();
     this.player.setVisible(false);
-    this.carried.setVisible(false);
     for (const p of this.props) [p.live, p.ghost, p.tag].forEach((o) => o.destroy());
     this.props = [];
     this.addProps();
@@ -118,6 +119,7 @@ export class NightScene extends Phaser.Scene {
     this.night = startNight(this.session, this.farm, entry);
     this.phase = 'night';
     this.acc = 0;
+    this.walkDistancePx = 0;
     this.player.setVisible(true);
     this.syncPlayer();
     // Phaser 4: startFollow without the second argument turns the camera's roundPixels off.
@@ -128,19 +130,25 @@ export class NightScene extends Phaser.Scene {
   private fitZoom(): void {
     const { width, height } = this.scale;
     const fit = Math.max(width / (this.farm.width * TILE_PX), height / (this.farm.height * TILE_PX));
-    this.cameras.main.setZoom(Math.max(MIN_CAMERA_ZOOM, Math.ceil(fit)));
+    // Frame roughly fifteen tiles across on desktop, so the walk and carrying poses read at play size.
+    const characterZoom = Math.floor(Math.min(width / (15 * TILE_PX), height / (11 * TILE_PX)));
+    this.cameras.main.setZoom(Math.max(MIN_CAMERA_ZOOM, characterZoom, Math.ceil(fit)));
   }
 
   private addProps(): void {
     const f = this.farm;
     const layout = this.session.farmer.layout;
-    const add = (o: FarmObject, key: (n: NightState) => string | null, originY = 1) => {
+    const add = (o: FarmObject, key: (n: NightState) => string | null, overlay = false) => {
       // Feet at the bottom edge of the object's tiles.
       const x = (o.rect.x + o.rect.w / 2) * TILE_PX;
-      const y = (o.rect.y + o.rect.h) * TILE_PX;
+      const feetY = (o.rect.y + o.rect.h) * TILE_PX;
+      // A padlock sits at the centre of the gate and sorts just above it.
+      const y = overlay ? feetY - TILE_PX / 2 : feetY;
+      const originY = overlay ? 0.5 : 1;
+      const depth = depthOf(feetY) + (overlay ? 0.1 : 0);
       const first = key(this.night) ?? 'pedestalEmpty';
-      const live = this.add.image(x, y, first).setOrigin(0.5, originY).setDepth(depthOf(y));
-      const ghost = this.add.image(x, y, first).setOrigin(0.5, originY).setDepth(depthOf(y)).setAlpha(0.4).setVisible(false);
+      const live = this.add.image(x, y, first).setOrigin(0.5, originY).setDepth(depth);
+      const ghost = this.add.image(x, y, first).setOrigin(0.5, originY).setDepth(depth).setAlpha(0.4).setVisible(false);
       const tag = this.add
         .text(x, y - live.height - 1, 'seen n1', { fontFamily: 'monospace', fontSize: '24px', color: '#d8d8c8' })
         .setScale(0.25)
@@ -157,7 +165,7 @@ export class NightScene extends Phaser.Scene {
     f.gates.forEach((o) => {
       const gate = (n: NightState) => n.world.gates.find((g) => g.id === o.id)!;
       add(o, (n) => (gate(n).open ? 'gateOpen' : 'gate'));
-      add(o, (n) => (gate(n).padlock === 'none' ? null : gate(n).padlock === 'locked' ? 'padlock' : 'padlockOpen'), 0);
+      add(o, (n) => (gate(n).padlock === 'none' ? null : gate(n).padlock === 'locked' ? 'padlock' : 'padlockOpen'), true);
     });
     f.fences.forEach((o) =>
       fenceSegments(o).forEach((seg) => add(seg, (n) => (n.world.fenceGaps.some((g) => g.x === seg.rect.x && g.y === seg.rect.y) ? 'fenceGap' : 'fence'))),
@@ -192,11 +200,15 @@ export class NightScene extends Phaser.Scene {
         // A tap shorter than a frame still counts as a press (ending the night is a press).
         interact: down('e') || (k['e'] !== undefined && Phaser.Input.Keyboard.JustDown(k['e'])),
       };
+      if (input.moveX === 0 && input.moveY === 0) this.walkDistancePx = 0;
       // Fixed steps; at most a quarter second per frame so a stalled tab does not jump.
       this.acc = Math.min(this.acc + deltaMs / 1000, 0.25);
       while (this.acc >= STEP_SECONDS && this.phase === 'night') {
+        const previous = this.night.player;
         const r = tick(this.farm, this.night, input, STEP_SECONDS);
         this.night = r.night;
+        const distancePx = Math.hypot(r.night.player.x - previous.x, r.night.player.y - previous.y) * TILE_PX;
+        this.walkDistancePx = distancePx > 1e-6 ? (this.walkDistancePx + distancePx) % (WALK_FRAMES * WALK_FRAME_PX) : 0;
         this.acc -= STEP_SECONDS;
         for (const e of r.events) {
           if (e.type === 'refused') this.flash({ text: REFUSAL[e.reason], red: true }, time);
@@ -225,8 +237,12 @@ export class NightScene extends Phaser.Scene {
   private syncPlayer(): void {
     const x = this.night.player.x * TILE_PX;
     const y = this.night.player.y * TILE_PX;
-    this.player.setPosition(x, y).setDepth(depthOf(y));
-    this.carried.setPosition(x, y - this.player.height).setDepth(depthOf(y) + 0.1).setVisible(this.night.carrying !== null && this.phase !== 'choose');
+    // Rows run down, left, right, up and repeat with the gnome in the player's arms.
+    const { facing, carrying } = this.night;
+    const directionRow = facing.x < 0 ? 1 : facing.x > 0 ? 2 : facing.y < 0 ? 3 : 0;
+    const row = directionRow + (carrying === null ? 0 : 4);
+    const column = this.phase === 'night' ? Math.floor(this.walkDistancePx / WALK_FRAME_PX) : 0;
+    this.player.setPosition(x, y).setDepth(depthOf(y)).setFrame(row * WALK_FRAMES + column);
   }
 
   /** Footprints appear as you make them (GDD 12). */
@@ -236,7 +252,11 @@ export class NightScene extends Phaser.Scene {
       const i = prints[this.printsDrawn]!;
       const x = (i % this.farm.width) * TILE_PX;
       const y = Math.floor(i / this.farm.width) * TILE_PX;
-      this.printsLayer.fillStyle(0x2a1d12, 0.8).fillEllipse(x + 5, y + 6, 3, 5).fillEllipse(x + 10, y + 10, 3, 5);
+      // A raised rim, sole and separate heel read as footsteps even on furrowed soil.
+      for (const [dx, dy] of [[4, 3], [9, 7]] as const) {
+        this.printsLayer.fillStyle(0x886957, 0.9).fillRect(x + dx, y + dy + 1, 3, 3);
+        this.printsLayer.fillStyle(0x231d26).fillRect(x + dx, y + dy, 3, 3).fillRect(x + dx, y + dy + 4, 2, 1);
+      }
     }
   }
 
@@ -298,6 +318,7 @@ export class NightScene extends Phaser.Scene {
       mapVersion: this.farm.mapVersion,
       phase: this.phase,
       player: { ...this.night.player },
+      playerFrame: this.player.frame.name,
       tile: tileOf(this.night.player),
       stamina: this.night.stamina,
       carrying: this.night.carrying,

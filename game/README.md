@@ -1,7 +1,7 @@
 AI-use disclosure: Claude (Claude Code) wrote this README under my direction for M0 (T7, T11a).
 Codex updated the test instructions under Hao's direction after the M0 review.
 
-# Running Gnome Heist (M0 greybox)
+# Running Gnome Heist
 
 Everything runs with project-local tools; nothing is installed globally.
 
@@ -21,7 +21,7 @@ Controls (T8): press 1, 2 or 3 to choose a dog hole; WASD or arrow keys to walk;
 ## Layout
 
 - `core/`: engine-free rules. `tsconfig.json` has no DOM or Node types, and `test/boundary.test.ts` rejects package imports, clocks, timers, `Math.random` and `fetch`.
-- `maps/farm.tmj`: the greybox farm in the Tiled subset (Technical plan Section 5), with `maps/greybox.png` embedded as its tileset. Both come from `npm run generate -w maps`; after a hand edit in Tiled, the `.tmj` is the source.
+- `maps/farm.tmj`: the source for the playable farm layout. `npm run generate -w maps` rebuilds its decoration layer, the night tileset and the environment sprites from that layout.
 - `game/`: Phaser 4.2.1 client (scenes `Boot`, `Night`, `Hud`). `window.__gnomeDebug` holds a read-only snapshot for automated checks.
 - `worker/`: one Worker serving `game/dist` and `POST /session/{id}/morning`, one Durable Object (`FarmerSession`) per session. No real model is called in M0; the morning answers with the placeholder `ruleFarmer`.
 
