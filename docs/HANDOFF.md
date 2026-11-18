@@ -4,13 +4,12 @@ AI-use disclosure: Claude (Claude Code) and Codex maintain this handoff under Ha
 
 Keep this file short: replace the snapshot each time, and update only your own row in Active work. Durable detail belongs in commits, PRs, and the docs.
 
-## Snapshot (2026-11-18, Codex, first playable art pass)
+## Snapshot (2026-11-18, Codex, gardener revision)
 
-- Local branch `codex/night-farm-art-v1` is based on the T8 handoff at `798b7cb`. The previous snapshot and rule-verification history are available at that commit.
-- Hao requested a first playable style checkpoint. The entry illustration, directional thief, carrying poses, farm tiles, interactive props and inked footprints are ready for his review. The four-column gait advances with actual distance. The 24 × 32 character cell and desktop camera framing are provisional art choices.
-- Local checks passed with Node 24.22.3: strict typecheck, 169 tests, production client build and Worker dry-run. A Chrome keyboard replay on Vite and on the standalone local HTML selected the west entrance, stopped facing right, dug the southwest gnome, returned with it, ended the night and restarted. The recorded route is from the playable client.
-- Independent review identified a widescreen sight-range regression and a portrait crop that cut off the gnome. Both fixes were applied. Chrome checked 1920 × 1080 camera zoom and 390 × 844 cover framing.
-- The first night still starts with an unlit lamp. The illustrated title scene shows the proposed moonlight and lantern palette. Style approval and human playtesting are pending.
+- Hao liked the farm style and asked for a cuter, smaller playable character. The first art checkpoint is at `443eae5` on `codex/night-farm-art-v1`.
+- The proposed gardener now wears a sage beret, teal overalls and an apricot scarf. At the existing map scale, visible height is 21–22 pixels across the sheet (previously 27–30). The revised cover depicts the same gardener.
+- Independent review checked all 32 distinct frames, the foot baseline and carry poses. The client production build passed. Chrome replayed the standalone HTML through choosing the west entrance, walking, digging the southwest gnome, carrying it to the exit and restarting.
+- Next art checkpoint: Hao compares the gardener's expression and size on the farm before any broader art work.
 
 ## Active work
 
@@ -22,7 +21,7 @@ Keep this file short: replace the snapshot each time, and update only your own r
 | M0 skeleton and Worker skeleton (T7, T11a) | Claude, for Hao | `feat/m0-skeleton` | `core/`, `game/`, `worker/`, `maps/`, `.github/`, root config, `docs/architecture.md`, `docs/project-plan.md` | Built, checked locally, reviewed; awaiting Hao: deploy, push/PR, acceptance |
 | M0 review fixes and local development decision | Codex, for Hao | `feat/m0-skeleton` | `core/`, `game/`, `worker/`, `vitest.config.ts`, `docs/architecture.md`, `docs/project-plan.md`, `docs/HANDOFF.md` | Fixes pushed at `f6af482`; 111 tests, strict typecheck and build passed; independent review found no material issues. Hao chose local development first and deferred cloud hosting. |
 | T8 night rules | Claude, for Hao | `feat/t8-night-rules` | `core/`, `game/`, `maps/`, `worker/src/session.ts`, `docs/project-plan.md`, `game/README.md` | Built, tested and reviewed locally; awaiting Hao on the open rule questions, then push/PR |
-| First playable art pass | Codex, for Hao | `codex/night-farm-art-v1` | `game/`, `maps/`, credits | Local style review ready; awaiting Hao’s visual direction |
+| First playable art pass | Codex, for Hao | `codex/night-farm-art-v1` | `game/`, `maps/`, credits | Gardener revision ready for Hao’s character and scale review |
 
 ## Before posting (Hao)
 
