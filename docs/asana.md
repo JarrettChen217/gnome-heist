@@ -105,6 +105,12 @@ All cards are assigned to Hao, the only workspace member. "Delegated to" names t
     - T18: uncommitted. HANDOFF reports local checks and a Chrome replay, but none of it is in git yet, and no fresh player has tried it.
   - *Not started*: everything else.
   - Date type: *Course date* for the 13 `[FINAL …]` cards; *Internal target* for the others. T16 targets 11-27, the day before the 11-28 course date.
+- **D1 and D2 decided [Hao, 2026-11-20]:**
+  - D1: no deployment before delivery; everything runs locally. An earlier "deploy" comment on D1 was a misunderstanding and is withdrawn on the card.
+  - D2: 20 paid model calls from the local Worker.
+  - T11a, T11b and T11c were rewritten as local work.
+  - `[FINAL CP]` carries a note that a local demo for "deployed model call" is not confirmed.
+  - A new status update, "local only until delivery", replaces the deployment item.
 - **Still open:** T2 is marked Done in the plan but not ticked in Asana. Hao ticks it if he agrees.
 
 ## 5. ID → Asana gid
