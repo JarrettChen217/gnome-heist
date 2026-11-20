@@ -68,7 +68,31 @@ All cards are assigned to Hao, the only workspace member. "Delegated to" names t
   - `[FINAL G2]` (11-30) ← T14, T15; `[FINAL G3] gate` ← `[FINAL G3] brief` ← T15
 - **Dates changed:** `[FINAL G1] Concept pitch recording` moved 11-14 → **11-15**, per the CourseWorks "G1 recording due Sunday" correction. T6 moved 11-18 → 11-20.
 - **Spot check, milestone → task → repository:** `[FINAL CP]` → `[T11c]` → `[T10]`, whose Evidence location is `core/src/morning.ts` and `core/test/morning.test.ts`. Those files are uncommitted in the working tree of `codex/night-farm-art-v1`.
-- **Not decided yet, so left open on the board:** the G1 gate decision (no instructor decision found in the Canvas digests on 2026-11-19). Also open: whether T1/T3/`[FINAL G1] recording` count as done, whether T4 is replaced by the two-night session, and new internal dates for overdue tasks.
+- **Hao's decisions, applied the same evening:**
+  - G1 is treated as approved for planning (no instructor decision had been found). It reopens if the instructor posts Hold.
+  - T1, T3 and both `[FINAL G1]` cards are complete.
+  - T4 is closed as *replaced* by the two-night observation (T18/T14), not as performed. Its dependency on T8 was removed.
+  - All four decisions are recorded as comments on the cards.
+- **Re-dated internal targets (2026-11-19, on Hao's request).** Every finish-to-start edge now ends before its successor starts, so the Gantt view shows no conflicts. The chain still finishes before the course dates:
+
+  | Date | Tasks |
+  | --- | --- |
+  | 11-19 | T7 |
+  | 11-20 | T8, T11a, D1, D2, T6 |
+  | 11-21 | T10, T11b, T17, T5 (11-20 to 11-21) |
+  | 11-22 | T9, T11c, T18 |
+  | 11-23 | T12a; `[FINAL CP]` checkpoint |
+  | 11-24 | T12b |
+  | 11-25 | T13, T14, D3 (11-20 to 11-25) |
+  | 11-26 | T15 |
+  | 11-27 | T16 |
+  | 11-28 | `[FINAL G2/G3]` recording |
+
+  T1 was set to 11-14, the actual merge date.
+- **Fields filled on all 37 cards** from each `Evidence:` line:
+  - Evidence: *Accepted by Hao* for T1, T3, T4 and the two G1 cards; *Verified locally* for T2, T7, T8, T11a and T18; *Implemented locally* for T5, T6, T10, T12a and T17; *Not started* for the rest.
+  - Date type: *Course date* for the 13 `[FINAL …]` cards and T16; *Internal target* for the others.
+- **Still open:** T2 is marked Done in the plan but not ticked in Asana. Hao ticks it if he agrees.
 
 ## 5. ID → Asana gid
 
@@ -116,18 +140,19 @@ Section gids:
 | Decisions for Hao | `1220727578045951` |
 | Done | `1220727441548258` |
 
-## 6. Left for the Asana UI (the connector cannot do these)
+## 6. UI configuration (done in Hao's Chrome, 2026-11-19)
 
-1. **Custom fields (optional).** The connector can attach existing fields but cannot create them. If you want the Evidence status as a column, open the project, go to *Customize → Fields → + Add field*, and create:
-   - **Evidence**, single-select: Not started · Implemented locally · Verified locally · Deployed · Verified with a player · Accepted by Hao
-   - **Date type**, single-select: Course date · Internal target · Not published
+The connector cannot create fields, change view settings or move sections. These steps were done in the Asana web UI through Claude in Chrome:
 
-   Then ask an agent to fill them from each card's `Evidence:` line.
-2. **Board and Timeline tabs:**
-   - Click **+** next to the List tab and add *Board*; its columns are the six sections.
-   - Add *Timeline* and set *Weeks* zoom, grouped by section.
-3. **List columns:** show Name, Assignee, Due date, *Blocked by* (and the fields from step 1, if created).
-4. **Check the section order** matches Section 3. The sections were renamed into order because the connector cannot move them.
+- **Tabs:** Overview, List, Board, Timeline, Dashboard, Gantt. Hao had already added Board, Timeline, Dashboard and Gantt.
+- **Gantt** (`…/gantt/1220727678744849`): zoom set to **Days** and saved. Dependencies show as FS arrows; there are no red conflict lines after the re-dating.
+- **Section order** checked: it matches Section 3.
+- **Custom fields** created under *Customize → Fields → Create new*, both single-select and project-local:
+  - **Evidence** `1220727680057342`. Options: Not started `…343` · Implemented locally `…344` · Verified locally `…345` · Deployed `…346` · Verified with a player `…347` · Accepted by Hao `…348`
+  - **Date type** `1220727680057350`. Options: Course date `…351` · Internal target `…352` · Not published `…353`
+- **List** shows Name, Assignee, Due date, Evidence, Date type.
+
+To repeat any of this by hand: open the project → *Customize* (top right) → *Fields* → *+ Add* → *Create new*, type the title, type each option and press Enter, delete the empty last option, then *Create field*. For the Gantt: open the *Gantt* tab → zoom menu (top right) → *Days* → *Save view*.
 
 ## 7. Running it again safely
 
@@ -141,7 +166,8 @@ Section gids:
 ## 8. Maintenance
 
 - **When:** at every `gnome-handoff`, after a PR opens or merges, and after each playtest.
-  - The session that changed the evidence updates the card's `Evidence:` line and appends one "Evidence update (date): …" line with the commit, PR or doc link.
+  - The session that changed the evidence updates the card's **Evidence field** and its `Evidence:` line, and appends one "Evidence update (date): …" line with the commit, PR or doc link.
+  - When a date moves, keep every finish-to-start edge ending before its successor starts. The Gantt view shows a red line otherwise.
   - Move the card to the right section.
   - Hao approves the write.
 - **Status update:** post a new "Three questions" status update when the answer to any of the three changes, and at least before each course date.
