@@ -197,7 +197,9 @@ This follows the Tank Trouble setup. Two workflows run on pull requests from thi
 
 Both actions are pinned to the same commit SHAs as in Tank Trouble.
 
-**Status (2026-11-19): not yet active.** The repository has no `ASANA_SECRET`; until it does, both jobs log a skip and pass. To turn them on, Hao:
+**Status: active since 2026-11-20.** Hao added `ASANA_SECRET`. The attachment run after an edit to PR #2's description returned `task 1220744086646328: added a widget`, and the T6 card then listed the GitHub attachment `#2 [T6] Set up the Gnome Heist Asana project and PR links`. The notification workflow has not yet fired with the secret (next on close or reopen). GitHub warns that both actions target Node 20 and are run on Node 24.
+
+If the secret is ever missing, both jobs log a skip and pass. To set it again, Hao:
 
 1. Opens https://github.integrations.asana.com/auth in his own browser.
 2. Signs in to Asana and authorizes the Asana GitHub integration.
