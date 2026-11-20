@@ -22,11 +22,11 @@ Truth order: git establishes files and commits, GitHub establishes PRs and CI, C
 | --- | --- |
 | `[ID] English title`; ID numbers are not execution order | Kept. Plan T IDs (`[T11c] …`), decisions `[D1]…`, course milestones keep their `[FINAL …]` titles |
 | Course milestones are separate tasks with a deadline type | Kept. The 13 existing `[FINAL …]` tasks are shared with the midterm project, not copied |
-| Status shown by section (Backlog → Done, plus Manual Testing) | Simplified. Sections follow the **delivery horizon**; status is the `Evidence:` line in each description |
-| One `Stage` field | No custom fields for now (see Section 6) |
+| Status shown by section (Backlog → Done, plus Manual Testing) | Simplified. Sections follow the **delivery horizon**; status is the **Evidence** field plus the `Evidence:` line in each description |
+| One `Stage` field | Two project-local single-select fields, Evidence and Date type (Section 6) |
 | Native finish-to-start dependencies; no date shifting | Kept. 35 edges; no subtasks |
 | Full English text, `---`, then a full Chinese translation | Simplified to English only, per CLAUDE.md |
-| PR body carries the task URL; GitHub Actions attach the PR | URL-in-PR rule kept. No Asana GitHub Actions; they need an `ASANA_SECRET` and Hao's OK |
+| PR body carries the task URL; GitHub Actions attach the PR | Kept. The same two pinned Asana actions, limited to this project; see Section 9 |
 | Agents never mark tasks complete; Hao accepts | Kept |
 | Read before writing, reuse before creating, read back after writing | Kept. The ID → gid table in Section 5 makes reruns safe |
 | Dashboard with 8 charts, built by hand | Dropped. The List and Board views plus the status update are enough |
@@ -48,7 +48,7 @@ The midterm project was renamed from "COMS E6998 — Hao Chen — Game Studio" t
 
 ```
 Evidence: Not started | Implemented locally | Verified locally | Deployed | Verified with a player | Accepted by Hao — plus what is NOT yet verified
-Date type: Course date | Internal target | none set
+Date type: Course date | Internal target | Not published
 Owner: Hao (accountable). Delegated to: <GDF role / agent>
 Acceptance: …
 Depends on: …
@@ -90,8 +90,21 @@ All cards are assigned to Hao, the only workspace member. "Delegated to" names t
 
   T1 was set to 11-14, the actual merge date.
 - **Fields filled on all 37 cards** from each `Evidence:` line:
-  - Evidence: *Accepted by Hao* for T1, T3, T4 and the two G1 cards; *Verified locally* for T2, T7, T8, T11a and T18; *Implemented locally* for T5, T6, T10, T12a and T17; *Not started* for the rest.
-  - Date type: *Course date* for the 13 `[FINAL …]` cards and T16; *Internal target* for the others.
+  - *Accepted by Hao*: T1, T3 and the two G1 cards. T4 also has this value, but it was closed as replaced, not performed.
+  - *Verified locally*:
+    - T2: spike results.
+    - T7: local checks. GitHub CI and preview URL not verified.
+    - T8: local tests and review; branch not pushed.
+    - T11a: Workers-runtime tests pass locally; not deployed.
+  - *Implemented locally*:
+    - T5: files exist, not yet used on a PR.
+    - T6: this setup.
+    - T10: deterministic morning only, uncommitted.
+    - T12a: two-night slice only, uncommitted; no five-night session exists.
+    - T17: committed on `codex/night-farm-art-v1`; farm look not yet playtested.
+    - T18: uncommitted. HANDOFF reports local checks and a Chrome replay, but none of it is in git yet, and no fresh player has tried it.
+  - *Not started*: everything else.
+  - Date type: *Course date* for the 13 `[FINAL …]` cards; *Internal target* for the others. T16 targets 11-27, the day before the 11-28 course date.
 - **Still open:** T2 is marked Done in the plan but not ticked in Asana. Hao ticks it if he agrees.
 
 ## 5. ID → Asana gid
@@ -171,6 +184,25 @@ To repeat any of this by hand: open the project → *Customize* (top right) → 
   - Move the card to the right section.
   - Hao approves the write.
 - **Status update:** post a new "Three questions" status update when the answer to any of the three changes, and at least before each course date.
-- **PRs:** the PR body links the Asana task URL under `## Asana`. The commit or PR title starts with the task ID, e.g. `[T11c] feat: …`.
+- **PRs:** the PR body lists every covered Asana task URL under `## Asana` (`.github/pull_request_template.md`). The commit or PR title starts with the task ID, e.g. `[T11c] feat: …`. A URL in the description is not proof of a link: check the task's GitHub attachment.
 - **Never:** mark a task complete (only Hao does), move a task to fit a PR, invent a deadline, or write "23:59" when no time is published.
 - **New work:** gets the next free T ID in `docs/project-plan.md` first, then a card here, then a row in Section 5.
+
+## 9. GitHub PR ↔ Asana task links
+
+This follows the Tank Trouble setup. Two workflows run on pull requests from this repository, not forks, and act only on tasks in this project (`allowed-projects: 1220727551768593`):
+
+- `.github/workflows/asana-pr-attachments.yml`: on *opened, reopened, edited*, it attaches the PR as a GitHub card to every task whose full Asana URL appears in the PR description.
+- `.github/workflows/asana-pr-notifications.yml`: on *opened, reopened, closed*, it comments `GitHub PR #n: state — title. url` on those tasks. It never completes a task.
+
+Both actions are pinned to the same commit SHAs as in Tank Trouble.
+
+**Status (2026-11-19): not yet active.** The repository has no `ASANA_SECRET`; until it does, both jobs log a skip and pass. To turn them on, Hao:
+
+1. Opens https://github.integrations.asana.com/auth in his own browser.
+2. Signs in to Asana and authorizes the Asana GitHub integration.
+3. Copies the secret it shows.
+4. Adds it as a repository secret named `ASANA_SECRET` under *GitHub → gnome-heist → Settings → Secrets and variables → Actions → New repository secret*.
+5. Edits any open PR description, which triggers the attachment.
+
+Only Hao handles this credential; agents never see or store it. The Tank Trouble repository keeps its own secret. Whether generating a new secret affects that one is not verified, so check that a Tank Trouble PR still attaches afterwards.

@@ -1,0 +1,31 @@
+# AI-use disclosure: Claude (Claude Code) adapted this workflow from the Tank Trouble repository under Hao's direction.
+# Posts a PR status comment (opened, reopened, closed) on every linked Gnome Heist Asana task. It never completes a task.
+name: Asana PR notifications
+
+on:
+  pull_request:
+    types: [opened, reopened, closed]
+
+permissions:
+  contents: read
+
+jobs:
+  notify-task:
+    name: Comment PR status on linked Asana tasks
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      HAS_ASANA_SECRET: ${{ secrets.ASANA_SECRET != '' }}
+    steps:
+      - name: Skip when ASANA_SECRET is not configured
+        if: env.HAS_ASANA_SECRET != 'true'
+        run: echo "ASANA_SECRET is not set for this repository; skipping the Asana comment."
+      - name: Post PR status comment
+        if: env.HAS_ASANA_SECRET == 'true'
+        uses: Asana/comment-on-task-github-action@82f7ef167032a15cc47ff6cfc947b8e9f249d026 # Node 20
+        with:
+          asana-secret: ${{ secrets.ASANA_SECRET }}
+          allowed-projects: |
+            1220727551768593
+          comment-text: 'GitHub PR #{{PR_ID}}: {{PR_STATE}} — {{PR_NAME}}. {{PR_URL}}'
