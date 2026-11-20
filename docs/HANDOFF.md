@@ -4,10 +4,14 @@ AI-use disclosure: Claude (Claude Code) and Codex maintain this handoff under Ha
 
 Keep this file short: replace the snapshot each time, and update only your own row in Active work. Durable detail belongs in commits, PRs, and the docs.
 
-## Snapshot (2026-11-20, Claude, after merging PR 2)
+## Snapshot (2026-11-20, Claude, after merging PR 2; D1/D2 decided)
 
 - **Course stage:** G1 is posted. Hao treats it as approved for planning: no instructor decision was found in the Canvas digests, and it reopens if a Hold appears.
-  - Next course dates: the model checkpoint on Mon Nov 23 (deployed model call, isolated session state, forced-timeout fallback); the G2/G3 recording on Sat Nov 28 (time not published).
+  - Next course dates: the model checkpoint on Mon Nov 23, whose course wording asks for a deployed model call, isolated session state and a forced-timeout fallback. The G2/G3 recording is on Sat Nov 28 (time not published).
+- **Local only until delivery [Hao, 2026-11-20, D1].**
+  - Nothing is deployed before delivery, and there is no `npm run deploy`. The Worker runs only on Hao's machine (`npm run dev`), because deployment puts Hao's money at risk.
+  - The checkpoint demo will be local. Whether the course accepts a local demo for "deployed model call" is not confirmed.
+  - D2: 20 paid model calls are approved for T11b and C9 step 2, all from the local Worker, with no dollar cap stated. More calls need a new approval.
 - **Asana is live.** Project: [Gnome Heist — COMS E6998 Final](https://app.asana.com/1/1219142319278837/project/1220727551768593).
   - Contents: 37 cards (13 shared `[FINAL …]` course milestones and 24 new: T1–T18, D1–D3), 34 dependencies, and the Evidence and Date type fields.
   - Hao's 2026-11-19 decisions are applied: T1, T3 and the G1 cards are complete; T4 is replaced by the two-night observation; internal targets are re-dated to a strict chain from T7 (11-19) to T16 (11-27), and the Gantt view shows no conflicts.
@@ -34,11 +38,7 @@ Keep this file short: replace the snapshot each time, and update only your own r
 
 ## Open items
 
-- **Decisions for Hao on the board:**
-  - D1: deploy the Worker for the checkpoint; this reverses "local first" for the checkpoint only.
-  - D2: paid calls for T11b and C9 step 2.
-  - D3: the eight T8 rule details.
-  - D1 and D2 are due 11-20; T11b depends on them.
+- **Decision still open on the board:** D3, the eight T8 rule details (due 11-25; T15 depends on it). D1 and D2 were decided on 2026-11-20 (see the Snapshot).
 - **T2:** the plan says Done, but it is not yet ticked in Asana.
 - **HANDOFF conflict:** the uncommitted `docs/HANDOFF.md` on `codex/night-farm-art-v1` started from the 11-13 version. Merge it with this snapshot when that work is committed.
 - **Workflows:** both Asana workflows target Node 20; GitHub runs them on Node 24 with a warning.
@@ -50,4 +50,4 @@ Keep this file short: replace the snapshot each time, and update only your own r
 
 ## Next action
 
-Hao decides D1 and D2 today. Then follow the Asana chain toward the Nov 23 checkpoint: T8 and T11a (11-20), then T10 and T11b (11-21), then T11c (11-22). When a session changes evidence, it updates the card's Evidence field and links its PR under `## Asana`.
+Follow the Asana chain toward the Nov 23 checkpoint, all on Hao's machine: T8 and T11a (11-20), then T10 and T11b (11-21; the first real model call from the local Worker, within the 20 approved calls), then T11c (11-22). When a session changes evidence, it updates the card's Evidence field and links its PR under `## Asana`.
