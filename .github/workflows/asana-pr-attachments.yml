@@ -1,0 +1,30 @@
+# AI-use disclosure: Claude (Claude Code) adapted this workflow from the Tank Trouble repository under Hao's direction.
+# Attaches this PR to every Gnome Heist Asana task whose URL appears in the PR description.
+name: Asana PR attachments
+
+on:
+  pull_request:
+    types: [opened, reopened, edited]
+
+permissions:
+  contents: read
+
+jobs:
+  attach-pull-request:
+    name: Attach PR to linked Asana tasks
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      HAS_ASANA_SECRET: ${{ secrets.ASANA_SECRET != '' }}
+    steps:
+      - name: Skip when ASANA_SECRET is not configured
+        if: env.HAS_ASANA_SECRET != 'true'
+        run: echo "ASANA_SECRET is not set for this repository; skipping the Asana attachment."
+      - name: Attach PR from task URLs in its description
+        if: env.HAS_ASANA_SECRET == 'true'
+        uses: Asana/create-app-attachment-github-action@d8b090a1304227bb4ecfd48d8b4921e2a15a41ba # Node 20
+        with:
+          asana-secret: ${{ secrets.ASANA_SECRET }}
+          allowed-projects: |
+            1220727551768593
