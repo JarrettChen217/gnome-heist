@@ -34,9 +34,9 @@ Every rule in the GDD and Configuration Document carries an origin label: **[Hao
 4. **Secrets.** API keys live only in the gitignored `.env` (locally) or Worker secrets (`wrangler secret put`; local `.dev.vars`). Never print, log, commit, or screen-share them. Before each commit, check `git status` for anything that should not be there.
 5. **Git.** Work on a task branch, never directly on `main`. Commit locally on the task branch as needed. Push, open a PR, or merge only when Hao says so. Never force-push. Commit messages end with the attribution lines the session provides. Videos never go into git.
 6. **Public content.** Never mention class or office-hour recordings or transcripts. Classmates stay anonymous.
-7. **Dates.** Course deadlines come from CourseWorks and the syllabus. Write "time not published" when no time is given; never invent 23:59 or present an internal target as a course deadline. Course-update checks run from the parent `AIPB_Repositories` directory with its `aipb-Codex-course-updates` skill, not here.
+7. **Dates.** Course deadlines come from CourseWorks and the syllabus. Write "time not published" when no time is given; never invent 23:59 or present an internal target as a course deadline. Course-update checks run from the parent `AIPB_Repositories` directory with its `aipb-course-updates` skill, not here.
 8. **Honest evidence.** Keep implemented, verified, and planned apart. A scripted animation is never presented as agent behavior; a passing CI is not a playtest.
-9. **Sign-ins.** Anything that needs a login (CourseWorks, Asana, GitHub web, Google) goes through Hao's real Chrome (Codex in Chrome), never the built-in browser.
+9. **Sign-ins.** Anything that needs a login (CourseWorks, Asana, GitHub web, Google) goes through Hao's real Chrome, never the built-in browser.
 
 ## Layout
 
@@ -49,10 +49,10 @@ Every rule in the GDD and Configuration Document carries an origin label: **[Hao
 ## Engine notes
 
 The client uses **Phaser 4.2.1**; most examples online are Phaser 3. Before writing rendering code, read the Phaser 4 list in `docs/architecture.md`, Section 7 (no `BitmapMask`/`setMask`, FX, custom pipelines, `setTintFill`, `Phaser.Geom.Point`, `Phaser.Structs.Set`, `textures.generate`/`GenerateTexture`; `Phaser.Math.TAU` is 2π; pass `roundPixels` to `camera.startFollow`; embedded tilesets only). Draw fog and danger overlays per tile, without masks or render textures.
-- `.Codex/skills/`: `gnome-resume`, `gnome-handoff`. `.Codex/agents/`: `gnome-reviewer`.
+- `.agents/skills/`: `gnome-resume`, `gnome-handoff`. `.codex/agents/`: `gnome-reviewer`.
 - Loose notes, prompts, and pitch drafts live outside the repo in Hao's OneDrive folder `AI Pract Building Games/Final Game/`.
 
 ## Commands
 
-- Model measurement: `uv run spike/measure_morning.py --provider anthropic --model Codex-sonnet-5-5 --think off --calls 20 --price-in 2 --price-out 10` (needs `.env`; spends real money, so ask Hao before running).
+- Model measurement: `uv run spike/measure_morning.py --provider anthropic --model claude-sonnet-5-5 --think off --calls 20 --price-in 2 --price-out 10` (needs `.env`; spends real money, so ask Hao before running).
 - Game: see `game/README.md` once it exists.
