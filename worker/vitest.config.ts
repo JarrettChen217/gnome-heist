@@ -13,7 +13,10 @@ export default defineConfig({
         return undefined;
       },
     },
-    cloudflareTest({ wrangler: { configPath: './wrangler.jsonc' } }),
+    cloudflareTest({
+      wrangler: { configPath: './wrangler.jsonc' },
+      miniflare: { bindings: { FARMER_PROVIDER: '', ANTHROPIC_API_KEY: '' } },
+    }),
   ],
   test: { name: 'worker', include: ['test/**/*.test.ts'] },
 });

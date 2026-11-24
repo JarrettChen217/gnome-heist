@@ -36,6 +36,8 @@ The game is a small tile-based 2D stealth game that must be playable from a link
 | Changes made and reviewed by coding agents | Plain code, readable diffs | Scenes are text files; workable | Editor-bound assets; hard to review |
 | 2D lighting and fog | Written by us; tile-based ranges are enough here | Built in | Built in |
 | Map editing | Loads Tiled maps natively | Built-in editor | Built-in editor |
+| Engine re-checked against Godot 4 after seeing classmates use it: keep Phaser (Section 2); the course allows any engine. | Hao, on agent proposal, 2026-11-23 |
+| Add a small local **Playwright** browser smoke suite (`e2e/`, Chromium only, rule farmer, no paid model calls); not run in CI yet, no screenshot baselines ([README](../README.md)). | Hao, on agent proposal, 2026-11-24 |
 
 Also considered: **Excalibur.js** (TypeScript with an official Tiled plugin; a credible alternative with no blocking gap found, but no reason to switch); **PixiJS** (mainly a renderer and scene graph: tilemaps, cameras, and game structure would be ours to assemble); **Pygame** (web export is not mature). For this schedule, Godot's built-in lighting does not outweigh the bridge, because lamp and dog ranges are whole tiles.
 

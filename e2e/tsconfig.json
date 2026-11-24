@@ -1,0 +1,6 @@
+// AI-use disclosure: Claude (Claude Code) wrote this file under Hao's direction for the Playwright smoke suite.
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": { "lib": ["ES2023", "DOM"], "types": ["node"] },
+  "include": [".", "../playwright.config.ts"]
+}

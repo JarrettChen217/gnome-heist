@@ -224,11 +224,13 @@ export interface FarmerContext {
   readonly stamina: number;
   readonly money: number;
   readonly memory: readonly MorningSummary[];
+  /** The gate states the farmer left when the previous night began. */
+  readonly eveningGates?: readonly GateState[];
 }
 
 export type ValidationResult =
   | { readonly ok: true; readonly plan: Plan }
-  | { readonly ok: false; readonly violations: readonly string[] };
+  | { readonly ok: false; readonly kind: 'schema' | 'rules'; readonly violations: readonly string[] };
 
 /** What the client may draw (Technical plan Section 4.4); filled in T9. */
 export interface PlayerView {

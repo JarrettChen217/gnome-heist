@@ -1,7 +1,7 @@
 // AI-use disclosure: Claude (Claude Code) wrote this file under my direction for M0 (T11a); it follows the one-deadline failover in Configuration Document A6. No real model is wired in M0.
 // Codex added absolute-deadline guards under Hao's direction after the M0 review.
 import { ruleFarmer, validatePlan } from '@gnome-heist/core';
-import type { FarmerContext, Plan } from '@gnome-heist/core';
+import type { FarmerContext, MorningBoard, Plan } from '@gnome-heist/core';
 
 /** A model call: returns the raw parsed JSON, which the validator then checks. */
 export type ModelPolicy = (context: FarmerContext, signal: AbortSignal) => Promise<unknown>;
@@ -26,7 +26,7 @@ export type ActedBy = 'primary' | 'secondary' | 'rule';
 
 export interface AttemptLog {
   readonly policy: 'primary' | 'secondary';
-  readonly outcome: 'ok' | 'error' | 'timeout' | 'invalid';
+  readonly outcome: 'ok' | 'error' | 'timeout' | 'schema_invalid' | 'rule_invalid';
   readonly ms: number;
   readonly detail?: string;
 }
@@ -48,12 +48,12 @@ async function attempt(policy: ModelPolicy, context: FarmerContext, msLeft: numb
   let timer: ReturnType<typeof setTimeout> | undefined;
   const timeout = new Promise<Attempt>((resolve) => {
     timer = setTimeout(() => {
-      ac.abort('cutoff');
       resolve({ kind: 'timeout' });
+      ac.abort('cutoff');
     }, Math.max(0, msLeft));
   });
   let settled = false;
-  const call = policy(context, ac.signal).then(
+  const call = Promise.resolve().then(() => policy(context, ac.signal)).then(
     (value): Attempt => {
       if (settled) onLate(value);
       return { kind: 'ok', value };
@@ -79,6 +79,8 @@ export async function decideMorning(
   log: (entry: Record<string, unknown>) => void = () => {},
   /** When the request reached the Durable Object; the cut-off counts from here (A6). */
   start: number = now(),
+  /** Map and physical state for validation only. The policy receives the allowed context. */
+  board?: MorningBoard,
 ): Promise<Decision> {
   const attempts: AttemptLog[] = [];
   const left = () => timing.cutoffMs - (now() - start);
@@ -101,14 +103,19 @@ export async function decideMorning(
       attempts.push({ policy: which, outcome: 'error', ms, detail: String(r.error) });
       return ms <= timing.fastFailMs ? 'fast-fail' : null;
     }
-    const v = validatePlan(context, r.value);
-    if (!v.ok) {
-      attempts.push({ policy: which, outcome: 'invalid', ms, detail: v.violations.join('; ') });
-      // A6: a plan the validator rejects goes to the rule. Telling a schema failure (which may go to the
-      // secondary) apart from a rule violation needs the real schema check, which comes with T10/T11b.
+    const v = validatePlan(context, r.value, board);
+    const validatedMs = now() - t0;
+    if (left() <= 0) {
+      late();
+      attempts.push({ policy: which, outcome: 'timeout', ms: validatedMs });
       return null;
     }
-    attempts.push({ policy: which, outcome: 'ok', ms });
+    if (!v.ok) {
+      const outcome = v.kind === 'schema' ? 'schema_invalid' : 'rule_invalid';
+      attempts.push({ policy: which, outcome, ms: validatedMs, detail: v.violations.join('; ') });
+      return v.kind === 'schema' && validatedMs <= timing.fastFailMs ? 'fast-fail' : null;
+    }
+    attempts.push({ policy: which, outcome: 'ok', ms: validatedMs });
     return v.plan;
   };
 
@@ -121,8 +128,8 @@ export async function decideMorning(
     }
   }
 
-  const rulePlan = ruleFarmer(context);
-  const checked = validatePlan(context, rulePlan);
+  const rulePlan = ruleFarmer(context, board);
+  const checked = validatePlan(context, rulePlan, board);
   if (!checked.ok) throw new Error(`rule-based farmer produced an invalid plan: ${checked.violations.join('; ')}`);
   return { plan: checked.plan, actedBy: 'rule', attempts };
 }

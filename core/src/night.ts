@@ -19,7 +19,7 @@ import type {
   Vec,
   WorldState,
 } from './types.ts';
-import { canWalkOut, dangerGrid, dogHoleAt, fenceAt, gateAt, pedestalAt, solidGrid, tileOf, tilesOf } from './world.ts';
+import { canWalkOut, dangerGrid, dogHoleAt, fenceAt, pedestalAt, solidGrid, tileOf } from './world.ts';
 
 /**
  * PROVISIONAL movement constants (GDD 5.11: continuous movement, collision by
@@ -30,6 +30,9 @@ export const WALK_SPEED_TILES_PER_SECOND = 4;
 export const PLAYER_HALF_EXTENT = 0.3;
 /** Longest step integrated at once, so a long frame cannot tunnel through a wall. */
 const MAX_STEP_TILES = 0.25;
+/** Distances from the player's feet to the closest point on the gate, in tiles. */
+const GATE_REACH = 1.25;
+const HELD_GATE_REACH = 1.55;
 
 /** Start a night at the chosen dog hole, with stamina refilled. */
 export function startNight(session: SessionState, farm: FarmDef, entry: string = farm.dogHoles[0]?.id ?? ''): NightState {
@@ -115,38 +118,58 @@ const withGate = (world: WorldState, next: GateState): WorldState => ({
 });
 const isGap = (world: WorldState, t: Tile) => world.fenceGaps.some((g) => g.x === t.x && g.y === t.y);
 
-/**
- * What E would do now (GDD 5.4, 11): end the night when standing in a dog
- * hole; otherwise the nearest gate, fence tile or pedestal on or next to the
- * player's tile (ties: lower id). Includes why it is refused, if it is.
- */
+/** Trace to the closest point on the gate edge. Intervening solid tiles block reach. */
+function canReachGate(night: NightState, tile: Tile): boolean {
+  let { x, y } = tileOf(night.player);
+  const dx = Math.max(tile.x, Math.min(night.player.x, tile.x + 1)) - night.player.x;
+  const dy = Math.max(tile.y, Math.min(night.player.y, tile.y + 1)) - night.player.y;
+  const sx = Math.sign(dx);
+  const sy = Math.sign(dy);
+  while (x !== tile.x || y !== tile.y) {
+    const tx = x === tile.x || dx === 0 ? Infinity : (x + (sx > 0 ? 1 : 0) - night.player.x) / dx;
+    const ty = y === tile.y || dy === 0 ? Infinity : (y + (sy > 0 ? 1 : 0) - night.player.y) / dy;
+    if (tx === ty && isSolid(night, x + sx, y) && isSolid(night, x, y + sy)) return false;
+    if (Math.min(tx, ty) >= 1) return true;
+    if (tx <= ty) x += sx;
+    if (ty <= tx) y += sy;
+    if ((x !== tile.x || y !== tile.y) && isSolid(night, x, y)) return false;
+  }
+  return true;
+}
+
+/** The action offered by the prompt and performed by E, including any refusal reason. */
 export function currentInteraction(farm: FarmDef, night: NightState): Interaction | null {
   if (night.ended !== null) return null;
   const here = tileOf(night.player);
   const hole = dogHoleAt(farm, here);
   if (hole) return make('endNight', hole.id, here, null);
 
-  const near: { tile: Tile; d: number }[] = [];
-  for (const [dx, dy] of [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]] as const) {
-    const t = { x: here.x + dx, y: here.y + dy };
-    if (t.x < 0 || t.y < 0 || t.x >= farm.width || t.y >= farm.height) continue;
-    near.push({ tile: t, d: Math.hypot(t.x + 0.5 - night.player.x, t.y + 0.5 - night.player.y) });
-  }
   const options: { i: Interaction; d: number }[] = [];
-  for (const { tile, d } of near) {
-    const g = gateAt(farm, tile);
-    if (g) {
-      const s = gate(night.world, g.id);
-      const inGateway = boxTiles(night.player).some((b) => tilesOf(g).some((t) => t.x === b.x && t.y === b.y));
-      if (s.padlock === 'none') options.push({ i: make(s.open ? 'closeGate' : 'openGate', g.id, tile, s.open && inGateway ? 'inGateway' : null), d });
-      else if (s.padlock === 'locked') options.push({ i: make('pickLock', g.id, tile, null), d });
-      else {
-        const locked = withGate(night.world, { ...s, open: false, padlock: 'locked' });
-        const reason: BlockReason | null = inGateway ? 'inGateway' : canWalkOut(farm, locked, here) ? null : 'selfLock';
-        options.push({ i: make('relock', g.id, tile, reason), d });
-      }
-      continue;
+  for (const g of farm.gates) {
+    const { x, y, w, h } = g.rect;
+    const dx = Math.max(x - night.player.x, 0, night.player.x - x - w);
+    const dy = Math.max(y - night.player.y, 0, night.player.y - y - h);
+    const holding = night.hold?.target === g.id;
+    if (Math.hypot(dx, dy) > (holding ? HELD_GATE_REACH : GATE_REACH)) continue;
+    const tile = { x: Math.max(x, Math.min(here.x, x + w - 1)), y: Math.max(y, Math.min(here.y, y + h - 1)) };
+    if (!canReachGate(night, tile)) continue;
+
+    const state = gate(night.world, g.id);
+    const inGateway = boxTiles(night.player).some((b) => b.x >= x && b.x < x + w && b.y >= y && b.y < y + h);
+    let interaction: Interaction;
+    if (state.padlock === 'locked') interaction = make('pickLock', g.id, tile, null);
+    else if (state.padlock === 'none') interaction = make(state.open ? 'closeGate' : 'openGate', g.id, tile, state.open && inGateway ? 'inGateway' : null);
+    else {
+      const locked = withGate(night.world, { ...state, open: false, padlock: 'locked' });
+      const reason: BlockReason | null = inGateway ? 'inGateway' : canWalkOut(farm, locked, here) ? null : 'selfLock';
+      interaction = make('relock', g.id, tile, reason);
     }
+    if (holding && night.hold?.action === interaction.action) return checkStamina(interaction);
+    options.push({ i: interaction, d: Math.hypot(tile.x + 0.5 - night.player.x, tile.y + 0.5 - night.player.y) });
+  }
+  for (const [dx, dy] of [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]] as const) {
+    const tile = { x: here.x + dx, y: here.y + dy };
+    const d = Math.hypot(tile.x + 0.5 - night.player.x, tile.y + 0.5 - night.player.y);
     const f = fenceAt(farm, tile);
     if (f && !isGap(night.world, tile)) {
       options.push({ i: make('kickFence', f.id, tile, null), d });
@@ -167,10 +190,11 @@ export function currentInteraction(farm: FarmDef, night: NightState): Interactio
       faced(a) - faced(b) ||
       (a.i.target < b.i.target ? -1 : a.i.target > b.i.target ? 1 : 0),
   );
-  const best = options[0]?.i ?? null;
-  // Out of stamina comes first: the prompt turns red (GDD 5.4).
-  if (best && best.cost > night.stamina) return { ...best, blocked: 'noStamina' };
-  return best;
+  return options[0] ? checkStamina(options[0].i) : null;
+
+  function checkStamina(i: Interaction): Interaction {
+    return i.cost > night.stamina ? { ...i, blocked: 'noStamina' } : i;
+  }
 
   function make(action: ActionKind, target: string, tile: Tile, blocked: BlockReason | null): Interaction {
     return { action, target, tile, cost: ACTION_COST[action], holdSeconds: HOLD_SECONDS[action], blocked };
@@ -272,6 +296,10 @@ export function tick(farm: FarmDef, night: NightState, input: NightInput, dtSeco
   if (!input.interact) return { night: { ...next, hold: null, interactLatched: false }, events };
   if (next.interactLatched) return { night: next, events };
   const i = currentInteraction(farm, next);
+  // Drifting out of reach must not spend the same press on a neighbouring fence or exit.
+  if (next.hold && next.hold.target !== i?.target && farm.gates.some((g) => g.id === next.hold!.target)) {
+    return { night: { ...next, hold: null, interactLatched: true }, events };
+  }
   if (i === null) return { night: { ...next, hold: null }, events };
   if (i.blocked !== null) {
     // Refused: nothing happens and no stamina is spent; report it once per press.

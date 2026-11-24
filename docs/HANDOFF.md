@@ -4,13 +4,12 @@ AI-use disclosure: Claude (Claude Code) and Codex maintain this handoff under Ha
 
 Keep this file short: replace the snapshot each time, and update only your own row in Active work. Durable detail belongs in commits, PRs, and the docs.
 
-## Snapshot (2026-11-18, Codex, farm cover)
+## Snapshot (2026-11-22, local morning checkpoint)
 
-- Hao approved the gardener's look and requested higher vegetation, legible paths, a hat-only passage and walk-in hiding spots. The previous art checkpoint is `b9b4f1a`.
-- The six farm areas have narrower stone routes, 25 tall-grass patches and 16 walk-in bushes. From the west hole, walk east through three tiles of grass and into a bush. Soft routes record footprints while longer stone detours remain clean. The occupied bush rustles and conceals a carried gnome along with the gardener. The implementation shelters the player from visual detection while preserving the dog's alert radius.
-- Local client build, Worker dry-run, strict typecheck and 174 tests passed. A Chrome replay of the standalone HTML checked tall-grass cropping, bush invisibility, emergence, concealment while carrying, banking the gnome and restarting. The local Vite preview was stopped at Hao's request.
-- Independent review flagged foreground leaves masking danger. The danger outline and bent-stem footprint cues now sort above the vegetation and below fog and the exposed cap.
-- Next art checkpoint: Hao can compare route readability with the feeling of entering and leaving cover using the offline build.
+- T10 shares morning preparation and commit across the browser and Worker. The model receives a field-by-field farmer context. The validator checks ownership, budget, permitted slots, entry safe zones and the final open route when a plan adds a barrier.
+- The Worker keeps session state in a Durable Object. Identical in-flight retries return pending, and one result commits per morning. A forced provider timeout uses the rule farmer. The two-night client defaults to local rules and can opt in to the Worker with `?farmer=agent`.
+- Strict typecheck, 212 tests and the client and Worker dry-run builds passed. Chrome ran both nights in default rule mode, with the Worker rule farmer, and after an interrupted request. The southwest lamp and the taken gnome carried into night two.
+- T11b used one confirmed Anthropic Sonnet 5.5 request from the local Worker on an empty-trace fixture. It accepted and committed a no-action plan in 2,997 ms. An identical retry returned the stored result without another model call. Provider usage was 2,715 input and 50 output tokens, estimated at USD 0.00593. The first attempt failed in Workerd before sending because of its redirect option. The adapter now rejects redirects without following them. See the [local checkpoint steps](../game/README.md#local-worker-checkpoint).
 
 ## Active work
 
@@ -23,6 +22,7 @@ Keep this file short: replace the snapshot each time, and update only your own r
 | M0 review fixes and local development decision | Codex, for Hao | `feat/m0-skeleton` | `core/`, `game/`, `worker/`, `vitest.config.ts`, `docs/architecture.md`, `docs/project-plan.md`, `docs/HANDOFF.md` | Fixes pushed at `f6af482`; 111 tests, strict typecheck and build passed; independent review found no material issues. Hao chose local development first and deferred cloud hosting. |
 | T8 night rules | Claude, for Hao | `feat/t8-night-rules` | `core/`, `game/`, `maps/`, `worker/src/session.ts`, `docs/project-plan.md`, `game/README.md` | Built, tested and reviewed locally; awaiting Hao on the open rule questions, then push/PR |
 | First playable art pass | Codex, for Hao | `codex/night-farm-art-v1` | `game/`, `maps/`, credits | Gardener look approved; redesigned farm and cover ready for playtest |
+| Local morning checkpoint (T10, T11b, T11c) | Codex, for Hao | `codex/night-farm-art-v1` | `core/`, `game/`, `worker/`, docs | Implementation and checks are in the working tree. Live coverage is one quiet night. No service deployed |
 
 ## Before posting (Hao)
 
@@ -33,13 +33,11 @@ Keep this file short: replace the snapshot each time, and update only your own r
 ## Open items
 
 - GDD Q10 (watch in the first playtest): with no safe-route guarantee, can danger cover every gnome for several nights so the player is stuck? Q9 was decided on 2026-11-13 (only an open route of at most 1 stamina is guaranteed, checked on barrier plans).
-- C7: Vertex from the Worker needs a service account; until then failover goes straight to the rule-based farmer.
-- C9: re-measure in three steps (Nov 19, Nov 21, before T13); each paid run needs Hao's OK.
-- Asana: create the project after the G1 decision (T6, about Nov 18), from `docs/project-plan.md`, with Hao's OK for each write.
+- C7: the Vertex adapter and credential setup are pending. Secondary failover has mock coverage. The implemented Anthropic path falls back to the rule farmer on error.
+- C9: the first local live smoke is recorded above. Multi-scenario latency and the model-versus-rule comparison remain open. Course acceptance of a local checkpoint recording also remains unverified.
 - Questions for the instructor (silent-playtester assignment, reply date, points, repository) are drafted in Hao's OneDrive G1 plan, section 5.
-- From the M0 review, for T11b/T11c: (1) a fast primary answer that fails the schema must go to the secondary (A6); today every invalid output goes to the rule (`worker/src/failover.ts`); (2) a second request with the same `morningId` while one is in flight calls the model again and gets 409; the pending record (T11c) fixes it (`worker/src/session.ts`).
 - **For Hao (T8 rule details, coded as provisional):** (1) starting padlocks: the map marks 2 gates padlocked, GDD 5.7 [Proposed] says 1 padlock and 1 lamp; code follows the map (`core/src/world.ts` `initialLayout`), no starting lamp; (2) carry one gnome at a time: with 5 nights and a 5-gnome win, any lost night makes the session unwinnable; (3) hold E 1 s for every action; picking a padlock opens the gate, re-locking closes and locks it; a kick breaks one fence tile; (4) traces appear only on the night they happen (broken fence, open lock, empty pedestal), and re-locking his open padlock is a `gate` trace; (5) the new `count` on footprint traces reaches the farmer's context (record in Configuration A2/A3 if accepted); (6) range edges inclusive, a bush covers itself, sight through an exact corner is not blocked, `loadFarm` also rejects a gate inside a safe zone; (7) the player picks the entry hole; facing breaks ties; a corner assist slides into one-tile gaps; (8) walk speed 4 tiles/s and box half-extent 0.3; greybox layout (bush moved into the window line) not yet approved as v1. After the answers, copy the boundary values into GDD 5.11.
 
 ## Next action
 
-Hao playtests the redesigned farm and the west cover passage. For the separate T8 work, Hao answers the questions above; apply any changes, copy the agreed values into GDD 5.11, and record the trace `count` in the Configuration Document. Then, with his OK, push `feat/m0-skeleton` and `feat/t8-night-rules` and open PRs so CI runs. Next build task: T10 (rule farmer, validator, end-of-night order, morning), then T9.
+Use the [local checkpoint steps](../game/README.md#local-worker-checkpoint) for the November 23 demo. Run the [two-night observation script](two-night-playtest.md) with a fresh player and capture what they infer from the morning and why they pick their second route.

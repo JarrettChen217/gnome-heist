@@ -2,12 +2,14 @@
 // Codex fixed rectangular fence placement under Hao's direction after the M0 review.
 // Codex integrated directional player art and walk animation under Hao's direction.
 // Codex implemented tall grass rendering and bush feedback under Hao's direction.
+// Codex connected the local Worker morning and offline fallback under Hao's direction.
 import * as Phaser from 'phaser';
-import { PLAYER_STAMINA, bushAt, currentInteraction, endNight, loadFarm, newSession, startNight, tallGrassAt, tick, tileOf, tilesOf, visibleTiles } from '@gnome-heist/core';
+import { PLAYER_STAMINA, advanceLocalMorning, bushAt, currentInteraction, endNight, loadFarm, newSession, startNight, tallGrassAt, tick, tileOf, tilesOf, visibleTiles } from '@gnome-heist/core';
 import type { FarmDef, FarmObject, Interaction, NightEnd, NightResult, NightState, SessionState, Tile } from '@gnome-heist/core';
 import { MIN_CAMERA_ZOOM, STEP_SECONDS, TILE_PX } from '../constants.ts';
 import { fenceSegments } from '../fence.ts';
-import { REFUSAL, promptText, resultLines } from '../text.ts';
+import { MorningClient } from '../morningClient.ts';
+import { REFUSAL, playtestDebrief, promptText } from '../text.ts';
 import type { PromptText } from '../text.ts';
 
 /** One drawn farm object. `key` gives its texture from the night state; the ghost keeps the last texture seen. */
@@ -24,6 +26,10 @@ type Cover = 'none' | 'tallGrass' | 'bush';
 
 export interface NightHudState {
   phase: Phase;
+  paused: boolean;
+  showMovementHint: boolean;
+  targetScreen: { x: number; y: number } | null;
+  feedback: { id: number; action: Interaction['action'] | 'bush' | 'bank' } | null;
   night: number;
   stamina: number;
   maxStamina: number;
@@ -71,6 +77,14 @@ export class NightScene extends Phaser.Scene {
   private acc = 0;
   private message: { text: PromptText; until: number } | null = null;
   private printsDrawn = 0;
+  private paused = false;
+  private movementLearned = false;
+  private requireRelease = false;
+  private feedback: NightHudState['feedback'] = null;
+  private feedbackId = 0;
+  private morning: ReturnType<typeof advanceLocalMorning> | null = null;
+  private morningClient: MorningClient | null = null;
+  private morningSource: 'local-rule' | 'offline-rule' | 'primary' | 'secondary' | 'rule' | null = null;
 
   constructor() {
     super('Night');
@@ -106,18 +120,53 @@ export class NightScene extends Phaser.Scene {
     if (kb === null) throw new Error('keyboard input unavailable');
     const K = Phaser.Input.Keyboard.KeyCodes;
     this.keys = Object.fromEntries(
-      Object.entries({ up: K.UP, down: K.DOWN, left: K.LEFT, right: K.RIGHT, w: K.W, a: K.A, s: K.S, d: K.D, e: K.E, r: K.R, one: K.ONE, two: K.TWO, three: K.THREE }).map(
+      Object.entries({ up: K.UP, down: K.DOWN, left: K.LEFT, right: K.RIGHT, w: K.W, a: K.A, s: K.S, d: K.D, e: K.E, r: K.R, esc: K.ESC, enter: K.ENTER, one: K.ONE, two: K.TWO, three: K.THREE }).map(
         ([name, code]) => [name, kb.addKey(code)],
       ),
     );
 
-    this.newSessionAndChoose();
+    this.game.events.on('hud-resume', this.resumeNight, this);
+    this.game.events.on('hud-restart', this.restartNight, this);
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      this.game.events.off('hud-resume', this.resumeNight, this);
+      this.game.events.off('hud-restart', this.restartNight, this);
+      this.finishMorningClient();
+    });
+    this.newRun();
     this.scene.launch('Hud');
   }
 
-  /** M1: every night starts from a fresh session (the morning that carries changes over is T10). */
-  private newSessionAndChoose(): void {
-    this.session = newSession(this.farm, 1);
+  private resumeNight(): void {
+    if (!this.paused) return;
+    this.paused = false;
+    this.requireRelease = true;
+  }
+
+  private restartNight(): void {
+    if (this.paused) this.chooseEntry(this.session);
+  }
+
+  private finishMorningClient(): void {
+    this.morningClient?.finish();
+    this.morningClient = null;
+  }
+
+  private newRun(): void {
+    this.finishMorningClient();
+    const workerMode = location.protocol !== 'file:' && new URLSearchParams(location.search).get('farmer') === 'agent';
+    this.morningClient = workerMode && typeof crypto.randomUUID === 'function' ? new MorningClient() : null;
+    this.morningSource = null;
+    this.chooseEntry(newSession(this.farm, 1));
+  }
+
+  private chooseEntry(session: SessionState): void {
+    this.session = session;
+    this.morning = null;
+    this.feedback = null;
+    this.message = null;
+    this.paused = false;
+    this.requireRelease = true;
+    for (const key of Object.values(this.keys)) Phaser.Input.Keyboard.JustDown(key);
     this.night = startNight(this.session, this.farm, this.farm.dogHoles[0]!.id);
     this.phase = 'choose';
     this.result = null;
@@ -177,7 +226,7 @@ export class NightScene extends Phaser.Scene {
       const ghost = this.add.image(x, y, first).setOrigin(0.5, originY).setDepth(depth).setAlpha(0.4).setVisible(false);
       const tag = showTag
         ? this.add
-            .text(x, y - live.height - 1, 'seen n1', { fontFamily: 'monospace', fontSize: '24px', color: '#d8d8c8' })
+            .text(x, y - live.height - 1, `seen n${this.session.night}`, { fontFamily: 'monospace', fontSize: '24px', color: '#d8d8c8' })
             .setScale(0.25)
             .setOrigin(0.5, 1)
             .setDepth(SEEN_TAG_DEPTH)
@@ -227,20 +276,35 @@ export class NightScene extends Phaser.Scene {
 
   override update(time: number, deltaMs: number): void {
     const k = this.keys;
+    const escape = Phaser.Input.Keyboard.JustDown(k['esc']!);
+    const enter = Phaser.Input.Keyboard.JustDown(k['enter']!);
+    const replay = Phaser.Input.Keyboard.JustDown(k['r']!);
+    if (escape && this.phase === 'night') {
+      if (this.paused) this.resumeNight();
+      else {
+        this.paused = true;
+        this.acc = 0;
+        this.night = { ...this.night, hold: null };
+      }
+    }
     if (this.phase === 'choose') {
       const pick = [k['one'], k['two'], k['three']].findIndex((key) => key !== undefined && Phaser.Input.Keyboard.JustDown(key));
       const hole = pick >= 0 ? this.farm.dogHoles[pick] : undefined;
       if (hole) this.beginNight(hole.id);
     } else if (this.phase === 'ended') {
-      if (k['r'] && Phaser.Input.Keyboard.JustDown(k['r'])) this.newSessionAndChoose();
-    } else {
+      if (enter && this.morning?.plan) this.chooseEntry(this.morning.session);
+      else if (replay) this.newRun();
+    } else if (!this.paused) {
       const down = (...names: string[]) => names.some((n) => k[n]?.isDown === true);
+      const pressedE = Phaser.Input.Keyboard.JustDown(k['e']!);
+      if (!down('e') && !pressedE) this.requireRelease = false;
       const input = {
         moveX: (down('right', 'd') ? 1 : 0) - (down('left', 'a') ? 1 : 0),
         moveY: (down('down', 's') ? 1 : 0) - (down('up', 'w') ? 1 : 0),
         // A tap shorter than a frame still counts as a press (ending the night is a press).
-        interact: down('e') || (k['e'] !== undefined && Phaser.Input.Keyboard.JustDown(k['e'])),
+        interact: !this.requireRelease && (down('e') || pressedE),
       };
+      if (input.moveX || input.moveY) this.movementLearned = true;
       if (input.moveX === 0 && input.moveY === 0) this.walkDistancePx = 0;
       // Fixed steps; at most a quarter second per frame so a stalled tab does not jump.
       this.acc = Math.min(this.acc + deltaMs / 1000, 0.25);
@@ -252,6 +316,7 @@ export class NightScene extends Phaser.Scene {
         this.walkDistancePx = distancePx > 1e-6 ? (this.walkDistancePx + distancePx) % (WALK_FRAMES * WALK_FRAME_PX) : 0;
         this.acc -= STEP_SECONDS;
         for (const e of r.events) {
+          if (e.type === 'action' && e.action !== 'endNight') this.signal(e.action);
           if (e.type === 'refused') this.flash({ text: REFUSAL[e.reason], red: true }, time);
           if (e.type === 'ended') this.finish(e.end);
         }
@@ -267,8 +332,37 @@ export class NightScene extends Phaser.Scene {
   private finish(end: NightEnd): void {
     this.phase = 'ended';
     this.result = endNight(this.farm, this.night);
+    if (this.result.gnomeTaken) this.signal('bank');
+    if (this.session.night === 1) void this.resolveMorning(this.result);
+    else this.finishMorningClient();
     console.info('[gnome-heist] night result', JSON.stringify(this.result));
     if (end.reason === 'spotted') this.cameras.main.shake(250, 0.004);
+  }
+
+  private async resolveMorning(result: NightResult): Promise<void> {
+    const session = this.session;
+    const client = this.morningClient;
+    if (client === null) {
+      this.morning = advanceLocalMorning(this.farm, session, result);
+      this.morningSource = 'local-rule';
+      return;
+    }
+    try {
+      const morning = await client.advance(this.farm, session, result);
+      if (client !== this.morningClient) return;
+      this.morning = morning;
+      this.morningSource = morning.actedBy;
+    } catch {
+      if (client !== this.morningClient) return;
+      this.finishMorningClient();
+      this.morning = advanceLocalMorning(this.farm, session, result);
+      this.morningSource = 'offline-rule';
+      console.info('[gnome-heist] morning mode switched to local rules', { night: session.night });
+    }
+  }
+
+  private signal(action: NonNullable<NightHudState['feedback']>['action']): void {
+    this.feedback = { id: ++this.feedbackId, action };
   }
 
   private flash(text: PromptText, time: number): void {
@@ -285,7 +379,10 @@ export class NightScene extends Phaser.Scene {
     const column = this.phase === 'night' ? Math.floor(this.walkDistancePx / WALK_FRAME_PX) : 0;
     const tile = tileOf(this.night.player);
     const bush = bushAt(this.farm, tile);
-    if (bush && bush !== this.occupiedBush) this.rustleBush(bush);
+    if (bush && bush !== this.occupiedBush) {
+      this.rustleBush(bush);
+      this.signal('bush');
+    }
     this.occupiedBush = bush;
     this.cover = bush ? 'bush' : tallGrassAt(this.farm, tile) ? 'tallGrass' : 'none';
 
@@ -366,7 +463,19 @@ export class NightScene extends Phaser.Scene {
     const hold = this.night.hold;
     const progress = i && hold && hold.action === i.action && hold.target === i.target && i.holdSeconds > 0 ? hold.seconds / i.holdSeconds : 0;
     if (this.message && time > this.message.until) this.message = null;
+    const cam = this.cameras.main;
+    const result = this.night.ended && this.result
+      ? playtestDebrief(this.night.ended, this.result, this.morning?.plan ?? null,
+        this.night.night === 1 && this.morning === null && this.morningClient !== null)
+      : null;
     return {
+      paused: this.paused,
+      showMovementHint: !this.movementLearned && this.phase === 'night' && !this.paused,
+      targetScreen: i ? {
+        x: ((i.tile.x + 0.5) * TILE_PX - cam.worldView.x) * cam.zoom,
+        y: (i.tile.y * TILE_PX - cam.worldView.y) * cam.zoom,
+      } : null,
+      feedback: this.feedback,
       phase: this.phase,
       night: this.night.night,
       stamina: this.night.stamina,
@@ -377,7 +486,7 @@ export class NightScene extends Phaser.Scene {
       prompt: promptText(i, this.night.carrying),
       progress,
       message: this.message?.text ?? null,
-      result: this.phase === 'ended' && this.night.ended && this.result ? resultLines(this.night.ended, this.result) : null,
+      result,
     };
   }
 
@@ -388,6 +497,12 @@ export class NightScene extends Phaser.Scene {
       mapVersion: this.farm.mapVersion,
       phase: this.phase,
       player: { ...this.night.player },
+      night: this.session.night,
+      paused: this.paused,
+      movementHint: !this.movementLearned,
+      morningPlan: this.morning?.plan ?? null,
+      morningSource: this.morningSource,
+      layout: this.session.farmer.layout,
       playerFrame: this.player.frame.name,
       cover: this.cover,
       playerVisible: this.player.visible,

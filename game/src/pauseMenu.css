@@ -1,0 +1,36 @@
+/* AI-use disclosure: Codex styled the pause controls under Hao's direction. */
+.farm-pause {
+  color: #f0ead8;
+  background: #181f26;
+  border: 1px solid #ad9979;
+  box-shadow: 5px 5px 0 #0b1015;
+  width: min(19rem, 80vw);
+  max-height: 80vh;
+  overflow: auto;
+  box-sizing: border-box;
+  padding: 1.25rem;
+  font: 1rem/1.45 monospace;
+}
+
+.farm-pause::backdrop { background: rgb(5 8 14 / 70%); }
+.farm-pause h1 { margin: 0 0 0.75rem; color: #ffe4a0; font: bold italic 2rem Georgia, serif; }
+.farm-pause button, .farm-pause summary, .farm-pause label {
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  text-align: start;
+  padding: 0.55rem 0.75rem;
+  margin: 0.4rem 0 0;
+  color: inherit;
+  background: #293039;
+  border: 1px solid #505251;
+  font: inherit;
+}
+.farm-pause button, .farm-pause summary { cursor: pointer; }
+.farm-pause summary::after { content: '+'; float: right; }
+.farm-pause details[open] summary::after { content: '−'; }
+.farm-pause p { margin: 0.5rem 0.75rem; font-size: 0.85rem; line-height: 1.7; }
+.farm-pause kbd { color: #ffe4a0; }
+.farm-pause output { float: right; }
+.farm-pause input { display: block; width: 100%; margin: 0.5rem 0 0; accent-color: #dbc18b; }
+.farm-pause :focus-visible { outline: 2px solid #ffe4a0; outline-offset: 1px; }
