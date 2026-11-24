@@ -1,0 +1,30 @@
+{
+  "//": "AI-use disclosure: Claude (Claude Code) wrote this file under my direction for M0 (T7, T11a).",
+  "name": "gnome-heist",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "core",
+    "maps",
+    "game",
+    "worker"
+  ],
+  "engines": {
+    "node": "24.22.3"
+  },
+  "packageManager": "npm@11.19.1",
+  "scripts": {
+    "typecheck": "tsc -p core && tsc -p core/tsconfig.test.json && tsc -p game && tsc -p worker && tsc -p e2e",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "build": "npm run build -w game && npm run build -w worker",
+    "dev": "npm run build -w game && npm run dev -w worker",
+    "deploy": "npm run build && npm run deploy -w worker"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.65.0",
+    "@types/node": "24.19.2",
+    "typescript": "7.0.2",
+    "vitest": "4.1.12"
+  }
+}

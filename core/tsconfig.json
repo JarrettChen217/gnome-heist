@@ -1,0 +1,7 @@
+// AI-use disclosure: Claude (Claude Code) wrote this file under my direction for M0 (T7, T11a).
+// Rules only: no DOM, no Node, no runtime globals beyond ES2023 (the dependency rule, Technical plan Section 3).
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": { "lib": ["ES2023"], "types": [] },
+  "include": ["src"]
+}

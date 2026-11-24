@@ -1,0 +1,21 @@
+// AI-use disclosure: Claude (Claude Code) wrote this file under my direction for M0 (T11a).
+// One Worker serves the client's static assets and the API on one origin (Technical plan Section 6).
+{
+  "$schema": "../node_modules/wrangler/config-schema.json",
+  "name": "gnome-heist",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-11-01",
+  "assets": {
+    "directory": "../game/dist",
+    "binding": "ASSETS",
+    // Only the API runs the Worker; every other path is a static file.
+    "run_worker_first": ["/session/*"]
+  },
+  "durable_objects": {
+    "bindings": [{ "name": "FARMER_SESSION", "class_name": "FarmerSession" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["FarmerSession"] }],
+  // The farm map is bundled at build time, not read from a file system at run time.
+  "rules": [{ "type": "Text", "globs": ["**/*.tmj"], "fallthrough": true }],
+  "observability": { "enabled": true }
+}

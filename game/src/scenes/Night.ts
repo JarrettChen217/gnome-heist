@@ -1,0 +1,527 @@
+// AI-use disclosure: Claude (Claude Code) wrote this file under my direction for M0 (T7) and wired in the T8 night rules; the fog here is a pre-T9 stand-in, not the PlayerView.
+// Codex fixed rectangular fence placement under Hao's direction after the M0 review.
+// Codex integrated directional player art and walk animation under Hao's direction.
+// Codex implemented tall grass rendering and bush feedback under Hao's direction.
+// Codex connected the local Worker morning and offline fallback under Hao's direction.
+import * as Phaser from 'phaser';
+import { PLAYER_STAMINA, advanceLocalMorning, bushAt, currentInteraction, endNight, loadFarm, newSession, startNight, tallGrassAt, tick, tileOf, tilesOf, visibleTiles } from '@gnome-heist/core';
+import type { FarmDef, FarmObject, Interaction, NightEnd, NightResult, NightState, SessionState, Tile } from '@gnome-heist/core';
+import { MIN_CAMERA_ZOOM, STEP_SECONDS, TILE_PX } from '../constants.ts';
+import { fenceSegments } from '../fence.ts';
+import { MorningClient } from '../morningClient.ts';
+import { REFUSAL, playtestDebrief, promptText } from '../text.ts';
+import type { PromptText } from '../text.ts';
+
+/** One drawn farm object. `key` gives its texture from the night state; the ghost keeps the last texture seen. */
+interface Prop {
+  readonly tiles: readonly Tile[];
+  readonly live: Phaser.GameObjects.Image;
+  readonly ghost: Phaser.GameObjects.Image;
+  readonly tag: Phaser.GameObjects.Text | null;
+  readonly key: (n: NightState) => string | null;
+}
+
+export type Phase = 'choose' | 'night' | 'ended';
+type Cover = 'none' | 'tallGrass' | 'bush';
+
+export interface NightHudState {
+  phase: Phase;
+  paused: boolean;
+  showMovementHint: boolean;
+  targetScreen: { x: number; y: number } | null;
+  feedback: { id: number; action: Interaction['action'] | 'bush' | 'bank' } | null;
+  night: number;
+  stamina: number;
+  maxStamina: number;
+  carrying: boolean;
+  inBush: boolean;
+  holes: string[];
+  prompt: PromptText | null;
+  /** 0..1 while E is held on an action. */
+  progress: number;
+  message: PromptText | null;
+  result: string[] | null;
+}
+
+/** Depth from the y of an object's feet, so the player passes behind and in front of tall things. */
+const depthOf = (feetYpx: number) => 10 + feetYpx;
+const DANGER_COLOUR = { window: 0x8fc7ff, lamp: 0xffe27a, dog: 0xff9a4a } as const;
+const WALK_FRAMES = 4;
+const WALK_FRAME_PX = 6;
+const FOG_DEPTH = 100000;
+const GRASS_HEAD_DEPTH = FOG_DEPTH + 1;
+const SEEN_TAG_DEPTH = FOG_DEPTH + 2;
+// In all player frames, rows 10 or 11 through 16 show the top of the beret.
+const GRASS_CROP_HEIGHT = 17;
+const GRASS_TEXTURES = ['tallGrass0', 'tallGrass1', 'tallGrass2'] as const;
+
+export class NightScene extends Phaser.Scene {
+  private farm!: FarmDef;
+  private session!: SessionState;
+  private night!: NightState;
+  private phase: Phase = 'choose';
+  private result: NightResult | null = null;
+  private player!: Phaser.GameObjects.Sprite;
+  private walkDistancePx = 0;
+  private fog!: Phaser.GameObjects.Graphics;
+  private dangerLayer!: Phaser.GameObjects.Graphics;
+  private dangerOutline!: Phaser.GameObjects.Graphics;
+  private trampledLeaves!: Phaser.GameObjects.Graphics;
+  private printsLayer!: Phaser.GameObjects.Graphics;
+  private props: Prop[] = [];
+  private bushSprites = new Map<string, Phaser.GameObjects.Image>();
+  private occupiedBush: FarmObject | undefined;
+  private cover: Cover = 'none';
+  private explored!: Uint8Array;
+  private keys!: Record<string, Phaser.Input.Keyboard.Key>;
+  private acc = 0;
+  private message: { text: PromptText; until: number } | null = null;
+  private printsDrawn = 0;
+  private paused = false;
+  private movementLearned = false;
+  private requireRelease = false;
+  private feedback: NightHudState['feedback'] = null;
+  private feedbackId = 0;
+  private morning: ReturnType<typeof advanceLocalMorning> | null = null;
+  private morningClient: MorningClient | null = null;
+  private morningSource: 'local-rule' | 'offline-rule' | 'primary' | 'secondary' | 'rule' | null = null;
+
+  constructor() {
+    super('Night');
+  }
+
+  create(): void {
+    // The same .tmj the rules read: Phaser renders it, core/loadFarm validates it.
+    this.farm = loadFarm(this.cache.tilemap.get('farm').data as unknown);
+    console.info(`[gnome-heist] map version ${this.farm.mapVersion}`);
+
+    const map = this.make.tilemap({ key: 'farm' });
+    const tileset = map.addTilesetImage('nightFarm', 'nightFarm');
+    if (tileset === null) throw new Error('tileset "nightFarm" missing from the map');
+    map.createLayer('ground', tileset, 0, 0)?.setDepth(0);
+    map.createLayer('decoration', tileset, 0, 0)?.setDepth(1);
+    this.dangerLayer = this.add.graphics().setDepth(2);
+    // Keep the danger border legible over tall leaves, under the fog and the exposed cap.
+    // Bent stems are the visible surface of a soft-ground footprint in dense foliage.
+    this.trampledLeaves = this.add.graphics().setDepth(FOG_DEPTH - 2);
+    this.dangerOutline = this.add.graphics().setDepth(FOG_DEPTH - 1);
+    this.printsLayer = this.add.graphics().setDepth(3);
+
+    this.player = this.add.sprite(0, 0, 'player-art', 0).setOrigin(0.5, 1).setVisible(false);
+    this.fog = this.add.graphics().setDepth(FOG_DEPTH);
+
+    const cam = this.cameras.main;
+    cam.setBounds(0, 0, this.farm.width * TILE_PX, this.farm.height * TILE_PX);
+    this.fitZoom();
+    this.scale.on(Phaser.Scale.Events.RESIZE, this.fitZoom, this);
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.scale.off(Phaser.Scale.Events.RESIZE, this.fitZoom, this));
+
+    const kb = this.input.keyboard;
+    if (kb === null) throw new Error('keyboard input unavailable');
+    const K = Phaser.Input.Keyboard.KeyCodes;
+    this.keys = Object.fromEntries(
+      Object.entries({ up: K.UP, down: K.DOWN, left: K.LEFT, right: K.RIGHT, w: K.W, a: K.A, s: K.S, d: K.D, e: K.E, r: K.R, esc: K.ESC, enter: K.ENTER, one: K.ONE, two: K.TWO, three: K.THREE }).map(
+        ([name, code]) => [name, kb.addKey(code)],
+      ),
+    );
+
+    this.game.events.on('hud-resume', this.resumeNight, this);
+    this.game.events.on('hud-restart', this.restartNight, this);
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      this.game.events.off('hud-resume', this.resumeNight, this);
+      this.game.events.off('hud-restart', this.restartNight, this);
+      this.finishMorningClient();
+    });
+    this.newRun();
+    this.scene.launch('Hud');
+  }
+
+  private resumeNight(): void {
+    if (!this.paused) return;
+    this.paused = false;
+    this.requireRelease = true;
+  }
+
+  private restartNight(): void {
+    if (this.paused) this.chooseEntry(this.session);
+  }
+
+  private finishMorningClient(): void {
+    this.morningClient?.finish();
+    this.morningClient = null;
+  }
+
+  private newRun(): void {
+    this.finishMorningClient();
+    const workerMode = location.protocol !== 'file:' && new URLSearchParams(location.search).get('farmer') === 'agent';
+    this.morningClient = workerMode && typeof crypto.randomUUID === 'function' ? new MorningClient() : null;
+    this.morningSource = null;
+    this.chooseEntry(newSession(this.farm, 1));
+  }
+
+  private chooseEntry(session: SessionState): void {
+    this.session = session;
+    this.morning = null;
+    this.feedback = null;
+    this.message = null;
+    this.paused = false;
+    this.requireRelease = true;
+    for (const key of Object.values(this.keys)) Phaser.Input.Keyboard.JustDown(key);
+    this.night = startNight(this.session, this.farm, this.farm.dogHoles[0]!.id);
+    this.phase = 'choose';
+    this.result = null;
+    this.explored = new Uint8Array(this.farm.width * this.farm.height);
+    this.printsDrawn = 0;
+    this.printsLayer.clear();
+    this.trampledLeaves.clear();
+    this.player.setVisible(false).setCrop();
+    this.cover = 'none';
+    this.occupiedBush = undefined;
+    this.tweens.killTweensOf([...this.bushSprites.values()]);
+    this.bushSprites.clear();
+    for (const p of this.props) {
+      p.live.destroy();
+      p.ghost.destroy();
+      p.tag?.destroy();
+    }
+    this.props = [];
+    this.addProps();
+    this.drawDanger();
+    this.cameras.main.stopFollow();
+    this.cameras.main.centerOn((this.farm.width * TILE_PX) / 2, (this.farm.height * TILE_PX) / 2);
+  }
+
+  private beginNight(entry: string): void {
+    this.night = startNight(this.session, this.farm, entry);
+    this.phase = 'night';
+    this.acc = 0;
+    this.walkDistancePx = 0;
+    this.syncPlayer();
+    // Phaser 4: startFollow without the second argument turns the camera's roundPixels off.
+    this.cameras.main.startFollow(this.player, true);
+  }
+
+  /** Integer zoom large enough that the map fills the window, so the camera always has room to follow. */
+  private fitZoom(): void {
+    const { width, height } = this.scale;
+    const fit = Math.max(width / (this.farm.width * TILE_PX), height / (this.farm.height * TILE_PX));
+    // Frame roughly fifteen tiles across on desktop, so the walk and carrying poses read at play size.
+    const characterZoom = Math.floor(Math.min(width / (15 * TILE_PX), height / (11 * TILE_PX)));
+    this.cameras.main.setZoom(Math.max(MIN_CAMERA_ZOOM, characterZoom, Math.ceil(fit)));
+  }
+
+  private addProps(): void {
+    const f = this.farm;
+    const layout = this.session.farmer.layout;
+    const add = (o: FarmObject, key: (n: NightState) => string | null, { overlay = false, showTag = true } = {}) => {
+      // Feet at the bottom edge of the object's tiles.
+      const x = (o.rect.x + o.rect.w / 2) * TILE_PX;
+      const feetY = (o.rect.y + o.rect.h) * TILE_PX;
+      // A padlock sits at the centre of the gate and sorts just above it.
+      const y = overlay ? feetY - TILE_PX / 2 : feetY;
+      const originY = overlay ? 0.5 : 1;
+      const depth = depthOf(feetY) + (overlay ? 0.1 : 0);
+      const first = key(this.night) ?? 'pedestalEmpty';
+      const live = this.add.image(x, y, first).setOrigin(0.5, originY).setDepth(depth);
+      const ghost = this.add.image(x, y, first).setOrigin(0.5, originY).setDepth(depth).setAlpha(0.4).setVisible(false);
+      const tag = showTag
+        ? this.add
+            .text(x, y - live.height - 1, `seen n${this.session.night}`, { fontFamily: 'monospace', fontSize: '24px', color: '#d8d8c8' })
+            .setScale(0.25)
+            .setOrigin(0.5, 1)
+            .setDepth(SEEN_TAG_DEPTH)
+            .setVisible(false)
+        : null;
+      this.props.push({ tiles: tilesOf(o), live, ghost, tag, key });
+      return live;
+    };
+    const has = (kind: string, slot: string) => layout.some((d) => d.kind === kind && d.slot === slot);
+    f.lampPosts.forEach((o) => add(o, () => (has('lamp', o.id) ? 'lampPost' : 'lampPostDark')));
+    f.doghouseSpots.forEach((o) => add(o, () => (has('doghouse', o.id) ? 'doghouse' : 'doghouseSpot')));
+    f.pedestals.forEach((o) => add(o, (n) => (n.world.gnomes.includes(o.id) ? 'pedestal' : 'pedestalEmpty')));
+    f.bushes.forEach((o) => this.bushSprites.set(o.id, add(o, () => 'bush', { showTag: false })));
+    const grassTiles = new Set<number>();
+    for (const patch of f.tallGrass) {
+      for (const tile of tilesOf(patch)) {
+        const index = tile.y * f.width + tile.x;
+        if (grassTiles.has(index)) continue;
+        grassTiles.add(index);
+        const texture = GRASS_TEXTURES[(tile.x + tile.y * 2) % GRASS_TEXTURES.length]!;
+        // Each tile sorts and enters fog independently, including tiles in the same patch.
+        add({ id: patch.id, rect: { ...tile, w: 1, h: 1 } }, () => texture, { showTag: false });
+      }
+    }
+    f.gates.forEach((o) => {
+      const gate = (n: NightState) => n.world.gates.find((g) => g.id === o.id)!;
+      add(o, (n) => (gate(n).open ? 'gateOpen' : 'gate'));
+      add(o, (n) => (gate(n).padlock === 'none' ? null : gate(n).padlock === 'locked' ? 'padlock' : 'padlockOpen'), { overlay: true });
+    });
+    f.fences.forEach((o) =>
+      fenceSegments(o).forEach((seg) => add(seg, (n) => (n.world.fenceGaps.some((g) => g.x === seg.rect.x && g.y === seg.rect.y) ? 'fenceGap' : 'fence'))),
+    );
+  }
+
+  /** Danger is drawn on the ground (GDD 5.5, 12). Pre-T9 it shows the real state; T9 draws it from the PlayerView. */
+  private drawDanger(): void {
+    const g = this.dangerLayer.clear();
+    const outline = this.dangerOutline.clear();
+    this.night.danger.forEach((d, i) => {
+      if (d === null) return;
+      const x = (i % this.farm.width) * TILE_PX;
+      const y = Math.floor(i / this.farm.width) * TILE_PX;
+      g.fillStyle(DANGER_COLOUR[d], 0.35).fillRect(x, y, TILE_PX, TILE_PX);
+      outline.lineStyle(1, DANGER_COLOUR[d], 0.8).strokeRect(x + 0.5, y + 0.5, TILE_PX - 1, TILE_PX - 1);
+    });
+  }
+
+  override update(time: number, deltaMs: number): void {
+    const k = this.keys;
+    const escape = Phaser.Input.Keyboard.JustDown(k['esc']!);
+    const enter = Phaser.Input.Keyboard.JustDown(k['enter']!);
+    const replay = Phaser.Input.Keyboard.JustDown(k['r']!);
+    if (escape && this.phase === 'night') {
+      if (this.paused) this.resumeNight();
+      else {
+        this.paused = true;
+        this.acc = 0;
+        this.night = { ...this.night, hold: null };
+      }
+    }
+    if (this.phase === 'choose') {
+      const pick = [k['one'], k['two'], k['three']].findIndex((key) => key !== undefined && Phaser.Input.Keyboard.JustDown(key));
+      const hole = pick >= 0 ? this.farm.dogHoles[pick] : undefined;
+      if (hole) this.beginNight(hole.id);
+    } else if (this.phase === 'ended') {
+      if (enter && this.morning?.plan) this.chooseEntry(this.morning.session);
+      else if (replay) this.newRun();
+    } else if (!this.paused) {
+      const down = (...names: string[]) => names.some((n) => k[n]?.isDown === true);
+      const pressedE = Phaser.Input.Keyboard.JustDown(k['e']!);
+      if (!down('e') && !pressedE) this.requireRelease = false;
+      const input = {
+        moveX: (down('right', 'd') ? 1 : 0) - (down('left', 'a') ? 1 : 0),
+        moveY: (down('down', 's') ? 1 : 0) - (down('up', 'w') ? 1 : 0),
+        // A tap shorter than a frame still counts as a press (ending the night is a press).
+        interact: !this.requireRelease && (down('e') || pressedE),
+      };
+      if (input.moveX || input.moveY) this.movementLearned = true;
+      if (input.moveX === 0 && input.moveY === 0) this.walkDistancePx = 0;
+      // Fixed steps; at most a quarter second per frame so a stalled tab does not jump.
+      this.acc = Math.min(this.acc + deltaMs / 1000, 0.25);
+      while (this.acc >= STEP_SECONDS && this.phase === 'night') {
+        const previous = this.night.player;
+        const r = tick(this.farm, this.night, input, STEP_SECONDS);
+        this.night = r.night;
+        const distancePx = Math.hypot(r.night.player.x - previous.x, r.night.player.y - previous.y) * TILE_PX;
+        this.walkDistancePx = distancePx > 1e-6 ? (this.walkDistancePx + distancePx) % (WALK_FRAMES * WALK_FRAME_PX) : 0;
+        this.acc -= STEP_SECONDS;
+        for (const e of r.events) {
+          if (e.type === 'action' && e.action !== 'endNight') this.signal(e.action);
+          if (e.type === 'refused') this.flash({ text: REFUSAL[e.reason], red: true }, time);
+          if (e.type === 'ended') this.finish(e.end);
+        }
+      }
+      this.syncPlayer();
+    }
+    this.drawPrints();
+    this.drawFogAndProps();
+    this.registry.set('hud', this.hudState(time));
+    this.publishDebug();
+  }
+
+  private finish(end: NightEnd): void {
+    this.phase = 'ended';
+    this.result = endNight(this.farm, this.night);
+    if (this.result.gnomeTaken) this.signal('bank');
+    if (this.session.night === 1) void this.resolveMorning(this.result);
+    else this.finishMorningClient();
+    console.info('[gnome-heist] night result', JSON.stringify(this.result));
+    if (end.reason === 'spotted') this.cameras.main.shake(250, 0.004);
+  }
+
+  private async resolveMorning(result: NightResult): Promise<void> {
+    const session = this.session;
+    const client = this.morningClient;
+    if (client === null) {
+      this.morning = advanceLocalMorning(this.farm, session, result);
+      this.morningSource = 'local-rule';
+      return;
+    }
+    try {
+      const morning = await client.advance(this.farm, session, result);
+      if (client !== this.morningClient) return;
+      this.morning = morning;
+      this.morningSource = morning.actedBy;
+    } catch {
+      if (client !== this.morningClient) return;
+      this.finishMorningClient();
+      this.morning = advanceLocalMorning(this.farm, session, result);
+      this.morningSource = 'offline-rule';
+      console.info('[gnome-heist] morning mode switched to local rules', { night: session.night });
+    }
+  }
+
+  private signal(action: NonNullable<NightHudState['feedback']>['action']): void {
+    this.feedback = { id: ++this.feedbackId, action };
+  }
+
+  private flash(text: PromptText, time: number): void {
+    this.message = { text, until: time + 1500 };
+  }
+
+  private syncPlayer(): void {
+    const x = this.night.player.x * TILE_PX;
+    const y = this.night.player.y * TILE_PX;
+    // Rows run down, left, right, up and repeat with the gnome in the player's arms.
+    const { facing, carrying } = this.night;
+    const directionRow = facing.x < 0 ? 1 : facing.x > 0 ? 2 : facing.y < 0 ? 3 : 0;
+    const row = directionRow + (carrying === null ? 0 : 4);
+    const column = this.phase === 'night' ? Math.floor(this.walkDistancePx / WALK_FRAME_PX) : 0;
+    const tile = tileOf(this.night.player);
+    const bush = bushAt(this.farm, tile);
+    if (bush && bush !== this.occupiedBush) {
+      this.rustleBush(bush);
+      this.signal('bush');
+    }
+    this.occupiedBush = bush;
+    this.cover = bush ? 'bush' : tallGrassAt(this.farm, tile) ? 'tallGrass' : 'none';
+
+    this.player.setPosition(x, y).setFrame(row * WALK_FRAMES + column).setVisible(this.cover !== 'bush');
+    if (this.cover === 'tallGrass') {
+      // The cropped beret stays visible where rows of grass or tile fog overlap its pixels.
+      this.player.setCrop(0, 0, this.player.frame.width, GRASS_CROP_HEIGHT).setDepth(GRASS_HEAD_DEPTH);
+    } else {
+      this.player.setCrop().setDepth(depthOf(y));
+    }
+  }
+
+  private rustleBush(bush: FarmObject): void {
+    const leaves = this.bushSprites.get(bush.id);
+    if (leaves === undefined) return;
+    const x = (bush.rect.x + bush.rect.w / 2) * TILE_PX;
+    this.tweens.killTweensOf(leaves);
+    leaves.setX(x);
+    this.tweens.add({ targets: leaves, x: x + 1, duration: 75, ease: 'Sine.easeInOut', yoyo: true, repeat: 1 });
+  }
+
+  /** Footprints appear as you make them (GDD 12). */
+  private drawPrints(): void {
+    const prints = this.night.footprints;
+    for (; this.printsDrawn < prints.length; this.printsDrawn++) {
+      const i = prints[this.printsDrawn]!;
+      const x = (i % this.farm.width) * TILE_PX;
+      const y = Math.floor(i / this.farm.width) * TILE_PX;
+      const tile = { x: i % this.farm.width, y: Math.floor(i / this.farm.width) };
+      if (tallGrassAt(this.farm, tile) || bushAt(this.farm, tile)) {
+        this.trampledLeaves.fillStyle(0x253639).fillRect(x + 3, y + 9, 5, 2).fillRect(x + 9, y + 12, 4, 2);
+        this.trampledLeaves.fillStyle(0xb5a47c).fillRect(x + 3, y + 8, 3, 1).fillRect(x + 6, y + 9, 2, 1)
+          .fillRect(x + 9, y + 11, 2, 1).fillRect(x + 11, y + 12, 2, 1);
+        continue;
+      }
+      // A raised rim, sole and separate heel read as footsteps even on furrowed soil.
+      for (const [dx, dy] of [[4, 3], [9, 7]] as const) {
+        this.printsLayer.fillStyle(0x886957, 0.9).fillRect(x + dx, y + dy + 1, 3, 3);
+        this.printsLayer.fillStyle(0x231d26).fillRect(x + dx, y + dy, 3, 3).fillRect(x + dx, y + dy + 4, 2, 1);
+      }
+    }
+  }
+
+  /**
+   * Pre-T9 fog: sight from core (GDD 5.11: 5 tiles, blocked by hedges, bushes
+   * and the house); explored tiles are dimmed and show faded copies of what was
+   * last seen there. Before the night starts, the whole farm is dark.
+   */
+  private drawFogAndProps(): void {
+    const { width: W, height: H } = this.farm;
+    const visible = this.phase === 'choose' ? new Array<boolean>(W * H).fill(false) : visibleTiles(this.farm, tileOf(this.night.player));
+    visible.forEach((v, i) => {
+      if (v) this.explored[i] = 1;
+    });
+    this.fog.clear();
+    for (let i = 0; i < W * H; i++) {
+      if (visible[i]) continue;
+      this.fog.fillStyle(0x05060a, this.explored[i] ? 0.6 : 1).fillRect((i % W) * TILE_PX, Math.floor(i / W) * TILE_PX, TILE_PX, TILE_PX);
+    }
+    for (const prop of this.props) {
+      const key = prop.key(this.night);
+      const seen = prop.tiles.some((t) => visible[t.y * W + t.x]);
+      const known = prop.tiles.some((t) => this.explored[t.y * W + t.x]);
+      if (key !== null && prop.live.texture.key !== key) prop.live.setTexture(key);
+      prop.live.setVisible(seen && key !== null);
+      if (seen && key !== null && prop.ghost.texture.key !== key) prop.ghost.setTexture(key);
+      prop.ghost.setVisible(!seen && known && key !== null);
+      prop.tag?.setVisible(!seen && known && key !== null);
+    }
+  }
+
+  private interaction(): Interaction | null {
+    return this.phase === 'night' ? currentInteraction(this.farm, this.night) : null;
+  }
+
+  private hudState(time: number): NightHudState {
+    const i = this.interaction();
+    const hold = this.night.hold;
+    const progress = i && hold && hold.action === i.action && hold.target === i.target && i.holdSeconds > 0 ? hold.seconds / i.holdSeconds : 0;
+    if (this.message && time > this.message.until) this.message = null;
+    const cam = this.cameras.main;
+    const result = this.night.ended && this.result
+      ? playtestDebrief(this.night.ended, this.result, this.morning?.plan ?? null,
+        this.night.night === 1 && this.morning === null && this.morningClient !== null)
+      : null;
+    return {
+      paused: this.paused,
+      showMovementHint: !this.movementLearned && this.phase === 'night' && !this.paused,
+      targetScreen: i ? {
+        x: ((i.tile.x + 0.5) * TILE_PX - cam.worldView.x) * cam.zoom,
+        y: (i.tile.y * TILE_PX - cam.worldView.y) * cam.zoom,
+      } : null,
+      feedback: this.feedback,
+      phase: this.phase,
+      night: this.night.night,
+      stamina: this.night.stamina,
+      maxStamina: PLAYER_STAMINA,
+      carrying: this.night.carrying !== null,
+      inBush: this.cover === 'bush',
+      holes: this.farm.dogHoles.map((h) => h.id),
+      prompt: promptText(i, this.night.carrying),
+      progress,
+      message: this.message?.text ?? null,
+      result,
+    };
+  }
+
+  /** Read-only snapshot for automated checks in the browser (window.__gnomeDebug). */
+  private publishDebug(): void {
+    const cam = this.cameras.main;
+    (window as unknown as { __gnomeDebug: unknown }).__gnomeDebug = {
+      mapVersion: this.farm.mapVersion,
+      phase: this.phase,
+      player: { ...this.night.player },
+      night: this.session.night,
+      paused: this.paused,
+      movementHint: !this.movementLearned,
+      morningPlan: this.morning?.plan ?? null,
+      morningSource: this.morningSource,
+      layout: this.session.farmer.layout,
+      playerFrame: this.player.frame.name,
+      cover: this.cover,
+      playerVisible: this.player.visible,
+      playerCropHeight: this.player.isCropped ? GRASS_CROP_HEIGHT : null,
+      tile: tileOf(this.night.player),
+      stamina: this.night.stamina,
+      carrying: this.night.carrying,
+      hold: this.night.hold,
+      interaction: this.interaction(),
+      ended: this.night.ended,
+      world: this.night.world,
+      footprints: this.night.footprints.length,
+      result: this.result,
+      camera: {
+        zoom: cam.zoom,
+        roundPixels: cam.roundPixels,
+        worldView: { x: cam.worldView.x, y: cam.worldView.y, w: cam.worldView.width, h: cam.worldView.height },
+      },
+      depth: { player: this.player.depth },
+    };
+  }
+}

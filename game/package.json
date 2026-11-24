@@ -1,0 +1,18 @@
+{
+  "//": "AI-use disclosure: Claude (Claude Code) wrote this file under my direction for M0 (T7, T11a).",
+  "name": "@gnome-heist/game",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build"
+  },
+  "dependencies": {
+    "@gnome-heist/core": "*",
+    "@gnome-heist/maps": "*",
+    "phaser": "4.2.1"
+  },
+  "devDependencies": {
+    "vite": "8.3.8"
+  }
+}
