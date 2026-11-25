@@ -4,9 +4,9 @@ AI-use disclosure: Claude (Claude Code) and Codex maintain this handoff under Ha
 
 Keep this file short: replace the snapshot each time, and update only your own row in Active work. Durable detail belongs in commits, PRs, and the docs.
 
-## Snapshot (2026-11-24, Claude, PR 5 opened and `main` merged in)
+## Snapshot (2026-11-24, Codex, first-night planning)
 
-- **PR 5 is open** ([#5](https://github.com/JarrettChen217/gnome-heist/pull/5), `codex/night-farm-art-v1` → `main`). It carries all game code so far: M0 (T7, T11a), T8 night rules, the T17 art pass, the T18 two-night slice and the local morning checkpoint (T10, T11b, T11c), plus a local Playwright smoke suite and the Codex agent setup. `main` (T6 Asana docs, PRs 2 to 4) was merged into the branch on 2026-11-24 and the `HANDOFF.md` / `project-plan.md` conflicts were resolved. Awaiting Hao's review and merge.
+- Local main includes PR 5 at `31bb69b`. The playable slice spans two nights on one farm. The GDD describes five nights. Hao raised a four-level cycle for discussion.
 - **Morning checkpoint (Codex, 2026-11-22).** T10 shares morning preparation and commit across the browser and Worker. The model receives a field-by-field farmer context. The validator checks ownership, budget, permitted slots, entry safe zones and the final open route when a plan adds a barrier. The Worker keeps session state in a Durable Object; identical in-flight retries return pending, and one result commits per morning. A forced provider timeout uses the rule farmer. The two-night client defaults to local rules and can opt in to the Worker with `?farmer=agent`.
 - **Evidence.** Strict typecheck, 212 tests and the client and Worker dry-run builds passed. Chrome ran both nights in default rule mode, with the Worker rule farmer, and after an interrupted request; the southwest lamp and the taken gnome carried into night two. T11b used one confirmed Anthropic Sonnet 5.5 request from the local Worker on an empty-trace fixture: a no-action plan committed in 2,997 ms; an identical retry returned the stored result without another call; 2,715 input and 50 output tokens, estimated USD 0.00593. See the [local checkpoint steps](../game/README.md#local-worker-checkpoint).
 - **Playwright (Claude, 2026-11-24).** Four Chromium smoke tests in `e2e/` (`npm run test:e2e`) passed locally, 12 of 12 with `--repeat-each=3`; they never call a paid model. CI typechecks them but does not run them. README also records why the game stays on Phaser rather than Godot.
@@ -20,8 +20,9 @@ Keep this file short: replace the snapshot each time, and update only your own r
 | --- | --- | --- | --- | --- |
 | G1 recording and post | Hao | — | outside repo | Posted; accepted by Hao 2026-11-19 |
 | Asana setup and PR links (T6) | Claude, for Hao | `docs/asana-setup` → merged | `docs/asana.md`, `docs/project-plan.md`, `.github/` | Merged in PR 2 (`f3691e5`) on 2026-11-20 after a `gnome-reviewer` pass; PPP not yet posted |
-| M0, T8, art pass, two-night slice and morning checkpoint (T7, T11a, T8, T17, T18, T10, T11b, T11c) | Claude and Codex, for Hao | `codex/night-farm-art-v1` (PR 5) | `core/`, `game/`, `worker/`, `maps/`, docs | Checked locally; not deployed; PR 5 awaiting Hao |
+| M0, T8, art pass, two-night slice and morning checkpoint (T7, T11a, T8, T17, T18, T10, T11b, T11c) | Claude and Codex, for Hao | `codex/night-farm-art-v1` (PR 5) | `core/`, `game/`, `worker/`, `maps/`, docs | Checked locally; merged in PR 5; not deployed |
 | Playwright smoke suite and engine note | Claude, for Hao | `codex/night-farm-art-v1` (PR 5) | `e2e/`, `playwright.config.ts`, `README.md`, `docs/architecture.md` | 4 tests pass locally; reviewed by `gnome-reviewer`, nothing blocking; not run in CI |
+| First-night planning | Codex, for Hao | `codex/onboarding-backlog` | GitHub issues 6–8, this handoff | Proposals recorded; design decision pending |
 
 ## Open items
 
@@ -36,4 +37,4 @@ Keep this file short: replace the snapshot each time, and update only your own r
 
 ## Next action
 
-Hao reviews PR 5 (add the T-card URLs under `## Asana` in its body if it should attach to the cards), then merges. Then run the [two-night observation script](two-night-playtest.md) with a fresh player for the Nov 28 G2/G3 evidence, and update the Asana Evidence fields for T7 to T11c.
+Discuss [first-night orientation](https://github.com/JarrettChen217/gnome-heist/issues/6) with Hao. At the next fresh-player session, observe what they think the objective is before giving the [playtest script](two-night-playtest.md) prompt. Then check what they notice on night two. Use the result to prioritize the [doghouse encounter](https://github.com/JarrettChen217/gnome-heist/issues/7) and [second layout and cycle structure](https://github.com/JarrettChen217/gnome-heist/issues/8). The Nov 28 playtest evidence and Asana evidence updates remain pending.
