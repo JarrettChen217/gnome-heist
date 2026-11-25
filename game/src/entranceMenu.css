@@ -1,0 +1,120 @@
+/* AI-use disclosure: Codex styled the farm entrance menu and its gnome cursor under Hao's direction. */
+.entrance-menu {
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+  color: #f8ebd0;
+  background: #152230;
+  font: 16px/1.25 monospace;
+  transition: opacity 140ms ease-in, visibility 0s linear 140ms;
+  overflow: auto;
+}
+.entrance-menu::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, #0a111a96, transparent 56%),
+    url('./assets/night-cover.webp') 63% center / cover no-repeat;
+}
+.entrance-menu.open { visibility: visible; opacity: 1; pointer-events: auto; transition: none; }
+.entrance-content {
+  position: relative;
+  display: flex;
+  box-sizing: border-box;
+  min-height: 100%;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: clamp(18px, 3.5vh, 36px);
+  padding: 24px clamp(18px, 6vw, 96px);
+}
+.entrance-content h1 {
+  margin: 0;
+  font: bold italic clamp(48px, 6.3vw, 94px)/0.98 Georgia, serif;
+  letter-spacing: -.055em;
+  color: #ffdf9a;
+  -webkit-text-stroke: 1px #40302b;
+  paint-order: stroke fill;
+  text-shadow: 0 3px #714230, 0 6px #251c22, 3px 6px #251c22;
+}
+.entrance-card {
+  box-sizing: border-box;
+  width: min(326px, 100%);
+  padding: 19px 19px 12px;
+  color: #f7e8cc;
+  background: #343942;
+  border: 3px solid #171d24;
+  box-shadow: inset 0 2px #979796, inset 2px 0 #727978, inset -2px -2px #24292e, 0 4px 0 #15191d, 4px 6px 0 #13182199;
+}
+.entrance-night { color: #ded0af; text-transform: uppercase; font-size: 11px; letter-spacing: .14em; }
+.entrance-card h2 { margin: 5px 0 14px; font: bold 24px/1.08 Georgia, serif; }
+.entrance-options { display: grid; gap: 3px; }
+.entrance-options button {
+  position: relative;
+  min-height: 44px;
+  padding: 7px 12px 7px 56px;
+  border: 2px solid transparent;
+  text-align: left;
+  color: #d9d9d4;
+  background: #2b3038;
+  font: bold 16px/1.15 monospace;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.entrance-options button.current {
+  color: #fff0c5;
+  background: #585248;
+  border-color: #d2aa6c;
+  outline: none;
+  box-shadow: inset 0 0 0 2px #393b3b;
+}
+.entrance-options button.current::before {
+  content: '';
+  position: absolute;
+  width: 30px;
+  height: 33px;
+  left: 10px;
+  top: 50%;
+  margin-top: -18px;
+  background: url('./assets/environment/gnome.png') left top / 30px 42px no-repeat;
+  image-rendering: pixelated;
+  animation: entrance-hop 150ms steps(2, end);
+}
+@keyframes entrance-hop { 50% { transform: translateY(-4px); } }
+.entrance-keys {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  margin: 12px 0 0;
+  color: #cccac1;
+  font-size: 11px;
+}
+.entrance-keys span { margin-left: 14px; }
+.entrance-keys kbd {
+  padding: 0 3px;
+  border: 1px solid #7b7d7b;
+  color: #f0ead8;
+  font: inherit;
+}
+@media (max-aspect-ratio: 1/1) {
+  .entrance-menu::before {
+    bottom: 20%;
+    background: linear-gradient(to top, #152230, transparent 34%), url('./assets/night-cover.webp') 64% center / cover no-repeat;
+  }
+  .entrance-content { justify-content: flex-end; align-items: center; gap: 14px; padding: 20px 16px max(22px, env(safe-area-inset-bottom)); }
+  .entrance-content h1 { font-size: clamp(42px, 10vw, 65px); }
+  .entrance-card { width: min(326px, 100%); }
+}
+@media (max-height: 430px) and (min-aspect-ratio: 1/1) {
+  .entrance-content { gap: 10px; padding-block: 10px; }
+  .entrance-content h1 { font-size: 36px; }
+  .entrance-card { width: 272px; padding: 10px 12px; }
+  .entrance-card h2 { font-size: 20px; margin: 2px 0 7px; }
+  .entrance-options button { min-height: 36px; }
+  .entrance-keys { margin-top: 7px; }
+}
+@media (pointer: coarse) { .entrance-keys { display: none; } }
+@media (prefers-reduced-motion: reduce) { .entrance-menu { transition: none; } .entrance-options button.current::before { animation: none; } }

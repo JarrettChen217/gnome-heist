@@ -59,6 +59,7 @@ Each morning the farmer, an AI agent, reads only the traces you left behind and 
 ### 5.2 Entries: dog holes
 
 - You always enter and leave through a dog hole in the outer hedge. Each dog hole is a fixed entry; v1 has three. [Hao]
+- Choose an entrance on a slate-gray panel over the cover. A red-capped gnome marks the selected row. Click or tap a row, use the arrows and Enter, or press a number shortcut. [Hao, on agent proposal]
 - On the first night, a 2D wide shot shows the playable farm in daylight, with the same paths, hedges and bushes at every zoom. The light fades and a farmhouse window glows before the chosen hedge opening rustles. The camera moves in as the player crawls through cap first, then settles with the scroll in view. The sequence lasts about 3.1 seconds. Movement gives the player immediate control. Later nights use a short crawl at the normal zoom. [Hao, on agent proposal]
 - **Entries are safe zones.** The farmer may not place or move anything onto a dog hole or within 2 tiles of it; the validator rejects such a move. Danger can still reach the path beyond those 2 tiles, so being seen soon after you crawl in remains a real risk. [Hao, on agent proposal]
 - Standing in a dog hole and pressing the end-night control ends the night. You cannot be stranded inside with no stamina, because walking is free. [Hao]
@@ -132,11 +133,11 @@ Each morning the farmer spends a small budget. [Hao]
 
 ### 5.8 Morning sequence
 
-0. The farmer comes out of the farmhouse, stretches, and looks around (about 3 s). This beat does not depend on his decision, so the model call runs during it. [Hao, on agent proposal]
-1. The farmer walks to each trace he decides to inspect. He can inspect only traces that are in that morning's list.
+0. At dawn the farmer opens the farmhouse window and looks outside (about 3 s). This beat does not depend on his decision, so the model call runs during it. [Hao, on agent proposal]
+1. The camera cuts to a daylight view of the playable farm. The farmer walks up to each trace he chose from that morning’s list. Footprints identify a patch of ground within the reported area. [Hao, on agent proposal]
 2. He says one line, for example, *"Who kicked a hole in my fence?!"* [Hao for the animation; agent proposal for the line]
 3. A short "thinking" beat shows his options with their costs and the one he picks; his stamina and money bars drop. [Hao]
-4. A sound cue and a caption say what kind of thing he did ("Something was hammered by the east gate."). New positions are not shown on the player's map. [Hao, on agent proposal] (See Q5 for how much of step 3 the player should see.)
+4. A close-up shows the work he committed to, followed by a sound cue and a caption. When he installs a lamp, his hammer strikes the cobwebbed fixture, a puff clears and the glass gleams. Players discover the installation site during the next night. [Hao, on agent proposal] (See Q5 for how much of step 3 the player should see.)
 
 ### 5.9 Being spotted
 
@@ -299,3 +300,4 @@ The farmer sees a trace list, his own layout, his remaining stamina and money, a
 | 2026-11-24 | Begin the first night with a 2D daylight view of the estate, dusk and a lit farmhouse window. Push toward the chosen hole and join the existing crawl. | [Hao, on agent proposal] | Decided for the prototype |
 | 2026-11-24 | Use the playable map and its vegetation throughout the opening so players can recognize the same paths and hedges after dark. | [Hao] | Decided |
 | 2026-11-24 | Extend the local prototype to one round of four nights on the same farm. Each intervening morning can change defenses, and the round scores the gnomes brought home. The full-game target in Section 5 remains five nights. | [Hao] | Decided for the prototype |
+| 2026-11-24 | Use a gnome cursor to choose a hedge entrance. Open the morning at the farmhouse window, inspect traces on the playable terrain, and show committed work in a close-up that conceals the destination. | [Hao, on agent proposal] | Decided for the prototype |

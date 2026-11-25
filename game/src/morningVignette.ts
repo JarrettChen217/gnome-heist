@@ -1,17 +1,14 @@
 // AI-use disclosure: Codex drew and animated this morning vignette and numbered its transitions under Hao's direction.
 import * as Phaser from 'phaser';
+import { FARMER_STAMINA } from '@gnome-heist/core';
 import type { MorningBeat } from './morningSequence.ts';
+import { MorningShots } from './morningShots.ts';
 import { playFeedback } from './feedbackSound.ts';
 
-/** A little theatrical cutaway: scenery is illustrative, never a map of defenses. */
+/** Letterbox a public morning cutaway and keep the captions readable as the viewport changes. */
 export class MorningVignette {
   private readonly backdrop: Phaser.GameObjects.Rectangle;
-  private readonly scenery: Phaser.GameObjects.Image;
-  private readonly art: Phaser.GameObjects.Graphics;
-  private readonly farmer: Phaser.GameObjects.Sprite;
-  private farmerX = 85;
-  private walkFrom = 85;
-  private previousCue = '';
+  private readonly shots: MorningShots;
   private readonly heading: Phaser.GameObjects.Text;
   private readonly dialogue: Phaser.GameObjects.Text;
   private readonly footer: Phaser.GameObjects.Text;
@@ -20,9 +17,7 @@ export class MorningVignette {
 
   constructor(private readonly scene: Phaser.Scene) {
     this.backdrop = scene.add.rectangle(0, 0, 1, 1, 0x172333).setOrigin(0).setDepth(10);
-    this.scenery = scene.add.image(0, 0, 'morning-farm').setOrigin(0).setDepth(10);
-    this.art = scene.add.graphics().setDepth(10);
-    this.farmer = scene.add.sprite(0, 0, 'morning-farmer', 0).setOrigin(0.5, 0.94).setDepth(10);
+    this.shots = new MorningShots(scene);
     const text = { fontFamily: 'monospace', color: '#fff0d0', fontSize: '16px', align: 'center' as const, lineSpacing: 5 };
     this.heading = scene.add.text(0, 0, '', { ...text, color: '#f2c974', fontSize: '14px', fontStyle: 'bold' }).setOrigin(0.5).setDepth(11);
     this.dialogue = scene.add.text(0, 0, '', text).setOrigin(0.5).setDepth(11);
@@ -32,79 +27,54 @@ export class MorningVignette {
   update(beat: MorningBeat | null, nextNight: number): void {
     const visible = beat !== null;
     this.backdrop.setVisible(visible);
-    this.scenery.setVisible(visible);
-    this.art.setVisible(visible);
-    this.farmer.setVisible(visible);
+    this.shots.update(beat);
     this.heading.setVisible(visible);
     this.dialogue.setVisible(visible);
     this.footer.setVisible(visible);
     if (!beat) {
       this.lastStage = '';
-      this.previousCue = '';
       this.textLayout = '';
-      this.farmerX = 85;
       return;
     }
     if (beat.stage === 'ready' && this.lastStage !== 'ready') playFeedback(this.scene.sound, 'morning');
     this.lastStage = beat.stage;
     const { width: w, height: h } = this.scene.scale;
-    const g = this.art.clear();
-    const unit = Math.min(w / 320, Math.max(0.35, (h - 195) / (320 / 1.5)), 2.3);
-    const sceneW = 320 * unit;
-    const left = (w - sceneW) / 2;
-    const top = Math.max(32, h * 0.1);
-    const rect = (x: number, y: number, rw: number, rh: number, color: number): void => {
-      g.fillStyle(color).fillRect(Math.round(left + x * unit), Math.round(top + y * unit), Math.ceil(rw * unit), Math.ceil(rh * unit));
-    };
     this.backdrop.setSize(w, h);
-    this.scenery.setPosition(left, top).setDisplaySize(sceneW, (320 / 1.5) * unit);
-    // An inspection prop is symbolic of the committed trace, not its farm location.
-    const trace = beat.trace;
-    if (trace && ['inspect', 'speak'].includes(beat.stage)) {
-      if (trace.kind === 'footprints') {
-        for (let i = 0; i < 3; i++) rect(239 + i * 9, 184 + (i % 2) * 5, 5, 3, 0x654e45);
-      } else if (trace.kind === 'brokenFence') {
-        rect(236, 175, 5, 31, 0xd4b28a); rect(260, 175, 5, 31, 0xd4b28a); rect(239, 185, 11, 4, 0xd4b28a); rect(255, 196, 10, 4, 0xd4b28a);
-      } else if (trace.kind === 'emptyPedestal') {
-        rect(238, 193, 27, 7, 0x777c73); rect(242, 181, 19, 12, 0xaab0a0); rect(245, 177, 13, 4, 0xc1c6af);
-      } else if (trace.kind === 'sighting') {
-        rect(242, 171, 14, 14, 0xeac575); rect(246, 174, 3, 3, 0x523e40); rect(252, 174, 3, 3, 0x523e40); rect(246, 182, 8, 2, 0x523e40);
-      } else {
-        rect(237, 169, 5, 37, 0x71584b); rect(262, 169, 5, 37, 0x71584b); rect(242, 177, 20, 4, 0xc7a478); rect(242, 194, 20, 4, 0xc7a478);
-        if (trace.kind === 'openLock') { rect(247, 183, 9, 8, 0xe3c275); rect(253, 178, 3, 6, 0xe3c275); }
-      }
-    }
-    const walking = beat.stage === 'opening' || beat.stage === 'inspect';
-    const progress = Math.min(1, beat.elapsed / (beat.stage === 'opening' ? 1400 : 650));
-    const cue = `${beat.stage}:${beat.index}`;
-    if (cue !== this.previousCue) { this.walkFrom = this.farmerX; this.previousCue = cue; }
-    const destination = beat.stage === 'opening' ? 93 : beat.stage === 'inspect' ? 221 + (beat.index % 2) * 8 : this.farmerX;
-    if (walking) this.farmerX = this.walkFrom + (destination - this.walkFrom) * progress;
-    const y = beat.stage === 'opening' ? 164 + 26 * progress : 190;
-    const stretch = beat.stage === 'opening' && beat.elapsed > 1400 && beat.elapsed < 2400;
-    const frame = stretch ? 3 : walking && progress < 1 ? 1 + Math.floor(beat.elapsed / 170) % 2 : 0;
-    this.farmer.setFrame(frame).setPosition(left + this.farmerX * unit, top + y * unit).setDisplaySize(28 * unit, 37 * unit);
+    const cue = [beat.stage, beat.index, beat.work?.prop, beat.work?.type, beat.trace?.id].join('/');
     // Keep animating the actor while the caption and its text texture remain stable.
     const layout = [cue, beat.stamina, beat.money, nextNight, w, h].join('/');
     if (this.textLayout === layout) return;
     this.textLayout = layout;
-    const stageTitle = beat.stage === 'opening' || beat.stage === 'waiting' ? 'MORNING ON THE FARM' : beat.stage === 'inspect' ? `INSPECTING TRACE ${beat.index + 1}` : beat.stage === 'speak' ? 'THE FARMER SAYS' : beat.stage === 'think' ? 'THE FARMER CONSIDERS' : `BEFORE NIGHT ${nextNight}`;
-    this.heading.setText(stageTitle).setPosition(w / 2, Math.max(22, top - 16));
+    const stageTitle = beat.stage === 'opening' || beat.stage === 'waiting' ? 'MORNING ON THE FARM' : beat.stage === 'inspect' ? `INSPECTING TRACE ${beat.index + 1}` : beat.stage === 'speak' ? 'THE FARMER SAYS' : beat.stage === 'think' ? 'THE FARMER CONSIDERS' : beat.stage === 'work' ? 'AT WORK' : `BEFORE NIGHT ${nextNight}`;
+    this.heading.setText(stageTitle);
     const choices = beat.choices.map((choice) => choice.label).join(' + ');
     const words = beat.stage === 'speak' ? `“${beat.line}”`
-      : beat.stage === 'think' ? `Buy · 1 stamina + 1 coin\nMove or repair · 1 stamina\nWait · free\n\nChosen: ${choices}`
+      : beat.stage === 'think' ? `Buy · 1 stamina + 1 coin\nMove or repair · 1 stamina   Wait · free\nChosen: ${choices}`
+      : beat.stage === 'work' ? beat.caption
       : beat.stage === 'ready' ? `“${beat.line}”\n${beat.caption}`
       : beat.stage === 'waiting' ? 'The farmer looks around…'
       : beat.stage === 'inspect' ? beat.caption : beat.stage === 'opening' ? beat.outcome : '';
-    const textY = top + (320 / 1.5) * unit + 10;
-    this.dialogue.setFontSize(h < 420 || (beat.stage === 'think' && w < 500) ? 12 : 16);
-    this.dialogue.setOrigin(0.5, 0).setWordWrapWidth(Math.max(100, Math.min(600, w - 36)), true).setText(words).setPosition(w / 2, textY);
-    const pips = '●'.repeat(Math.min(beat.stamina, 8));
+    const small = h < 420 || w < 500;
+    this.dialogue.setFontSize(small ? 12 : 16).setOrigin(0.5, 0)
+      .setWordWrapWidth(Math.max(100, Math.min(600, w - 36)), true).setText(words);
+    const staminaPips = '●'.repeat(beat.stamina) + '○'.repeat(Math.max(0, FARMER_STAMINA - beat.stamina));
     const coins = '●'.repeat(Math.min(beat.money, 8));
-    const resources = `Stamina ${pips} ${beat.stamina}   Coin ${coins} ${beat.money}`;
-    this.footer.setOrigin(0.5, 0).setFontSize(h < 420 ? 12 : 14)
-      .setWordWrapWidth(Math.max(100, w - 36), true)
-      .setText(beat.stage === 'think' ? resources : beat.stage === 'ready' ? 'Press Enter to continue' : '')
-      .setPosition(w / 2, textY + this.dialogue.height + (h < 420 ? 5 : 12));
+    const resources = `Stamina ${staminaPips} ${beat.stamina}   Coins ${coins} ${beat.money}`;
+    const footerText = beat.stage === 'ready' ? `${resources}   ·   Enter to continue`
+      : beat.stage === 'work' || beat.stage === 'think' ? resources : '';
+    this.footer.setOrigin(0.5, 0).setFontSize(small ? 12 : 14)
+      .setWordWrapWidth(Math.max(100, w - 36), true).setText(footerText);
+    // Reserve the caption block before sizing the picture, including wrapped options on phones.
+    const gap = small ? 5 : 9;
+    const captionH = this.dialogue.height + (footerText ? this.footer.height + gap : 0);
+    const titleH = this.heading.height + 12;
+    const reserved = Math.max(small ? 94 : 128, captionH + gap * 2);
+    const unit = Math.max(0.1, Math.min(w / 320, (h - titleH - reserved - 8) / 180, 2.5));
+    const top = Math.max(titleH, (h - 180 * unit - reserved + titleH) / 2);
+    const textY = top + 180 * unit + gap;
+    this.shots.image.setPosition((w - 320 * unit) / 2, top).setDisplaySize(320 * unit, 180 * unit);
+    this.heading.setPosition(w / 2, top - this.heading.height / 2 - 4);
+    this.dialogue.setPosition(w / 2, textY);
+    this.footer.setPosition(w / 2, textY + this.dialogue.height + gap);
   }
 }

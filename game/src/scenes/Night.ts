@@ -184,9 +184,11 @@ export class NightScene extends Phaser.Scene {
       ),
     );
 
+    this.game.events.on('hud-enter', this.selectEntrance, this);
     this.game.events.on('hud-resume', this.resumeNight, this);
     this.game.events.on('hud-restart', this.restartNight, this);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      this.game.events.off('hud-enter', this.selectEntrance, this);
       this.game.events.off('hud-resume', this.resumeNight, this);
       this.game.events.off('hud-restart', this.restartNight, this);
       this.finishMorningClient();
@@ -262,6 +264,10 @@ export class NightScene extends Phaser.Scene {
     this.cameras.main.stopFollow();
     this.cameras.main.setZoom(this.normalZoom);
     this.cameras.main.centerOn((this.farm.width * TILE_PX) / 2, (this.farm.height * TILE_PX) / 2);
+  }
+
+  private selectEntrance(id: string): void {
+    if (this.phase === 'choose' && this.farm.dogHoles.some((hole) => hole.id === id)) this.beginNight(id);
   }
 
   private beginNight(entry: string): void {

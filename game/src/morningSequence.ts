@@ -1,7 +1,7 @@
 // AI-use disclosure: Codex built this presentation of the committed morning plan under Hao's direction.
 
-import { FARM_AREA_NAMES } from '@gnome-heist/core';
-import type { FarmDef, FarmerContext, FarmerState, Plan, Trace } from '@gnome-heist/core';
+import { FARM_AREA_NAMES, tilesOf } from '@gnome-heist/core';
+import type { DefenseKind, FarmDef, FarmerContext, FarmerState, Plan, PlanAction, Tile, Trace } from '@gnome-heist/core';
 
 export interface MorningOption {
   readonly label: string;
@@ -16,11 +16,20 @@ const WAIT = { label: 'Do nothing', stamina: 0, money: 0 };
 
 export const MORNING_OPENING_MS = 3000;
 
+export interface MorningWork {
+  readonly type: PlanAction['type'];
+  readonly prop: DefenseKind | 'fence';
+}
+
+export const MORNING_WORK_MS = 1250;
+
 export interface MorningBeat {
-  stage: 'opening' | 'waiting' | 'inspect' | 'speak' | 'think' | 'ready';
+  stage: 'opening' | 'waiting' | 'inspect' | 'speak' | 'think' | 'work' | 'ready';
   elapsed: number;
   index: number;
   trace: Trace | null;
+  site: Tile | null;
+  work: MorningWork | null;
   line: string;
   caption: string;
   stamina: number;
@@ -32,7 +41,6 @@ export interface MorningBeat {
 interface Cue {
   beat: MorningBeat;
   duration: number;
-  elapsedOffset?: number;
 }
 
 const TRACE_LABEL: Record<Trace['kind'], string> = {
@@ -52,7 +60,29 @@ const TRACE_LANDMARKS: Readonly<Record<string, string>> = {
   fence_east: 'the east fence',
 };
 
-function inspectionCaption(farm: FarmDef, trace: Trace): string {
+// The center-most soft tile represents a reported footprint area. No player route is available here.
+function inspectionSite(farm: FarmDef, trace: Trace): Tile | null {
+  if (trace.kind === 'sighting') {
+    const match = /^tile_(\d+)_(\d+)$/.exec(trace.target);
+    if (!match) return null;
+    const x = Number(match[1]);
+    const y = Number(match[2]);
+    return x < farm.width && y < farm.height ? { x, y } : null;
+  }
+  const objects = trace.kind === 'footprints' ? farm.areas : trace.kind === 'emptyPedestal' ? farm.pedestals
+    : trace.kind === 'brokenFence' ? farm.fences : farm.gates;
+  const object = objects.find(({ id }) => id === trace.target);
+  if (!object) return null;
+  const { x, y, w, h } = object.rect;
+  const cx = x + (w - 1) / 2;
+  const cy = y + (h - 1) / 2;
+  if (trace.kind !== 'footprints') return { x: Math.floor(cx), y: Math.floor(cy) };
+  const soft = tilesOf(object).filter((tile) => farm.ground[tile.y * farm.width + tile.x] === 'soft');
+  const distance = (tile: Tile) => (tile.x - cx) ** 2 + (tile.y - cy) ** 2;
+  return soft.sort((a, b) => distance(a) - distance(b))[0] ?? null;
+}
+
+function inspectionCaption(farm: FarmDef, trace: Trace, site: Tile | null): string {
   const description = TRACE_LABEL[trace.kind];
   const landmark = TRACE_LANDMARKS[trace.target];
   if (landmark) {
@@ -62,14 +92,9 @@ function inspectionCaption(farm: FarmDef, trace: Trace): string {
   }
 
   let areaName = FARM_AREA_NAMES[trace.target];
-  if (!areaName) {
-    const pedestal = farm.pedestals.find((item) => item.id === trace.target);
-    const sighting = /^tile_(\d+)_(\d+)$/.exec(trace.target);
-    const tile = pedestal?.rect ?? (sighting ? { x: Number(sighting[1]), y: Number(sighting[2]) } : null);
-    if (tile) {
-      const area = farm.areas.find(({ rect }) => tile.x >= rect.x && tile.x < rect.x + rect.w && tile.y >= rect.y && tile.y < rect.y + rect.h);
-      if (area) areaName = FARM_AREA_NAMES[area.id];
-    }
+  if (!areaName && site) {
+    const area = farm.areas.find(({ rect }) => site.x >= rect.x && site.x < rect.x + rect.w && site.y >= rect.y && site.y < rect.y + rect.h);
+    if (area) areaName = FARM_AREA_NAMES[area.id];
   }
   return areaName ? `${description} in ${areaName}.` : `${description}.`;
 }
@@ -80,8 +105,10 @@ export function openingBeat(context: FarmerContext, outcome: string): MorningBea
     elapsed: 0,
     index: 0,
     trace: null,
+    site: null,
+    work: null,
     line: '',
-    caption: 'The farmer steps out and looks around.',
+    caption: 'The farmer opens the window and looks out.',
     stamina: context.stamina,
     money: context.money,
     outcome,
@@ -101,30 +128,33 @@ export function morningCues(
   for (const [index, id] of plan.inspected.entries()) {
     const trace = context.tracesToday.find((entry) => entry.id === id);
     if (trace) {
+      const site = inspectionSite(farm, trace);
       cues.push({
-        beat: { ...opening, stage: 'inspect', index, trace, caption: inspectionCaption(farm, trace) },
+        beat: { ...opening, stage: 'inspect', index, trace, site, caption: inspectionCaption(farm, trace, site) },
         duration: 1100,
       });
     }
   }
 
-  const speak: MorningBeat = { ...opening, stage: 'speak', line: plan.line, caption: '' };
+  const speak: MorningBeat = { ...(cues.at(-1)?.beat ?? opening), stage: 'speak', line: plan.line, caption: '' };
   cues.push({ beat: speak, duration: 1300 });
 
-  const actions = plan.actions.map((action) => {
+  const actions = plan.actions.map((action): { work: MorningWork; choice: MorningOption; caption: string } => {
     switch (action.type) {
       case 'buy': {
         const caption = { doghouse: 'A new doghouse went up.', lamp: 'A new lamp is burning.', padlock: 'A padlock was added.' };
-        return { choice: { ...BUY, label: `Buy a ${action.target}` }, caption: caption[action.target] };
+        return { work: { type: action.type, prop: action.target }, choice: { ...BUY, label: `Buy a ${action.target}` }, caption: caption[action.target] };
       }
       case 'move': {
         const defense = farmer.layout.find((entry) => entry.id === action.target);
-        const label = defense?.kind ?? 'defense';
-        return { choice: { ...MOVE, label: `Move a ${label}` }, caption: `A ${label} was moved.` };
+        if (!defense) throw new Error('Moved defense missing from committed layout');
+        const label = defense.kind;
+        return { work: { type: action.type, prop: label }, choice: { ...MOVE, label: `Move a ${label}` }, caption: `A ${label} was moved.` };
       }
       case 'repair': {
         const fence = farm.fences.some((entry) => entry.id === action.target);
         return {
+          work: { type: action.type, prop: fence ? 'fence' : 'padlock' },
           choice: { ...REPAIR, label: fence ? 'Mend a fence' : 'Re-lock a padlock' },
           caption: fence ? 'A fence was mended.' : 'A padlock was re-locked.',
         };
@@ -138,12 +168,22 @@ export function morningCues(
     caption: 'The farmer weighs his options.',
     choices: actions.length ? actions.map(({ choice }) => choice) : [WAIT],
   };
-  cues.push({ beat: think, duration: 1650 });
-  // The animation displays the exact closing budget from the committed session.
+  cues.push({ beat: think, duration: 1450 });
   const spent = { ...think, stamina: farmer.stamina, money: farmer.money };
-  cues.push({ beat: spent, duration: 1500, elapsedOffset: 1650 });
+  let stamina = think.stamina;
+  let money = think.money;
+  for (const [index, action] of actions.entries()) {
+    stamina -= action.choice.stamina;
+    money -= action.choice.money;
+    cues.push({
+      beat: { ...think, stamina, money, stage: 'work', index, trace: null, site: null, work: action.work, caption: action.choice.label },
+      duration: MORNING_WORK_MS,
+    });
+  }
   cues.push({
-    beat: { ...spent, stage: 'ready', caption: actions.map(({ caption }) => caption).join(' ') || 'The farmer made no changes.' },
+    beat: { ...spent, stage: 'ready', index: 0, work: actions.at(-1)?.work ?? null,
+      trace: actions.length ? null : spent.trace, site: actions.length ? null : spent.site,
+      caption: actions.map(({ caption }) => caption).join(' ') || 'The farmer made no changes.' },
     duration: Infinity,
   });
   return cues;
@@ -151,7 +191,7 @@ export function morningCues(
 
 export function cueAt(cues: readonly Cue[], elapsed: number): MorningBeat | null {
   for (const cue of cues) {
-    if (elapsed < cue.duration) return { ...cue.beat, elapsed: elapsed + (cue.elapsedOffset ?? 0) };
+    if (elapsed < cue.duration) return { ...cue.beat, elapsed };
     elapsed -= cue.duration;
   }
   return null;

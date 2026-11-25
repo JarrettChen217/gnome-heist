@@ -125,6 +125,29 @@ const entrances = [
   { name: 'south', digit: 3, width: 1280, height: 800, entry: { x: 11, y: 17 }, scroll: { x: 11, y: 15 }, key: 'ArrowUp', axis: 'y', direction: -1 },
 ] as const;
 
+test('arrow keys move the gnome and Enter confirms the focused entrance', async ({ page }) => {
+  await page.goto('/');
+  const west = page.getByRole('button', { name: 'West hedge' });
+  const east = page.getByRole('button', { name: 'East hedge' });
+  await expect(west).toBeFocused();
+  await page.keyboard.press('ArrowUp');
+  await expect(page.getByRole('button', { name: 'South hedge' })).toBeFocused();
+  await page.keyboard.press('ArrowUp');
+  await expect(east).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect.poll(() => debug(page)).toMatchObject({ phase: 'night', player: { x: 23.5, y: 15.5 } });
+  await expect(east).toBeHidden();
+});
+
+test.describe('touch entrance selector', () => {
+  test.use({ hasTouch: true, viewport: { width: 390, height: 740 } });
+  test('tapping a row directly enters that hedge', async ({ page }) => {
+    await page.goto('/');
+    await page.getByRole('button', { name: 'South hedge' }).tap();
+    await expect.poll(() => debug(page)).toMatchObject({ phase: 'night', player: { x: 11.5, y: 17.5 } });
+  });
+});
+
 for (const entrance of entrances) {
   test(`the ${entrance.name} reveal frames the live farm and leaves the scroll on the ground at ${entrance.width}px`, async ({ page }) => {
     await page.setViewportSize({ width: entrance.width, height: entrance.height });

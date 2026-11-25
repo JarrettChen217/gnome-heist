@@ -417,23 +417,44 @@ function drawPedestal(gnome) {
 
 function drawLamp(lit) {
   const p = new Pixels(16, 32);
-  p.ellipse(8, 30, 5, 1, '#18212b');
-  p.rect(5, 28, 6, 3, ink);
-  p.rect(6, 28, 4, 2, '#53525d');
-  p.rect(6, 10, 4, 19, ink);
-  p.rect(7, 11, 2, 17, '#5b555e');
-  p.line(7, 13, 7, 21, '#908077');
-  p.dot(8, 25, '#3d394a');
-  p.polygon([[1, 5], [3, 3], [5, 2], [7, 0], [9, 0], [10, 2], [13, 3], [15, 5], [13, 7], [12, 12],
-    [10, 14], [6, 14], [4, 12], [3, 7]], ink);
-  p.line(3, 4, 7, 2, lit ? gold : '#6f6570');
-  p.line(8, 2, 12, 4, '#685460');
-  p.line(3, 5, 13, 5, '#84645a');
-  p.polygon([[4, 6], [12, 6], [11, 11], [10, 12], [6, 12], [5, 11]], lit ? gold : '#3d4757');
-  p.line(6, 6, 6, 10, lit ? '#bd774e' : '#545763');
-  p.line(10, 6, 10, 10, lit ? '#986348' : '#232938');
-  if (lit) p.rect(7, 7, 3, 3, parchment);
-  p.line(6, 12, 10, 12, lit ? '#ac7151' : '#6a5a62');
+  p.ellipse(6, 30, 5, 1, '#18212b');
+  p.rect(3, 28, 6, 3, ink);
+  p.rect(4, 28, 4, 2, '#53525d');
+  p.rect(4, 3, 4, 26, ink);
+  p.rect(5, 3, 2, 25, '#615660');
+  p.line(5, 14, 5, 25, '#938077');
+  p.rect(3, 2, 5, 2, ink);
+  p.line(4, 2, 6, 2, '#a69081');
+  p.rect(7, 4, 7, 3, ink);
+  p.line(7, 4, 13, 4, copper);
+  p.line(7, 10, 11, 6, '#71616a');
+  p.rect(11, 6, 2, 3, '#574e5b');
+  p.dot(13, 8, copper);
+  if (lit) {
+    // Clean brass lantern suspended from the hook. Keep the glass brighter than its frame.
+    p.polygon([[7, 12], [10, 10], [11, 9], [13, 9], [15, 12], [15, 14], [14, 20],
+      [12, 22], [9, 21], [8, 19]], ink);
+    p.line(8, 12, 11, 10, gold);
+    p.rect(8, 13, 7, 1, copper);
+    p.rect(9, 14, 5, 5, gold);
+    p.line(9, 16, 9, 18, '#c98453');
+    p.rect(11, 14, 2, 4, '#fff2ba');
+    p.dot(10, 15, parchment);
+    p.line(10, 20, 13, 20, '#b67c55');
+  } else {
+    // An untended hook has a dusty fan of silk between its arm and the post.
+    const silk = '#8d96a1';
+    p.line(14, 6, 13, 11, '#76818b');
+    p.line(13, 11, 10, 16, silk);
+    p.line(10, 16, 7, 19, '#9aa2a5');
+    p.line(7, 7, 12, 13, '#79848f');
+    p.line(7, 7, 9, 17, '#727d85');
+    p.line(7, 12, 9, 11, '#a1a6a7');
+    p.line(9, 11, 12, 9, silk);
+    p.line(7, 15, 9, 14, '#a5abad');
+    p.line(9, 14, 13, 11, silk);
+    p.dot(10, 16, '#c1c3bb');
+  }
   return p;
 }
 

@@ -3,6 +3,7 @@
 import * as Phaser from 'phaser';
 import { PLAYTEST_NIGHT_LIMIT, STRIKE_LIMIT } from '@gnome-heist/core';
 import { playFeedback } from '../feedbackSound.ts';
+import { EntranceMenu } from '../entranceMenu.ts';
 import { PauseMenu } from '../pauseMenu.ts';
 import { MorningVignette } from '../morningVignette.ts';
 import type { NightHudState } from './Night.ts';
@@ -12,11 +13,7 @@ const style = { fontFamily: 'monospace', fontSize: '16px', color: CREAM, backgro
 
 /** The HUD has its own camera so text stays at screen scale while following the farm objects. */
 export class HudScene extends Phaser.Scene {
-  private entry!: Phaser.GameObjects.Container;
-  private cover!: Phaser.GameObjects.Image;
-  private entryBand!: Phaser.GameObjects.Rectangle;
-  private title!: Phaser.GameObjects.Text;
-  private choices!: Phaser.GameObjects.Text;
+  private entry!: EntranceMenu;
   private status!: Phaser.GameObjects.Text;
   private prompt!: Phaser.GameObjects.Text;
   private fieldMap!: Phaser.GameObjects.Graphics;
@@ -47,11 +44,7 @@ export class HudScene extends Phaser.Scene {
     this.letter = this.add.text(0, 0, 'E', { fontFamily: 'monospace', fontSize: '20px', fontStyle: 'bold', color: CREAM, stroke: '#253039', strokeThickness: 3 }).setOrigin(0.5);
     this.panel = this.add.text(0, 0, '', { ...style, backgroundColor: '#101720f5', padding: { x: 14, y: 12 }, lineSpacing: 3 }).setOrigin(0.5);
     this.corner = this.add.text(0, 0, 'Esc · Pause', { ...style, fontSize: '13px' }).setOrigin(1, 1);
-    this.cover = this.add.image(0, 0, 'night-cover').setOrigin(0.5);
-    this.entryBand = this.add.rectangle(0, 0, 1, 1, 0x101724).setOrigin(0);
-    this.title = this.add.text(0, 0, 'Gnome Heist', { fontFamily: 'Georgia, serif', fontStyle: 'bold italic', fontSize: '44px', color: '#ffe4a0' });
-    this.choices = this.add.text(0, 0, '', { fontFamily: 'monospace', fontSize: '16px', color: '#ede6d7', lineSpacing: 6 });
-    this.entry = this.add.container(0, 0, [this.cover, this.entryBand, this.title, this.choices]);
+    this.entry = new EntranceMenu((id) => this.game.events.emit('hud-enter', id));
     this.movementCue = this.add.text(0, 0, 'WASD or arrow keys to walk', { ...style, fontSize: '13px' }).setOrigin(0.5, 1).setDepth(8).setVisible(false);
     this.pauseMenu = new PauseMenu(
       () => this.game.events.emit('hud-resume'),
@@ -65,23 +58,12 @@ export class HudScene extends Phaser.Scene {
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.scale.off(Phaser.Scale.Events.RESIZE, this.place, this);
       this.pauseMenu.destroy();
+      this.entry.destroy();
     });
   }
 
   private place(): void {
     const { width, height } = this.scale;
-    const stacked = width < 780;
-    const bandHeight = stacked ? 150 : 100;
-    const top = Math.max(0, height - bandHeight);
-    const scale = Math.max(width / this.cover.width, top / this.cover.height);
-    const coverWidth = this.cover.width * scale;
-    const cropLeft = Phaser.Math.Clamp(coverWidth * 0.64 - width / 2, 0, coverWidth - width);
-    this.cover.setPosition(coverWidth / 2 - cropLeft, top / 2).setScale(scale);
-    this.choices.setFontSize(width < 370 ? 13 : 16);
-    this.entryBand.setPosition(0, top).setSize(width, bandHeight);
-    this.title.setPosition(stacked ? 16 : 32, top + (stacked ? 6 : 20));
-    this.choices.setPosition(stacked ? 16 : Math.max(330, width * 0.45), top + (stacked ? 60 : 18));
-    this.choices.setWordWrapWidth(stacked ? width - 32 : width - Math.max(330, width * 0.45) - 16, true);
     this.corner.setPosition(width - 8, height - 8);
     this.panel.setPosition(width / 2, height / 2).setWordWrapWidth(Math.min(640, width - 52), true);
     this.movementCue.setPosition(width / 2, height - 36);
@@ -204,7 +186,7 @@ export class HudScene extends Phaser.Scene {
     const s = this.registry.get('hud') as NightHudState | undefined;
     if (s === undefined) return;
     this.morning.update(s.morningBeat, s.night + 1);
-    this.entry.setVisible(s.phase === 'choose');
+    this.entry.setVisible(s.phase === 'choose', s.night, s.holes);
     this.status.setVisible(s.phase === 'night' && !s.entering);
     this.corner.setVisible(s.phase === 'night' && !s.entering);
     const pips = '●'.repeat(s.stamina) + '○'.repeat(Math.max(0, s.maxStamina - s.stamina));
@@ -217,13 +199,7 @@ export class HudScene extends Phaser.Scene {
     this.drawInteraction(s, time);
     this.movementCue.setVisible(s.phase === 'night' && s.showMovementHint && !s.paused && !s.entering);
     this.pauseMenu.setVisible(s.paused);
-    if (s.phase === 'choose') {
-      const entrances = s.holes.map((id, i) => `[${i + 1}] ${id.replace(/^hole_/, '').toUpperCase()}`);
-      const goal = s.night > 1 && s.banked > 0 ? 'Return for another gnome' : 'Choose your entrance';
-      const invitation = `Night ${s.night} of ${PLAYTEST_NIGHT_LIMIT} · ${goal}`;
-      this.choices.setText(`${invitation}\n${entrances.join('   ')}`);
-      this.panel.setVisible(false);
-    } else if (s.phase === 'ended' && s.result) {
+    if (s.phase === 'ended' && s.result) {
       this.panel.setText(s.result.join('\n')).setVisible(true);
       this.panel.setScale(Math.min(1, (this.scale.height - 24) / this.panel.height));
     } else this.panel.setVisible(false);

@@ -1,6 +1,6 @@
 // AI-use disclosure: Claude and Codex wrote these tests under Hao's direction for the Playwright smoke suite.
-// Browser smoke tests: the built client boots, keyboard input moves the gardener, and the first
-// morning completes through the local Worker (rule farmer) or falls back to local rules.
+// Browser smoke tests: the built client boots, keyboard input moves the gardener, and three mornings
+// can complete through the local Worker or carry on after a fallback.
 // Phaser draws into one canvas, so the tests read the read-only window.__gnomeDebug snapshot
 // that the Night scene publishes every frame, rather than looking for sprites.
 import { expect, test, type Page } from '@playwright/test';
@@ -156,6 +156,10 @@ test('the morning waits through a pending reply and presents a legal agent purch
   expect(speaking.line).toBe(line);
   await tap(page, 'Enter');
   expect((await debug(page))?.phase).toBe('ended');
+  await expect.poll(async () => (await debug(page))?.morningBeat?.stage, { intervals: [50] }).toBe('work');
+  expect((await debug(page))?.morningBeat).toMatchObject({
+    work: { type: 'buy', prop: 'lamp' }, site: null, trace: null,
+  });
   await expect.poll(async () => (await debug(page))?.morningBeat?.stage, { timeout: 12_000 }).toBe('ready');
   expect(await debug(page)).toMatchObject({
     morningSource: 'primary',
