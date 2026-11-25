@@ -4,10 +4,10 @@ AI-use disclosure: Claude (Claude Code) and Codex maintain this handoff under Ha
 
 Keep this file short: replace the snapshot each time, and update only your own row in Active work. Durable detail belongs in commits, PRs, and the docs.
 
-## Snapshot (2026-11-24, Codex, dawn and the second theft)
+## Snapshot (2026-11-24, Codex, dog-hole entrance shot)
 
-- Local `codex/onboarding-backlog` at `060e408` extends T20 with a dawn animation driven by the validated morning plan. The opening runs while the request is pending. The farmer inspects selected traces, delivers his line and spends his actual budget. The player can bank a distinct second gnome on the same farm. Local main remains at `31bb69b` (PR 5).
-- At `060e408`, strict typecheck, 213 unit and Worker tests, the client build, Worker dry-run and all 10 Chrome checks passed. Keyboard input banked the southwest gnome, then the southeast gnome and scored 2/2. Chrome also exercised a simulated primary plan, an unreachable Worker, and a Worker that stayed pending until the client timed out. The independent reviewer cleared the narrow-screen carrying prompt, empty-handed entry wording and inspected-area captions.
+- Local `codex/onboarding-backlog` at `95c0337` opens the first night with a 1.5-second entrance shot, then returns to the playable camera with the scroll in sight. Later nights use a 0.4-second crawl. Input can take over early. The two-night build retains the validated dawn sequence and second theft from `060e408`. Local main remains at `31bb69b`.
+- Strict typecheck, 213 unit and Worker tests, the client build, Worker dry-run and all 12 Chrome checks passed at `95c0337`. Checks covered the three entrances, pickup, early movement, pause, restart, second-night entry and banking two gnomes. Independent review cleared the change. T20 in Asana records the local evidence.
 - The [two-night playtest](two-night-playtest.md) still needs a fresh player. Morning checks used local rules or test fixtures. D1 keeps the build local. D2 and the existing paid-call limits are in the [project plan](project-plan.md). The Nov 23 course checkpoint outcome remains unrecorded. G2/G3 recording and post are on Nov 28.
 
 ## Active work
@@ -18,7 +18,7 @@ Keep this file short: replace the snapshot each time, and update only your own r
 | Asana setup and PR links (T6) | Claude, for Hao | `docs/asana-setup` → merged | `docs/asana.md`, `docs/project-plan.md`, `.github/` | Merged in PR 2 (`f3691e5`) on 2026-11-20 after a `gnome-reviewer` pass; PPP not yet posted |
 | M0, T8, art pass, two-night slice and morning checkpoint (T7, T11a, T8, T17, T18, T10, T11b, T11c) | Claude and Codex, for Hao | `codex/night-farm-art-v1` (PR 5) | `core/`, `game/`, `worker/`, `maps/`, docs | Checked locally; merged in PR 5; not deployed |
 | Playwright smoke suite and engine note | Claude, for Hao | `codex/night-farm-art-v1` (PR 5) | `e2e/`, `playwright.config.ts`, `README.md`, `docs/architecture.md` | 4 tests pass locally; reviewed by `gnome-reviewer`, nothing blocking; not run in CI |
-| First-night orientation (T20) | Codex, for Hao | `codex/onboarding-backlog` | `game/src/scenes/`, `e2e/orientation.spec.ts`, playtest plan | Verified locally at `1b40f6f`; T14 pending |
+| First-night orientation (T20) | Codex, for Hao | `codex/onboarding-backlog` | `game/src/scenes/`, `e2e/orientation.spec.ts`, playtest plan | Entrance shot and scroll verified locally at `95c0337`; T14 pending |
 | Dawn animation and second gnome (T10/T18) | Codex, for Hao | `codex/onboarding-backlog` | `game/`, `e2e/`, `core/src/`, playtest plan | Verified locally at `060e408`; Asana evidence updated |
 
 ## Open items
@@ -34,4 +34,4 @@ Keep this file short: replace the snapshot each time, and update only your own r
 
 ## Next action
 
-Run [T14](https://app.asana.com/1/1219142319278837/project/1220727551768593/task/1220727682763412) on local build `060e408` with a first-time player using the [two-night observation script](two-night-playtest.md). Record their first destination, whether they get a gnome home unaided, and their reason for their second route. Use that evidence when selecting the [doghouse encounter](https://github.com/JarrettChen217/gnome-heist/issues/7) or the [second layout](https://github.com/JarrettChen217/gnome-heist/issues/8).
+Run [T14](https://app.asana.com/1/1219142319278837/project/1220727551768593/task/1220727682763412) on local build `95c0337` with a first-time player using the [two-night observation script](two-night-playtest.md). Record their first destination, whether they get a gnome home unaided, and their reason for their second route. Use that evidence when selecting the [doghouse encounter](https://github.com/JarrettChen217/gnome-heist/issues/7) or the [second layout](https://github.com/JarrettChen217/gnome-heist/issues/8).
