@@ -2,6 +2,7 @@
 import * as Phaser from 'phaser';
 import type { FarmDef, Tile } from '@gnome-heist/core';
 import { TILE_PX } from './constants.ts';
+import { farmhouseOpenings } from './farmhouse.ts';
 
 export const ESTATE_TIMING = { dusk: 650, push: 1300, crawl: 2100, end: 3100 } as const;
 
@@ -107,18 +108,13 @@ export class EntryShot {
       // Add a muted green-gold light while retaining the underlying pixel contrast.
       this.daylight.clear().setVisible(true).fillStyle(0x9aab65, 0.48 * (1 - dusk))
         .fillRect(0, 0, width, height);
-      // The farmhouse art occupies rows 1–3; make-night-art.mjs puts its pane
-      // at eaves + 2, centered on the windowSight column.
-      const sight = this.farm.windowSight[0];
-      const windowX = sight ? (sight.rect.x + 0.5) * TILE_PX : width / 2;
-      const windowY = 3 * TILE_PX + 5;
+      const { window: { x, y, width: paneW, height: paneH } } = farmhouseOpenings(this.farm);
       const pane = this.window.clear().setVisible(true);
       const overview = 1 - smoothstep((elapsedMs - 1900) / 700);
-      pane.fillStyle(0x222f3b, (1 - windowLight) * overview).fillRect(windowX - 4, windowY, 8, 5);
-      pane.fillStyle(0xe6a963, windowLight * overview).fillRect(windowX - 4, windowY, 8, 5);
-      pane.fillStyle(0xffd98e, windowLight * overview).fillRect(windowX - 3, windowY, 3, 2).fillRect(windowX + 1, windowY + 1, 2, 2);
-      pane.fillStyle(0x55404a, overview).fillRect(windowX, windowY - 1, 1, 7).fillRect(windowX - 4, windowY + 2, 8, 1);
-
+      pane.fillStyle(0x222f3b, (1 - windowLight) * overview).fillRect(x, y, paneW, paneH);
+      pane.fillStyle(0xe6a963, windowLight * overview).fillRect(x, y, paneW, paneH);
+      pane.fillStyle(0xffd98e, windowLight * overview).fillRect(x + 1, y + 1, 3, 2).fillRect(x + 6, y + 2, 2, 2);
+      pane.fillStyle(0x55404a, overview).fillRect(x + paneW / 2, y, 1, paneH).fillRect(x, y + paneH / 2, paneW, 1);
     }
   }
 

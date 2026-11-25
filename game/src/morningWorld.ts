@@ -2,7 +2,8 @@
 import * as Phaser from 'phaser';
 import { solidGrid, tilesOf, type FarmDef, type Tile, type WorldState } from '@gnome-heist/core';
 import { MIN_CAMERA_ZOOM, TILE_PX } from './constants.ts';
-import { MORNING_WORK_MS, type MorningBeat } from './morningSequence.ts';
+import { farmhouseOpenings } from './farmhouse.ts';
+import { MORNING_OPENING_MS, MORNING_WORK_MS, type MorningBeat } from './morningSequence.ts';
 
 const DAYLIGHT = [
   { name: 'peach', color: 0xd1ad83, strength: 0.38 },
@@ -18,9 +19,10 @@ const clamp = Phaser.Math.Clamp;
 export class MorningWorld {
   private readonly actor: Phaser.GameObjects.Sprite;
   private readonly light: Phaser.GameObjects.Graphics;
-  private readonly window: Phaser.GameObjects.Graphics;
+  private readonly facade: Phaser.GameObjects.Graphics;
+  private readonly windowHead: Phaser.GameObjects.Sprite;
   private readonly effects: Phaser.GameObjects.Graphics;
-  private readonly windowTile: Tile;
+  private readonly openings: ReturnType<typeof farmhouseOpenings>;
   private readonly gates = new Map<number, string>();
   private solid: boolean[] = [];
   private route: Tile[] = []; // World-pixel waypoints, including the final work stance.
@@ -34,13 +36,15 @@ export class MorningWorld {
   private normalZoom = MIN_CAMERA_ZOOM;
 
   constructor(private readonly scene: Phaser.Scene, private readonly farm: FarmDef) {
-    this.windowTile = farm.windowSight[0]?.rect ?? { x: Math.floor(farm.width / 2), y: 4 };
+    this.openings = farmhouseOpenings(farm);
     for (const gate of farm.gates) for (const tile of tilesOf(gate)) {
       this.gates.set(tile.y * farm.width + tile.x, gate.id);
     }
     this.actor = scene.add.sprite(0, 0, 'morning-farmer', 0).setDisplaySize(19, 26).setOrigin(0.5, 0.94).setVisible(false);
     this.effects = scene.add.graphics().setVisible(false);
-    this.window = scene.add.graphics().setDepth(7000).setVisible(false);
+    this.facade = scene.add.graphics().setDepth(9).setVisible(false);
+    this.windowHead = scene.add.sprite(0, 0, 'morning-farmer', 0).setDisplaySize(13, 17)
+      .setOrigin(0.5, 0).setCrop(0, 6, 96, 52).setDepth(9.1).setVisible(false);
     this.light = scene.add.graphics().setDepth(8000).setBlendMode(Phaser.BlendModes.ADD).setVisible(false);
   }
 
@@ -53,21 +57,22 @@ export class MorningWorld {
     for (const object of [...this.farm.pedestals, ...this.farm.lampPosts]) {
       for (const tile of tilesOf(object)) this.solid[tile.y * this.farm.width + tile.x] = true;
     }
-    this.actor.setPosition(center(this.windowTile.x), center(this.windowTile.y) - 9).setFrame(0).setFlipX(false);
+    this.setEntrancePose(0);
     const variation = Math.floor(Math.random() * (DAYLIGHT.length - 1)) + 1;
     this.lightIndex = ((this.lightIndex < 0 ? night : this.lightIndex) + variation) % DAYLIGHT.length;
     const sun = DAYLIGHT[this.lightIndex]!;
     this.light.clear().fillStyle(sun.color, sun.strength)
       .fillRect(0, 0, this.farm.width * TILE_PX, this.farm.height * TILE_PX).setVisible(true);
-    this.window.setVisible(true);
+    this.facade.setVisible(true);
     this.effects.setVisible(true);
     this.scene.cameras.main.stopFollow();
-    this.aimCamera();
+    this.aimCamera(0);
   }
 
   clear(): void {
-    this.actor.setVisible(false).setRotation(0);
-    this.window.clear().setVisible(false);
+    this.actor.setVisible(false).setRotation(0).setCrop();
+    this.facade.clear().setVisible(false);
+    this.windowHead.setVisible(false);
     this.effects.clear().setVisible(false);
     if (this.light.visible) this.scene.cameras.main.setZoom(this.normalZoom);
     this.light.setVisible(false);
@@ -95,6 +100,7 @@ export class MorningWorld {
     const lamp = beat.work?.prop === 'lamp' && beat.site !== null;
     const cue = [beat.stage, beat.index, beat.trace?.id, beat.work?.type, beat.site?.x, beat.site?.y].join('/');
     if (cue !== this.lastCue) {
+      if (this.lastCue.startsWith('opening/') && beat.stage !== 'opening') this.setEntrancePose(MORNING_OPENING_MS);
       this.lastCue = cue;
       if (beat.stage === 'work') { this.hits = 0; this.mounted = false; }
       if (beat.stage === 'inspect' || (beat.stage === 'work' && lamp)) {
@@ -105,15 +111,15 @@ export class MorningWorld {
       }
     }
     this.effects.clear();
-    const atWindow = beat.stage === 'opening' || beat.stage === 'waiting';
-    this.window.clear();
-    if (atWindow) this.drawWindow(beat);
-    this.actor.setVisible(!atWindow || (beat.stage === 'opening' && beat.elapsed >= 1700) || beat.stage === 'waiting');
+    const opening = beat.stage === 'opening';
+    const t = opening ? beat.elapsed : MORNING_OPENING_MS;
+    this.drawFacade(t);
+    if (opening) this.setEntrancePose(t);
     this.walking = this.route.length > 0;
     if (this.walking) {
       this.walk(deltaMs);
       this.actor.setFrame(1 + Math.floor(this.distance / 5) % 2);
-    } else {
+    } else if (!opening) {
       if (this.focus) this.actor.setFlipX(this.actor.x > center(this.focus.x));
       this.actor.setFrame(0);
     }
@@ -126,42 +132,65 @@ export class MorningWorld {
       const x = center(this.focus.x), y = center(this.focus.y);
       for (const dx of [-5, 0, 5]) this.effects.fillStyle(0x4f443a).fillRect(x + dx, y + (dx === 0 ? 2 : 0), 2, 2);
     }
-    this.aimCamera();
+    const pan = opening ? clamp((t - 1400) / 1150, 0, 1) : 1;
+    this.aimCamera(pan * pan * (3 - 2 * pan));
     return !this.walking;
   }
 
-  private drawWindow(beat: MorningBeat): void {
-    const t = beat.stage === 'opening' ? beat.elapsed : 3000;
-    const x = center(this.windowTile.x), y = this.windowTile.y * TILE_PX - 11;
-    const open = clamp((t - 160) / 480, 0, 1);
-    const shutter = Math.round(4 * (1 - open));
-    const g = this.window;
-    g.fillStyle(0x3c322d).fillRect(x - 4, y, 8, 6);
-    if (shutter) g.fillStyle(0x5a604b).fillRect(x - 4, y, shutter, 6).fillRect(x + 4 - shutter, y, shutter, 6);
-    if (open > 0) {
-      g.fillStyle(0x747058).fillRect(x - 5 - open, y, 1 + open, 6).fillRect(x + 4, y, 1 + open, 6);
-      if (t > 430 && t < 1510) {
-        const look = t < 990 ? 1 : -1;
-        g.fillStyle(0xd3a36a).fillRect(x - 1, y + 2, 3, 3);
-        g.fillStyle(0xd49a49).fillRect(x - 2, y + 1, 4, 1).fillRect(x - 2 + look, y + 2, 5, 1);
-        g.fillStyle(0x40342f).fillRect(x + look, y + 3, 1, 1);
-      }
+  private drawFacade(elapsed: number): void {
+    const { window, door } = this.openings;
+    const g = this.facade.clear();
+    const open = clamp((elapsed - 150) / 360, 0, 1);
+    const remaining = Math.round(window.width / 2 * (1 - open));
+    const { x, y, width, height } = window;
+    g.fillStyle(0x30272b).fillRect(x, y, width, height);
+    if (remaining > 0) {
+      g.fillStyle(0x665347).fillRect(x, y, remaining, height).fillRect(x + width - remaining, y, remaining, height);
     }
-    if (beat.stage === 'opening' && t >= 1660) {
-      // The window and thresholds share one facade. Step out onto the south path.
-      const p = clamp((t - 1660) / 650, 0, 1);
-      this.actor.y = center(this.windowTile.y) - (1 - p) * 9;
-      this.actor.setAlpha(p);
-    } else this.actor.setAlpha(1);
+    const swing = Math.round(3 * open);
+    if (swing > 0) {
+      g.fillStyle(0x605749).fillRect(x - swing - 1, y, swing, height).fillRect(x + width + 1, y, swing, height);
+      g.fillStyle(0x8f765b).fillRect(x - swing - 1, y + 1, swing, 1).fillRect(x + width + 1, y + 1, swing, 1);
+    }
+    this.windowHead.setPosition(x + width / 2, y).setFlipX(elapsed >= 965)
+      .setVisible(elapsed >= 510 && elapsed < 1460);
+
+    // The closed leaf is painted into the farm atlas. Project its width as it swings inward.
+    const angle = Math.min(clamp((elapsed - 1510) / 280, 0, 1), clamp((2880 - elapsed) / 320, 0, 1));
+    if (angle > 0) {
+      const leaf = Math.max(2, Math.round(door.width * (1 - angle)));
+      g.fillStyle(0x211e27).fillRect(door.x, door.y, door.width, door.height);
+      g.fillStyle(0x694b44).fillRect(door.x, door.y, leaf, door.height);
+      g.fillStyle(0x805b47).fillRect(door.x, door.y + 4, leaf, 1);
+      if (leaf > 3) g.fillStyle(0xc0a26e).fillRect(door.x + leaf - 3, door.y + 12, 2, 2);
+    }
   }
 
-  private aimCamera(): void {
+  private setEntrancePose(elapsed: number): void {
+    const { door, yardY } = this.openings;
+    const threshold = door.y + door.height;
+    const p = clamp((elapsed - 1810) / 720, 0, 1);
+    const y = Phaser.Math.Linear(threshold - 5, yardY, p);
+    const frame = p > 0 && p < 1 ? 1 + Math.floor(p * 6) % 2 : 0;
+    const actor = this.actor.setPosition(door.x + door.width / 2, y).setFrame(frame)
+      .setFlipX(false).setVisible(elapsed >= 1810);
+    // Keep the opaque sprite occluded by the lintel until he clears the doorway.
+    const top = y - actor.displayHeight * actor.originY;
+    const clip = clamp(Math.ceil((door.y - top) / actor.scaleY), 0, actor.frame.height - 1);
+    if (clip > 0) actor.setCrop(0, clip, actor.frame.width, actor.frame.height - clip);
+    else actor.setCrop();
+  }
+
+  private aimCamera(doorBlend: number): void {
     const cam = this.scene.cameras.main;
     const { width, height } = this.scene.scale;
     // Keep the farmer above the caption strip at all aspect ratios.
     const zoom = Math.max(MIN_CAMERA_ZOOM, Math.ceil(width / (this.farm.width * TILE_PX)),
       Math.ceil(height / (this.farm.height * TILE_PX)));
-    cam.setZoom(zoom).centerOn(this.actor.x, this.actor.y - 12 + height / zoom * 0.08);
+    const { window } = this.openings;
+    const x = Phaser.Math.Linear(window.x + window.width / 2, this.actor.x, doorBlend);
+    const y = Phaser.Math.Linear(window.y + window.height, this.actor.y, doorBlend);
+    cam.setZoom(zoom).centerOn(x, y - 12 + height / zoom * 0.08);
   }
 
   private routeBeside(site: Tile, lamp: boolean): Tile[] {
