@@ -3,7 +3,7 @@
 // Codex integrated directional player art and walk animation under Hao's direction.
 // Codex implemented tall grass rendering and bush feedback under Hao's direction.
 // Codex connected the local Worker morning and offline fallback under Hao's direction.
-// Codex implemented the first-night scroll, remembered path, and four-night playtest under Hao's direction.
+// Codex implemented the first-night scroll, four-night playtest, and live morning farm under Hao's direction.
 import * as Phaser from 'phaser';
 import { PLAYER_STAMINA, PLAYTEST_NIGHT_LIMIT, STRIKE_LIMIT, advanceLocalMorning, bushAt, currentInteraction, endNight, loadFarm, newSession, prepareMorning, startNight, tallGrassAt, tick, tileOf, tilesOf, visibleTiles } from '@gnome-heist/core';
 import type { FarmerContext, FarmDef, FarmObject, Interaction, NightEnd, NightResult, NightState, SessionState, Tile } from '@gnome-heist/core';
@@ -13,11 +13,13 @@ import { fenceSegments } from '../fence.ts';
 import { MorningClient } from '../morningClient.ts';
 import { cueAt, morningCues, MORNING_OPENING_MS, openingBeat } from '../morningSequence.ts';
 import type { MorningBeat } from '../morningSequence.ts';
+import { MorningWorld } from '../morningWorld.ts';
 import { REFUSAL, nightOutcome, promptText } from '../text.ts';
 import type { PromptText } from '../text.ts';
 
 /** One drawn farm object. `key` gives its texture from the night state; the ghost keeps the last texture seen. */
 interface Prop {
+  readonly id: string;
   readonly tiles: readonly Tile[];
   readonly overview: 'structure' | 'vegetation' | 'sensitive';
   readonly live: Phaser.GameObjects.Image;
@@ -130,6 +132,9 @@ export class NightScene extends Phaser.Scene {
   private feedbackId = 0;
   private banked = 0;
   private morningBeat: MorningBeat | null = null;
+  private morningWorld!: MorningWorld;
+  private readonly morningLamps = new Set<string>();
+  private readonly morningMoveOrigins = new Map<number, string>();
   private morningCues: ReturnType<typeof morningCues> = [];
   private morningElapsed = 0;
   private morning: ReturnType<typeof advanceLocalMorning> | null = null;
@@ -161,6 +166,7 @@ export class NightScene extends Phaser.Scene {
 
     this.player = this.add.sprite(0, 0, 'player-art', 0).setOrigin(0.5, 1).setVisible(false);
     this.entryShot = new EntryShot(this, this.farm);
+    this.morningWorld = new MorningWorld(this, this.farm);
     this.scroll = this.add.graphics().setVisible(false);
     // A dark outline, rolled ends, parchment and a seal remain legible at integer zoom.
     this.scroll.fillStyle(0x262131).fillRect(-6, -5, 12, 9).fillRect(-5, -6, 10, 11);
@@ -219,6 +225,7 @@ export class NightScene extends Phaser.Scene {
     this.morningSource = null;
     this.banked = 0;
     this.movementLearned = false;
+    this.morningLamps.clear();
     this.nightStartMemory = { visited: new Uint8Array(this.farm.width * this.farm.height), hasMap: false };
     this.chooseEntry(newSession(this.farm, 1));
   }
@@ -227,9 +234,11 @@ export class NightScene extends Phaser.Scene {
     this.entryCinematic = null;
     this.entryFacing = null;
     this.entryShot.clear();
+    this.morningWorld.clear();
     this.session = session;
     this.morning = null;
     this.morningBeat = null;
+    this.morningMoveOrigins.clear();
     this.morningCues = [];
     this.morningElapsed = 0;
     this.feedback = null;
@@ -247,7 +256,10 @@ export class NightScene extends Phaser.Scene {
     this.explored = new Uint8Array(this.farm.width * this.farm.height);
     this.printsDrawn = 0;
     this.printsLayer.clear();
+    this.printsLayer.setVisible(true);
     this.trampledLeaves.clear();
+    this.trampledLeaves.setVisible(true);
+    this.fog.setVisible(true);
     this.player.setVisible(false).setCrop();
     this.cover = 'none';
     this.occupiedBush = undefined;
@@ -313,6 +325,7 @@ export class NightScene extends Phaser.Scene {
     // Frame roughly fifteen tiles across on desktop, so the walk and carrying poses read at play size.
     const characterZoom = Math.floor(Math.min(width / (15 * TILE_PX), height / (11 * TILE_PX)));
     this.normalZoom = Math.max(MIN_CAMERA_ZOOM, characterZoom, Math.ceil(fit));
+    if (this.morningBeat) return;
     const camera = this.cameras.main;
     if (!this.entryCinematic) camera.setZoom(this.normalZoom);
     else if (this.night.night > 1) {
@@ -347,7 +360,7 @@ export class NightScene extends Phaser.Scene {
             .setDepth(SEEN_TAG_DEPTH)
             .setVisible(false)
         : null;
-      this.props.push({ tiles: tilesOf(o), overview, live, ghost, tag, key });
+      this.props.push({ id: o.id, tiles: tilesOf(o), overview, live, ghost, tag, key });
       return live;
     };
     const has = (kind: string, slot: string) => layout.some((d) => d.kind === kind && d.slot === slot);
@@ -417,8 +430,11 @@ export class NightScene extends Phaser.Scene {
     }
     const entry = this.entryCinematic;
     if (entry) this.entryShot.draw(this.player, this.entryTile, entry.inward, entry.elapsed, entry.duration, this.normalZoom);
-    this.drawPrints();
-    this.drawFogAndProps();
+    if (this.morningBeat) this.drawMorningProps(this.morningBeat);
+    else {
+      this.drawPrints();
+      this.drawFogAndProps();
+    }
     const hud = this.hudState(time);
     this.registry.set('hud', hud);
     this.publishDebug(hud);
@@ -477,7 +493,7 @@ export class NightScene extends Phaser.Scene {
         if (e.type === 'ended') this.finish(e.end);
       }
     }
-    this.syncPlayer();
+    if (!this.morningBeat) this.syncPlayer();
   }
 
   private updateFieldMemory(): void {
@@ -501,13 +517,21 @@ export class NightScene extends Phaser.Scene {
     if (context) {
       const opening = openingBeat(context, nightOutcome(end, this.result));
       this.morningBeat = opening;
+      this.player.setVisible(false);
+      this.scroll.setVisible(false);
+      this.fog.setVisible(false);
+      this.printsLayer.setVisible(false);
+      this.trampledLeaves.setVisible(false);
+      this.dangerLayer.setVisible(false);
+      this.dangerOutline.setVisible(false);
+      this.morningWorld.begin(resolved.world, this.session.night, this.normalZoom);
       void this.resolveMorning(this.result, context, opening);
     } else {
       this.session = resolved;
       this.finishMorningClient();
     }
     console.info('[gnome-heist] night result', JSON.stringify(this.result));
-    if (end.reason === 'spotted') this.cameras.main.shake(250, 0.004);
+    if (end.reason === 'spotted' && !this.morningBeat) this.cameras.main.shake(250, 0.004);
   }
 
   private async resolveMorning(result: NightResult, context: FarmerContext, opening: MorningBeat): Promise<void> {
@@ -532,12 +556,31 @@ export class NightScene extends Phaser.Scene {
       }
     }
     this.morning = morning;
-    if (morning.plan) this.morningCues = morningCues(this.farm, opening, context, morning.plan, morning.session.farmer);
+    if (morning.plan) {
+      this.morningCues = morningCues(this.farm, opening, context, morning.plan, morning.session.farmer);
+      // Committing preserves existing defense order and appends purchases in action order.
+      const purchases = morning.session.farmer.layout.slice(context.layout.length).values();
+      const locations = new Map(context.layout.map(({ id, slot }) => [id, slot]));
+      for (const [index, action] of morning.plan.actions.entries()) {
+        if (action.type === 'buy') {
+          const bought = purchases.next().value;
+          if (bought) locations.set(bought.id, action.to);
+        } else if (action.type === 'move') {
+          const source = locations.get(action.target);
+          if (source) this.morningMoveOrigins.set(index, source);
+          locations.set(action.target, action.to);
+        }
+      }
+    }
   }
 
   private updateMorning(deltaMs: number): void {
     const beat = this.morningBeat;
-    if (!beat) return;
+    if (!beat || !this.morningWorld.update(beat, deltaMs)) return;
+    if (beat.stage === 'work' && this.morningWorld.debug.lampMounted) {
+      const lamp = this.morningLamp(beat);
+      if (lamp) this.morningLamps.add(lamp.id);
+    }
     if (beat.stage === 'opening') {
       const elapsed = beat.elapsed + deltaMs;
       if (elapsed < MORNING_OPENING_MS) {
@@ -621,6 +664,34 @@ export class NightScene extends Phaser.Scene {
         this.printsLayer.fillStyle(0x886957, 0.9).fillRect(x + dx, y + dy + 1, 3, 3);
         this.printsLayer.fillStyle(0x231d26).fillRect(x + dx, y + dy, 3, 3).fillRect(x + dx, y + dy + 4, 2, 1);
       }
+    }
+  }
+
+  private morningLamp(beat: MorningBeat): Prop | undefined {
+    if (beat.work?.prop !== 'lamp' || !beat.site) return undefined;
+    const { x, y } = beat.site;
+    return this.props.find((prop) => prop.live.texture.key.startsWith('lampPost') &&
+      prop.live.x === (x + 0.5) * TILE_PX && prop.live.y === (y + 1) * TILE_PX);
+  }
+
+  /** Reuse existing farm objects without writing night visibility, props, or player memory. */
+  private drawMorningProps(beat: MorningBeat): void {
+    const { gate } = this.morningWorld.debug;
+    const origin = beat.stage === 'work' && beat.work?.prop === 'lamp' ? this.morningMoveOrigins.get(beat.index) : undefined;
+    if (origin) this.morningLamps.delete(origin);
+    for (const prop of this.props) {
+      let key = prop.key(this.night);
+      if (key === 'gate' && prop.id === gate) key = 'gateOpen';
+      const approvedTrace = prop.id === beat.trace?.target &&
+        (key === 'pedestalEmpty' || (beat.trace.kind === 'openLock' && key === 'padlockOpen'));
+      const lamp = key === 'lampPost' || key === 'lampPostDark';
+      if (lamp) key = this.morningLamps.has(prop.id) ? 'lampPost' : 'lampPostDark';
+      if (key !== null && (prop.overview !== 'sensitive' || approvedTrace || lamp)) {
+        if (prop.live.texture.key !== key) prop.live.setTexture(key);
+        prop.live.setAlpha(1).setVisible(true);
+      } else prop.live.setVisible(false);
+      prop.ghost.setVisible(false);
+      prop.tag?.setVisible(false);
     }
   }
 
@@ -732,6 +803,7 @@ export class NightScene extends Phaser.Scene {
     const cam = this.cameras.main;
     const vegetation = this.props.filter((prop) => prop.overview === 'vegetation');
     const sensitive = this.props.filter((prop) => prop.overview === 'sensitive');
+    const lamp = this.morningBeat ? this.morningLamp(this.morningBeat) : undefined;
     (window as unknown as { __gnomeDebug: unknown }).__gnomeDebug = {
       mapVersion: this.farm.mapVersion,
       phase: this.phase,
@@ -764,6 +836,8 @@ export class NightScene extends Phaser.Scene {
       scrollTile: this.scrollTile ? { ...this.scrollTile } : null,
       scrollVisible: this.scroll.visible,
       morningBeat: hud.morningBeat,
+      morningWorld: this.morningBeat ? this.morningWorld.debug : null,
+      morningLamp: lamp ? { id: lamp.id, x: lamp.live.x, y: lamp.live.y, texture: lamp.live.texture.key } : null,
       banked: this.banked,
       morningPlan: this.morning?.plan ?? null,
       morningSource: this.morning?.plan ? this.morningSource : null,

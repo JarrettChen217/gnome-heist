@@ -271,7 +271,9 @@ test('pausing an entry shot allows a clean restart with a different entrance', a
 });
 
 test('restart restores the scroll, then four heists and three mornings lead to a fresh replay', async ({ page }) => {
-  test.setTimeout(110_000);
+  test.setTimeout(145_000);
+  // A morning can include walks to multiple inspected traces and two defense sites.
+  const morningTimeout = 25_000;
   await page.goto('/');
   await chooseEntrance(page, 1);
   await walkTo(page, 'ArrowRight', 'x', 1.5, 1);
@@ -299,7 +301,7 @@ test('restart restores the scroll, then four heists and three mornings lead to a
   await expect.poll(async () => (await debug(page))?.morningBeat?.stage, { intervals: [50] }).toBe('inspect');
   const inspected = (await debug(page))!;
   expect(inspected.morningPlan?.inspected).toContain(inspected.morningBeat?.trace?.id);
-  await expect.poll(async () => (await debug(page))?.morningBeat?.stage, { timeout: 12_000 }).toBe('ready');
+  await expect.poll(async () => (await debug(page))?.morningBeat?.stage, { timeout: morningTimeout }).toBe('ready');
   await tap(page, 'Enter');
   await chooseEntrance(page, 2);
   const secondReveal = (await debug(page))!;
@@ -326,7 +328,7 @@ test('restart restores the scroll, then four heists and three mornings lead to a
   await expect.poll(() => debug(page)).toMatchObject({
     phase: 'ended', result: { gnomeTaken: 'ped_se' }, banked: 2, morningSource: 'local-rule',
   });
-  await expect.poll(async () => (await debug(page))?.morningBeat?.stage, { timeout: 12_000 }).toBe('ready');
+  await expect.poll(async () => (await debug(page))?.morningBeat?.stage, { timeout: morningTimeout }).toBe('ready');
 
   await tap(page, 'Enter');
   await chooseEntrance(page, 3);
@@ -342,7 +344,7 @@ test('restart restores the scroll, then four heists and three mornings lead to a
   await expect.poll(() => debug(page)).toMatchObject({
     phase: 'ended', result: { gnomeTaken: 'ped_center' }, banked: 3, morningSource: 'local-rule',
   });
-  await expect.poll(async () => (await debug(page))?.morningBeat?.stage, { timeout: 12_000 }).toBe('ready');
+  await expect.poll(async () => (await debug(page))?.morningBeat?.stage, { timeout: morningTimeout }).toBe('ready');
 
   await tap(page, 'Enter');
   await chooseEntrance(page, 2);

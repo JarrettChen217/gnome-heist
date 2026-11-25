@@ -430,30 +430,21 @@ function drawLamp(lit) {
   p.line(7, 10, 11, 6, '#71616a');
   p.rect(11, 6, 2, 3, '#574e5b');
   p.dot(13, 8, copper);
-  if (lit) {
-    // Clean brass lantern suspended from the hook. Keep the glass brighter than its frame.
-    p.polygon([[7, 12], [10, 10], [11, 9], [13, 9], [15, 12], [15, 14], [14, 20],
-      [12, 22], [9, 21], [8, 19]], ink);
-    p.line(8, 12, 11, 10, gold);
-    p.rect(8, 13, 7, 1, copper);
-    p.rect(9, 14, 5, 5, gold);
-    p.line(9, 16, 9, 18, '#c98453');
-    p.rect(11, 14, 2, 4, '#fff2ba');
-    p.dot(10, 15, parchment);
-    p.line(10, 20, 13, 20, '#b67c55');
-  } else {
-    // An untended hook has a dusty fan of silk between its arm and the post.
-    const silk = '#8d96a1';
-    p.line(14, 6, 13, 11, '#76818b');
-    p.line(13, 11, 10, 16, silk);
-    p.line(10, 16, 7, 19, '#9aa2a5');
-    p.line(7, 7, 12, 13, '#79848f');
-    p.line(7, 7, 9, 17, '#727d85');
-    p.line(7, 12, 9, 11, '#a1a6a7');
-    p.line(9, 11, 12, 9, silk);
-    p.line(7, 15, 9, 14, '#a5abad');
-    p.line(9, 14, 13, 11, silk);
-    p.dot(10, 16, '#c1c3bb');
+  // The housing and hook stay in place as the closed glass warms and the silk clears.
+  p.polygon([[7, 12], [10, 10], [11, 9], [13, 9], [15, 12], [15, 14], [14, 20],
+    [12, 22], [9, 21], [8, 19]], ink);
+  p.line(8, 12, 11, 10, '#9b8473');
+  p.rect(8, 13, 7, 1, '#8a7161');
+  p.rect(9, 14, 5, 5, lit ? '#ba945e' : '#44494c');
+  p.line(9, 16, 9, 18, lit ? '#a38059' : '#3e4246');
+  p.rect(11, 14, 2, 4, lit ? '#d9b77a' : '#53595b');
+  p.dot(10, 15, lit ? '#e4cb94' : '#64676a');
+  p.line(10, 20, 13, 20, '#8d715e');
+  if (!lit) {
+    // Fine threads collect in the upper corner between the iron bracket and the cap.
+    p.line(13, 6, 10, 10, '#7b8284');
+    p.line(9, 7, 11, 9, '#666f76');
+    p.line(9, 9, 10, 10, '#8e9290');
   }
   return p;
 }

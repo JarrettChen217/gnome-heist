@@ -134,10 +134,10 @@ Each morning the farmer spends a small budget. [Hao]
 ### 5.8 Morning sequence
 
 0. At dawn the farmer opens the farmhouse window and looks outside (about 3 s). This beat does not depend on his decision, so the model call runs during it. [Hao, on agent proposal]
-1. The camera cuts to a daylight view of the playable farm. The farmer walks up to each trace he chose from that morning’s list. Footprints identify a patch of ground within the reported area. [Hao, on agent proposal]
+1. The playable farm fills the game viewport at dawn. The camera follows the farmer from his farmhouse to each trace he chose from that morning’s list. The daylight varies from one morning to the next and stays steady during his walk. Footprints identify a patch of ground within the reported area. [Hao, on agent proposal]
 2. He says one line, for example, *"Who kicked a hole in my fence?!"* [Hao for the animation; agent proposal for the line]
 3. A short "thinking" beat shows his options with their costs and the one he picks; his stamina and money bars drop. [Hao]
-4. The camera shows lamp work at the chosen post on the playable farm. The farmer works beside the fixture, a puff clears and the glass gleams. A moved lamp is shown at its new post. Other defense work uses a close-up. The player’s field map records exploration during play. [Hao, on agent proposal; on-site lamp work by Hao] (See Q5 for how much of step 3 the player should see.)
+4. The camera shows lamp work at the chosen post on the playable farm. He pauses at the evidence to think, walks to the post, and taps the fixture twice. The lantern keeps its shape through night and day. Its glass warms slightly when the work is complete. A moved lamp is shown at its new post. Other defense work uses a close-up. The player’s field map records exploration during play. [Hao, on agent proposal; on-site lamp work by Hao] (See Q5 for how much of step 3 the player should see.)
 
 ### 5.9 Being spotted
 
@@ -302,3 +302,4 @@ The farmer sees a trace list, his own layout, his remaining stamina and money, a
 | 2026-11-24 | Extend the local prototype to one round of four nights on the same farm. Each intervening morning can change defenses, and the round scores the gnomes brought home. The full-game target in Section 5 remains five nights. | [Hao] | Decided for the prototype |
 | 2026-11-24 | Use a gnome cursor to choose a hedge entrance. Open the morning at the farmhouse window, inspect traces on the playable terrain, and show committed work in a close-up that conceals the destination. | [Hao, on agent proposal] | Decided for the prototype |
 | 2026-11-24 | Show lamp installation and relocation at the selected post on the daylight farm so players can recognize the location. | [Hao] | Decided for the prototype |
+| 2026-11-25 | Render dawn on the full-screen playable farm. Follow the farmer between evidence and lamp work, vary the daylight each morning, and use two taps and a small change in the glass to show completion. | [Hao] | Decided for the prototype |

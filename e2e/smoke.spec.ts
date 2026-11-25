@@ -10,6 +10,14 @@ interface GnomeDebug {
   readonly phase: 'choose' | 'night' | 'ended';
   readonly player: { readonly x: number; readonly y: number };
   readonly night: number;
+  readonly morningWorld: {
+    readonly x: number;
+    readonly y: number;
+    readonly walking: boolean;
+    readonly hammerStrikes: number;
+    readonly lampMounted: boolean;
+    readonly daylight: string;
+  } | null;
   readonly morningPlan: unknown;
   readonly morningSource: string | null;
   readonly morningBeat: {
@@ -160,8 +168,22 @@ test('the morning waits through a pending reply and presents a legal agent purch
   expect((await debug(page))?.morningBeat).toMatchObject({
     work: { type: 'buy', prop: 'lamp' }, site: { x: 4, y: 14 }, trace: null,
   });
+  await expect.poll(async () => (await debug(page))?.morningWorld?.walking, { intervals: [30] }).toBe(true);
+  const approach = (await debug(page))!.morningWorld!;
+  await expect.poll(async () => (await debug(page))?.morningWorld?.hammerStrikes, { timeout: 12_000, intervals: [30] }).toBe(1);
+  const atPost = (await debug(page))!;
+  expect(atPost).toMatchObject({ morningLamp: { id: 'post_sw', texture: 'lampPostDark' } });
+  const firstTap = atPost.morningWorld!;
+  expect(firstTap).toMatchObject({ walking: false, lampMounted: false, daylight: approach.daylight });
+  expect(Math.hypot(firstTap.x - approach.x, firstTap.y - approach.y)).toBeGreaterThan(4);
+  await expect.poll(async () => (await debug(page))?.morningWorld?.hammerStrikes, { intervals: [30] }).toBe(2);
+  expect(await debug(page)).toMatchObject({
+    morningWorld: { walking: false, lampMounted: true },
+    morningLamp: { id: 'post_sw', texture: 'lampPost' },
+  });
   await expect.poll(async () => (await debug(page))?.morningBeat?.stage, { timeout: 12_000 }).toBe('ready');
   expect(await debug(page)).toMatchObject({
+    playerVisible: false,
     morningSource: 'primary',
     morningPlan: { actions: [action] },
     morningBeat: {
