@@ -28,6 +28,9 @@ interface OrientationState {
   readonly result: { readonly gnomeTaken: string | null } | null;
   readonly world: { readonly gnomes: readonly string[] };
   readonly morningSource: string | null;
+  readonly morningBeat: { readonly stage: string; readonly trace: { readonly id: string } | null } | null;
+  readonly morningPlan: { readonly inspected: readonly string[] } | null;
+  readonly banked: number;
 }
 
 const debug = (page: Page) =>
@@ -55,6 +58,16 @@ async function walkTo(page: Page, key: string, axis: 'x' | 'y', threshold: numbe
     );
   } finally {
     await page.keyboard.up(key);
+  }
+}
+
+async function dig(page: Page, pedestal: string): Promise<void> {
+  expect((await debug(page))?.interaction).toMatchObject({ action: 'dig', target: pedestal });
+  await page.keyboard.down('KeyE');
+  try {
+    await expect.poll(async () => (await debug(page))?.carrying).toBe(pedestal);
+  } finally {
+    await page.keyboard.up('KeyE');
   }
 }
 
@@ -88,7 +101,7 @@ for (const entrance of entrances) {
   });
 }
 
-test('restart restores the scroll, then banking carries the explored map and empty pedestal into night two', async ({ page }) => {
+test('restart restores the scroll, then two entrances lead to two banked gnomes and a fresh replay', async ({ page }) => {
   await page.goto('/');
   await chooseEntrance(page, 1);
   await walkTo(page, 'ArrowRight', 'x', 1.5, 1);
@@ -102,13 +115,7 @@ test('restart restores the scroll, then banking carries the explored map and emp
 
   await walkTo(page, 'ArrowRight', 'x', 3.5, 1);
   await walkTo(page, 'ArrowDown', 'y', 11.5, 1);
-  expect((await debug(page))?.interaction).toMatchObject({ action: 'dig', target: 'ped_sw' });
-  await page.keyboard.down('KeyE');
-  try {
-    await expect.poll(async () => (await debug(page))?.carrying).toBe('ped_sw');
-  } finally {
-    await page.keyboard.up('KeyE');
-  }
+  await dig(page, 'ped_sw');
 
   await walkTo(page, 'ArrowUp', 'y', 10.5, -1);
   await walkTo(page, 'ArrowLeft', 'x', 0.5, -1);
@@ -116,7 +123,12 @@ test('restart restores the scroll, then banking carries the explored map and emp
   await tap(page, 'KeyE');
   await expect.poll(async () => (await debug(page))?.morningSource).toBe('local-rule');
   expect((await debug(page))?.result?.gnomeTaken).toBe('ped_sw');
+  expect((await debug(page))?.banked).toBe(1);
 
+  await expect.poll(async () => (await debug(page))?.morningBeat?.stage, { intervals: [50] }).toBe('inspect');
+  const inspected = (await debug(page))!;
+  expect(inspected.morningPlan?.inspected).toContain(inspected.morningBeat?.trace?.id);
+  await expect.poll(async () => (await debug(page))?.morningBeat?.stage, { timeout: 12_000 }).toBe('ready');
   await tap(page, 'Enter');
   await chooseEntrance(page, 2);
   const second = (await debug(page))!;
@@ -127,13 +139,22 @@ test('restart restores the scroll, then banking carries the explored map and emp
   expect(second.scrollTile).toBeNull();
   expect(second.showScrollNote).toBe(false);
 
+  await walkTo(page, 'ArrowLeft', 'x', 20.55, -1);
+  await walkTo(page, 'ArrowUp', 'y', 10.5, -1);
+  await dig(page, 'ped_se');
+  await walkTo(page, 'ArrowDown', 'y', 15.5, 1);
+  await walkTo(page, 'ArrowRight', 'x', 23.5, 1);
   await tap(page, 'KeyE');
   await expect.poll(async () => (await debug(page))?.phase).toBe('ended');
+  expect(await debug(page)).toMatchObject({ result: { gnomeTaken: 'ped_se' }, banked: 2 });
+
   await tap(page, 'KeyR');
   await chooseEntrance(page, 1);
   const replay = (await debug(page))!;
   expect(replay.night).toBe(1);
   expect(replay.world.gnomes).toContain('ped_sw');
+  expect(replay.world.gnomes).toContain('ped_se');
+  expect(replay.banked).toBe(0);
   expect(replay.fieldMap).toBeNull();
   expect(replay.scrollVisible).toBe(true);
 });

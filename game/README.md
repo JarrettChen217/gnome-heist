@@ -24,7 +24,24 @@ npm run test:e2e       # Playwright smoke tests in Chrome against a fresh local 
 
 Choose an entrance with 1, 2 or 3. Walk with WASD or the arrow keys. Hold E at a gate, fence or pedestal, or press E inside a dog hole to end the night. Esc opens the pause menu. Restarting the night takes you back to entrance selection with that evening’s starting farm.
 
-After the first night, read the farmer’s morning response and press Enter to choose an entrance for night two. Taken gnomes, changes to the farm and the farmer’s response carry over. R at the result screen starts a fresh playtest. By default the browser uses the deterministic rule farmer without making a morning API request. See the [two-night playtest plan](../docs/two-night-playtest.md).
+At dawn, the farmer steps outside while the morning plan is being prepared. He checks the traces he selected, speaks, and spends his budget according to the validated plan. The same animation plays when the rule farmer takes over. The closing caption names the change and leaves its location for the player to discover.
+
+Press Enter after the closing caption to choose a second entrance. The previous theft, the route on the scroll and the changed defenses carry over. Dig up a remaining gnome and bring it through a hedge opening. The final screen counts gnomes brought home across both nights. R at the result screen starts a fresh playtest. By default the browser uses the deterministic rule farmer without making a morning API request. See the [two-night playtest plan](../docs/two-night-playtest.md).
+
+<details>
+<summary>Morning art credits and ImageGen prompts</summary>
+
+Codex used the built-in ImageGen tool under Hao's direction to create the [dawn backdrop](src/assets/morning-farm.webp) and [farmer pose sheet](src/assets/morning-farmer.webp). Phaser animates the poses during play.
+
+**Backdrop prompt**
+
+> Pixel-art background plate for a 16-bit stealth gardening game's morning cutscene. Landscape 3:2. Rural farmhouse at dawn, timber clapboard facade, shingled roof, glowing window, door at x=32% of frame with threshold at y=77%. Soft peach sunrise grading into dusty lavender, cool mature green orchard in the background to the right, hedgerows, a small chimney. Storybook handcrafted crisp pixel clusters, restrained dither, game art designed at 320x225. Keep the full lower fifth across the frame as an unobstructed horizontal earth footpath for animated sprites to walk on. Side-on stage view. Entirely empty of characters, animals, gnomes, footprints, lamps, foreground fences or UI. No signs, words, logos, typography, borders.
+
+**Farmer prompt**
+
+> Create a game-ready sprite sheet on fully transparent background: four nonoverlapping full-body sprites of the SAME middle-aged grumpy friendly orchard farmer, facing screen right in 3/4 side profile, warm straw hat with dark band, faded teal overalls over ochre rolled-sleeve shirt, brown boots, big grey mustache. Charming finely crafted pixel art, 16-bit farm adventure game, strong silhouette, clean chunky square pixels, no soft outline, balanced and elegant stylized proportions. Canvas landscape, exactly one horizontal row of 4 equally spaced sprites, centered at 12.5%, 37.5%, 62.5%, and 87.5% of sheet, feet aligned, equal scale, visible from hat to soles. First stands relaxed and looks to right; second right-foot-forward walking; third left-foot-forward walking; fourth stretches with bent arms raised above head. Each stands alone with plenty of transparent gutters. No floor, no cast shadows, no scenery, no text, no props, no other poses or accessories.
+
+</details>
 
 ### Local Worker checkpoint
 

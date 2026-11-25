@@ -1,16 +1,18 @@
-// AI-use disclosure: Claude (Claude Code) wrote this file under my direction for M0 (T7) and wired in the T8 night rules; the fog here is a pre-T9 stand-in, not the PlayerView.
+// AI-use disclosure: Claude (Claude Code) wrote this file under my direction for M0 (T7) and wired in the T8 night rules. Codex sequenced the farmer’s morning from the committed plan under Hao’s direction.
 // Codex fixed rectangular fence placement under Hao's direction after the M0 review.
 // Codex integrated directional player art and walk animation under Hao's direction.
 // Codex implemented tall grass rendering and bush feedback under Hao's direction.
 // Codex connected the local Worker morning and offline fallback under Hao's direction.
 // Codex implemented the first-night scroll and remembered path under Hao's direction.
 import * as Phaser from 'phaser';
-import { PLAYER_STAMINA, advanceLocalMorning, bushAt, currentInteraction, endNight, loadFarm, newSession, startNight, tallGrassAt, tick, tileOf, tilesOf, visibleTiles } from '@gnome-heist/core';
-import type { FarmDef, FarmObject, Interaction, NightEnd, NightResult, NightState, SessionState, Tile } from '@gnome-heist/core';
+import { PLAYER_STAMINA, advanceLocalMorning, bushAt, currentInteraction, endNight, loadFarm, newSession, prepareMorning, startNight, tallGrassAt, tick, tileOf, tilesOf, visibleTiles } from '@gnome-heist/core';
+import type { FarmerContext, FarmDef, FarmObject, Interaction, NightEnd, NightResult, NightState, SessionState, Tile } from '@gnome-heist/core';
 import { MIN_CAMERA_ZOOM, STEP_SECONDS, TILE_PX } from '../constants.ts';
 import { fenceSegments } from '../fence.ts';
 import { MorningClient } from '../morningClient.ts';
-import { REFUSAL, playtestDebrief, promptText } from '../text.ts';
+import { cueAt, morningCues, MORNING_OPENING_MS, openingBeat } from '../morningSequence.ts';
+import type { MorningBeat } from '../morningSequence.ts';
+import { REFUSAL, nightOutcome, promptText } from '../text.ts';
 import type { PromptText } from '../text.ts';
 
 /** One drawn farm object. `key` gives its texture from the night state; the ghost keeps the last texture seen. */
@@ -21,6 +23,8 @@ interface Prop {
   readonly tag: Phaser.GameObjects.Text | null;
   readonly key: (n: NightState) => string | null;
 }
+
+export type { MorningBeat } from '../morningSequence.ts';
 
 export type Phase = 'choose' | 'night' | 'ended';
 type Cover = 'none' | 'tallGrass' | 'bush';
@@ -52,6 +56,8 @@ export interface NightHudState {
   progress: number;
   message: PromptText | null;
   result: string[] | null;
+  morningBeat: MorningBeat | null;
+  banked: number;
 }
 
 /** Depth from the y of an object's feet, so the player passes behind and in front of tall things. */
@@ -112,6 +118,10 @@ export class NightScene extends Phaser.Scene {
   private requireRelease = false;
   private feedback: NightHudState['feedback'] = null;
   private feedbackId = 0;
+  private banked = 0;
+  private morningBeat: MorningBeat | null = null;
+  private morningCues: ReturnType<typeof morningCues> = [];
+  private morningElapsed = 0;
   private morning: ReturnType<typeof advanceLocalMorning> | null = null;
   private morningClient: MorningClient | null = null;
   private morningSource: 'local-rule' | 'offline-rule' | 'primary' | 'secondary' | 'rule' | null = null;
@@ -192,6 +202,7 @@ export class NightScene extends Phaser.Scene {
     const workerMode = location.protocol !== 'file:' && new URLSearchParams(location.search).get('farmer') === 'agent';
     this.morningClient = workerMode && typeof crypto.randomUUID === 'function' ? new MorningClient() : null;
     this.morningSource = null;
+    this.banked = 0;
     this.nightStartMemory = { visited: new Uint8Array(this.farm.width * this.farm.height), hasMap: false };
     this.chooseEntry(newSession(this.farm, 1));
   }
@@ -199,6 +210,9 @@ export class NightScene extends Phaser.Scene {
   private chooseEntry(session: SessionState): void {
     this.session = session;
     this.morning = null;
+    this.morningBeat = null;
+    this.morningCues = [];
+    this.morningElapsed = 0;
     this.feedback = null;
     this.message = null;
     this.paused = false;
@@ -341,10 +355,11 @@ export class NightScene extends Phaser.Scene {
       const hole = pick >= 0 ? this.farm.dogHoles[pick] : undefined;
       if (hole) this.beginNight(hole.id);
     } else if (this.phase === 'ended') {
-      if (enter && this.morning?.plan) {
+      if (replay) this.newRun();
+      else if (enter && this.morningBeat?.stage === 'ready' && this.morning) {
         this.nightStartMemory = this.fieldMemory;
         this.chooseEntry(this.morning.session);
-      } else if (replay) this.newRun();
+      } else this.updateMorning(deltaMs);
     } else if (!this.paused) {
       const down = (...names: string[]) => names.some((n) => k[n]?.isDown === true);
       const pressedE = Phaser.Input.Keyboard.JustDown(k['e']!);
@@ -396,33 +411,65 @@ export class NightScene extends Phaser.Scene {
   private finish(end: NightEnd): void {
     this.phase = 'ended';
     this.result = endNight(this.farm, this.night);
-    if (this.result.gnomeTaken) this.signal('bank');
-    if (this.session.night === 1) void this.resolveMorning(this.result);
-    else this.finishMorningClient();
+    if (this.result.gnomeTaken) {
+      this.banked += 1;
+      this.signal('bank');
+    }
+    const context = this.session.night === 1 ? prepareMorning(this.farm, this.session, this.result).context : null;
+    if (context) {
+      const opening = openingBeat(context, nightOutcome(end, this.result));
+      this.morningBeat = opening;
+      void this.resolveMorning(this.result, context, opening);
+    } else this.finishMorningClient();
     console.info('[gnome-heist] night result', JSON.stringify(this.result));
     if (end.reason === 'spotted') this.cameras.main.shake(250, 0.004);
   }
 
-  private async resolveMorning(result: NightResult): Promise<void> {
+  private async resolveMorning(result: NightResult, context: FarmerContext, opening: MorningBeat): Promise<void> {
     const session = this.session;
     const client = this.morningClient;
+    let morning: ReturnType<typeof advanceLocalMorning>;
     if (client === null) {
-      this.morning = advanceLocalMorning(this.farm, session, result);
+      morning = advanceLocalMorning(this.farm, session, result);
       this.morningSource = 'local-rule';
+    } else {
+      try {
+        const remote = await client.advance(this.farm, session, result);
+        if (client !== this.morningClient) return;
+        morning = remote;
+        this.morningSource = remote.actedBy;
+      } catch {
+        if (client !== this.morningClient) return;
+        this.finishMorningClient();
+        morning = advanceLocalMorning(this.farm, session, result);
+        this.morningSource = 'offline-rule';
+        console.info('[gnome-heist] morning mode switched to local rules', { night: session.night });
+      }
+    }
+    this.morning = morning;
+    if (morning.plan) this.morningCues = morningCues(this.farm, opening, context, morning.plan, morning.session.farmer);
+  }
+
+  private updateMorning(deltaMs: number): void {
+    const beat = this.morningBeat;
+    if (!beat) return;
+    if (beat.stage === 'opening') {
+      const elapsed = beat.elapsed + deltaMs;
+      if (elapsed < MORNING_OPENING_MS) {
+        this.morningBeat = { ...beat, elapsed };
+        return;
+      }
+      this.morningBeat = cueAt(this.morningCues, 0) ?? {
+        ...beat, stage: 'waiting', elapsed: 0, caption: 'The farmer takes a moment to survey the farm.',
+      };
       return;
     }
-    try {
-      const morning = await client.advance(this.farm, session, result);
-      if (client !== this.morningClient) return;
-      this.morning = morning;
-      this.morningSource = morning.actedBy;
-    } catch {
-      if (client !== this.morningClient) return;
-      this.finishMorningClient();
-      this.morning = advanceLocalMorning(this.farm, session, result);
-      this.morningSource = 'offline-rule';
-      console.info('[gnome-heist] morning mode switched to local rules', { night: session.night });
+    if (beat.stage === 'waiting') {
+      this.morningBeat = cueAt(this.morningCues, 0) ?? { ...beat, elapsed: beat.elapsed + deltaMs };
+      return;
     }
+    this.morningElapsed += deltaMs;
+    this.morningBeat = cueAt(this.morningCues, this.morningElapsed);
   }
 
   private signal(action: NonNullable<NightHudState['feedback']>['action']): void {
@@ -529,10 +576,10 @@ export class NightScene extends Phaser.Scene {
     const progress = i && hold && hold.action === i.action && hold.target === i.target && i.holdSeconds > 0 ? hold.seconds / i.holdSeconds : 0;
     if (this.message && time > this.message.until) this.message = null;
     const cam = this.cameras.main;
-    const result = this.night.ended && this.result
-      ? playtestDebrief(this.night.ended, this.result, this.morning?.plan ?? null,
-        this.night.night === 1 && this.morning === null && this.morningClient !== null)
-      : null;
+    const result = this.night.ended && this.result && !this.morningBeat ? [
+      nightOutcome(this.night.ended, this.result), '',
+      'Two-night playtest complete', `Gnomes banked: ${this.banked} / 2`, 'R  ·  Play again',
+    ] : null;
     return {
       paused: this.paused,
       showMovementHint: !this.movementLearned && this.phase === 'night' && !this.paused,
@@ -561,6 +608,8 @@ export class NightScene extends Phaser.Scene {
       progress,
       message: this.message?.text ?? null,
       result,
+      morningBeat: this.morningBeat,
+      banked: this.banked,
     };
   }
 
@@ -583,6 +632,8 @@ export class NightScene extends Phaser.Scene {
       showScrollNote: hud.showScrollNote,
       scrollTile: this.scrollTile ? { ...this.scrollTile } : null,
       scrollVisible: this.scroll.visible,
+      morningBeat: hud.morningBeat,
+      banked: this.banked,
       morningPlan: this.morning?.plan ?? null,
       morningSource: this.morningSource,
       layout: this.session.farmer.layout,

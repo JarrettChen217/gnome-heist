@@ -3,6 +3,9 @@
 import * as Phaser from 'phaser';
 import farmUrl from '@gnome-heist/maps/farm.tmj?url';
 import farmTilesUrl from '@gnome-heist/maps/night-farm.png?url';
+// Codex generated the dawn farmhouse and four farmer poses with ImageGen under Hao's direction.
+import farmerPosesUrl from '../assets/morning-farmer.webp?url';
+import morningFarmUrl from '../assets/morning-farm.webp?url';
 import coverUrl from '../assets/night-cover.webp?url';
 import playerUrl from '../assets/player.png?url';
 import { preloadEnvironment } from '../environment.ts';
@@ -21,6 +24,8 @@ export class BootScene extends Phaser.Scene {
 
   preload(): void {
     this.load.image('night-cover', coverUrl);
+    this.load.image('morning-farm', morningFarmUrl);
+    this.load.spritesheet('morning-farmer', farmerPosesUrl, { frameWidth: 96, frameHeight: 128 });
     preloadEnvironment(this);
     this.load.spritesheet('player-art', playerUrl, { frameWidth: 24, frameHeight: 32 });
     this.load.tilemapTiledJSON('farm', farmUrl);

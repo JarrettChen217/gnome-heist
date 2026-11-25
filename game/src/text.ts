@@ -1,5 +1,5 @@
 // AI-use disclosure: Claude (Claude Code) wrote this file under my direction for T8; player-facing wording for prompts and the end-of-night panel.
-import type { BlockReason, Interaction, NightEnd, NightResult, Plan } from '@gnome-heist/core';
+import type { BlockReason, Interaction, NightEnd, NightResult } from '@gnome-heist/core';
 
 const DOING: Record<Interaction['action'], string> = {
   openGate: 'open the gate',
@@ -56,21 +56,9 @@ export function resultLines(end: NightEnd, result: NightResult): string[] {
   return [head, '', 'What the farmer will find in the morning:', ...traces];
 }
 
-/** Compact playtest debrief. Reveal the kind of defense, leaving its exact position to discover. */
-export function playtestDebrief(end: NightEnd, result: NightResult, plan: Plan | null, pending = false): string[] {
-  const outcome = end.reason === 'spotted'
+/** Compact end-of-night outcome shared by the morning scene and the final recap. */
+export function nightOutcome(end: NightEnd, result: NightResult): string {
+  return end.reason === 'spotted'
     ? `Spotted by ${end.by === 'window' ? 'the farmer at the window' : end.by === 'lamp' ? 'a lamp' : 'the dog'}!`
     : result.gnomeTaken ? 'You brought a gnome home!' : 'You slipped out empty-handed.';
-  if (pending) return [outcome, '', 'At daybreak', 'The farmer is checking the garden…'];
-  if (!plan) return [outcome, '', 'Two-night playtest complete', 'R  ·  Play again'];
-
-  const changes = plan.actions.map(action => {
-    if (action.type === 'repair') {
-      const fence = result.traces.some(trace => trace.target === action.target && trace.kind === 'brokenFence');
-      return fence ? 'A fence was mended.' : 'A gate was locked again.';
-    }
-    if (action.type === 'buy' && action.target === 'lamp') return 'A new lamp is burning.';
-    return 'A defense has changed.';
-  });
-  return [outcome, '', 'At daybreak', `“${plan.line}”`, ...changes, '', 'Enter  ·  Choose your next entrance'];
 }

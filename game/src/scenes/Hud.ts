@@ -3,6 +3,7 @@
 import * as Phaser from 'phaser';
 import { playFeedback } from '../feedbackSound.ts';
 import { PauseMenu } from '../pauseMenu.ts';
+import { MorningVignette } from '../morningVignette.ts';
 import type { NightHudState } from './Night.ts';
 
 const CREAM = '#f0ead8';
@@ -28,6 +29,7 @@ export class HudScene extends Phaser.Scene {
   private veil!: Phaser.GameObjects.Rectangle;
   private movementKeys!: Phaser.GameObjects.Container;
   private pauseMenu!: PauseMenu;
+  private morning!: MorningVignette;
   private feedbackId: number | null = null;
 
   constructor() {
@@ -70,6 +72,7 @@ export class HudScene extends Phaser.Scene {
       (volume) => this.sound.setVolume(volume),
       this.sound.volume,
     );
+    this.morning = new MorningVignette(this);
     this.place();
     this.scale.on(Phaser.Scale.Events.RESIZE, this.place, this);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
@@ -81,7 +84,7 @@ export class HudScene extends Phaser.Scene {
   private place(): void {
     const { width, height } = this.scale;
     const stacked = width < 780;
-    const bandHeight = stacked ? 130 : 100;
+    const bandHeight = stacked ? 150 : 100;
     const top = Math.max(0, height - bandHeight);
     const scale = Math.max(width / this.cover.width, top / this.cover.height);
     const coverWidth = this.cover.width * scale;
@@ -90,7 +93,8 @@ export class HudScene extends Phaser.Scene {
     this.choices.setFontSize(width < 370 ? 13 : 16);
     this.entryBand.setPosition(0, top).setSize(width, bandHeight);
     this.title.setPosition(stacked ? 16 : 32, top + (stacked ? 6 : 20));
-    this.choices.setPosition(stacked ? 16 : Math.max(330, width * 0.45), top + (stacked ? 66 : 24));
+    this.choices.setPosition(stacked ? 16 : Math.max(330, width * 0.45), top + (stacked ? 60 : 18));
+    this.choices.setWordWrapWidth(stacked ? width - 32 : width - Math.max(330, width * 0.45) - 16, true);
     this.corner.setPosition(width - 8, height - 8);
     this.panel.setPosition(width / 2, height / 2).setWordWrapWidth(Math.min(640, width - 52), true);
     this.veil.setSize(width, height);
@@ -212,11 +216,12 @@ export class HudScene extends Phaser.Scene {
   override update(time: number): void {
     const s = this.registry.get('hud') as NightHudState | undefined;
     if (s === undefined) return;
+    this.morning.update(s.morningBeat);
     this.entry.setVisible(s.phase === 'choose');
     this.status.setVisible(s.phase === 'night');
     this.corner.setVisible(s.phase === 'night');
     const pips = '●'.repeat(s.stamina) + '○'.repeat(Math.max(0, s.maxStamina - s.stamina));
-    const status = `Night ${s.night}   Stamina ${pips}${s.carrying ? '   Carrying a gnome' : ''}`;
+    const status = `Night ${s.night}   Banked ${s.banked}/2   Stamina ${pips}${s.carrying ? '   Carrying a gnome' : ''}`;
     this.status.setText(s.inBush && s.phase === 'night' ? `${status}\nBush cover · Dogs can hear you` : status);
 
     this.drawFieldMap(s);
@@ -226,7 +231,8 @@ export class HudScene extends Phaser.Scene {
     this.pauseMenu.setVisible(s.paused);
     if (s.phase === 'choose') {
       const entrances = s.holes.map((id, i) => `[${i + 1}] ${id.replace(/^hole_/, '').toUpperCase()}`);
-      this.choices.setText(`Night ${s.night} · Choose your entrance\n${entrances.join('   ')}`);
+      const invitation = s.night > 1 ? `Night ${s.night} · Return for another gnome` : `Night ${s.night} · Choose your entrance`;
+      this.choices.setText(`${invitation}\n${entrances.join('   ')}`);
       this.panel.setVisible(false);
     } else if (s.phase === 'ended' && s.result) {
       this.panel.setText(s.result.join('\n')).setVisible(true);
