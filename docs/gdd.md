@@ -206,6 +206,8 @@ All numbers in Sections 5 and 9 are placeholders chosen for a small map, not tes
 
 ## 11. Controls [Proposed]
 
+On the first night, each entrance leads past a visible scroll that the player automatically collects within their first few steps. One short message explains the theft and escape. An upper-left pixel map marks north, the farmhouse and the selected entrance, then fills in as the player explores. [Hao, on agent proposal]
+
 Arrow keys or WASD to move; E to interact (hold E for gates); E in a dog hole to end the night; M to show the full remembered map.
 
 ## 12. Feedback
@@ -291,3 +293,4 @@ The farmer sees a trace list, his own layout, his remaining stamina and money, a
 | 2026-11-18 | Raise vegetation around readable paths, include stretches that show only the player’s hat, and allow full concealment in walk-in bushes | Hao | Decided |
 | 2026-11-13 | He hates broken things: repairing first is his personality in the prompt, not a forced rule | Agent proposal (soft, not forced), accepted by Hao | Decided |
 | 2026-11-13 | Moving a padlock so its destination gate is locked also triggers the existing open-route check; the check uses the layout after the whole plan | Codex proposal, accepted by Hao | Decided |
+| 2026-11-24 | Prototype the first-night scroll pickup and pixel map at all three entrances, then observe orientation and the second-night route choice. | [Hao, on agent proposal] | Decided for the first prototype |

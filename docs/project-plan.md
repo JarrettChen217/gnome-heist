@@ -59,6 +59,17 @@ Owner is always me (accountable). "Delegated to" names the production agent role
 
 Internal checkpoints: the deployed Worker skeleton exists by **Nov 17** (T11a), and a real deployed model call by **Nov 19** (T11b), so deployment problems surface early. By **Nov 21**, one night and one morning are playable with the rule-based farmer and the three checkpoint items work. If the game side slips, I apply the cut list in GDD Section 13; art cuts do not unblock the Worker, so it is not left until the end. *(Superseded: the internal targets were re-dated on 2026-11-19; current dates are in Asana. The Status column for T7 to T11c was brought up to date on 2026-11-22; Asana holds the live status.)*
 
+**T20 · First-night orientation** [Hao, on agent proposal, 2026-11-24]. Build on the T18 two-night slice. The proposed work block begins after Hao authorizes the time. Internal estimates:
+
+| Elapsed | Work and observable result |
+| --- | --- |
+| 0–20 min | Inspect all three entrances and choose a visible, reachable pickup for each. Check the upper-left HUD at wide and narrow widths. |
+| 20–85 min | Implement automatic collection, one short English scroll message and a pixel map showing north, the farmhouse, the chosen entrance and the explored path. Keep undiscovered defenses hidden. |
+| 85–120 min | Check each entrance, restart and night-two carry-over. Run the existing checks and a local rule-farmer run through theft, exit, morning and night two. Record the actual outcome. |
+| Optional third hour | Fix the largest issue observed, repeat the affected checks and prepare T14. If a fresh player is available, observe their run before offering directions. |
+
+Track the prototype in [issue 6](https://github.com/JarrettChen217/gnome-heist/issues/6). Use T14 to record the first destination, whether the player gets a gnome home, and the reason for their second route. Review the doghouse encounter and level progression after that observation.
+
 **New IDs [Hao, on agent proposal, 2026-11-19]:** T17 is the first playable art pass (`codex/night-farm-art-v1`) and T18 is the two-night local playtest slice (plan `docs/two-night-playtest.md`, committed on that branch in PR 5 on 2026-11-24). D1 to D3 are decisions for me on the Asana board. D1 [Hao, 2026-11-20]: nothing is deployed before delivery; the Worker and the checkpoint demo run on my machine, and the earlier internal deployment targets are dropped. D2 [Hao, 2026-11-20]: 20 paid model calls for T11b and C9 step 2, from the local Worker; more need a new approval. D3: the T8 rule details (open). Live task status and the re-dated internal targets (2026-11-19, on my request) are tracked in Asana ([setup](asana.md)); G1 is treated as approved for planning until the instructor says otherwise [Hao].
 
 **Local checkpoint scope [Hao, 2026-11-20 and Nov 22]:** run the game and Worker locally before delivery. The Nov 22 authorization covered calls to the official Anthropic API up to USD 20 for this work. The quiet-night smoke used one confirmed provider call. Course acceptance of a local recording remains unverified.
