@@ -28,14 +28,7 @@ At dawn, the farmer steps outside while the morning plan is being prepared. He c
 
 Press Enter after the closing caption to choose a second entrance. The previous theft, the route on the scroll and the changed defenses carry over. Dig up a remaining gnome and bring it through a hedge opening. The final screen counts gnomes brought home across both nights. R at the result screen starts a fresh playtest. By default the browser uses the deterministic rule farmer without making a morning API request. See the [two-night playtest plan](../docs/two-night-playtest.md).
 
-<details>
-<summary>Opening estate artwork and ImageGen prompt</summary>
-
-Codex used built-in ImageGen to create the [daytime estate](src/assets/estate-day.webp). The client animates the light and camera and aligns each illustrated hedge opening with its playable entrance.
-
-> Full-bleed landscape 4:3 illustration for a classic two-dimensional pixel art farm stealth game, a small secluded English garden estate in warm late-afternoon sunlight. Camera is directly overhead with slightly front-facing 2D pixel sprites as in Stardew Valley, NO perspective or converging lines, no horizon, no sky, no 3D effects. Compose the estate as one rectangular hedge enclosure: its outer hedge boundary spans approximately x=12%..88%, y=13%..88% of canvas. The quiet ochre stone farmhouse with dark shingled gable roof, chimney, green door and single small front window faces south and sits at top center INSIDE the hedge (house center x50%, y26%). Outer unlit window visible for a game engine glow overlay. THREE unobtrusive shadowy rabbit-sized openings under the leaves framed by intact hedge: left boundary 60% down the enclosure, right boundary 86% down the enclosure, bottom boundary near center. All sides surrounded by lush countryside, woodland trees around the outer edges, a few tiny wildflowers, layered bushes under late afternoon. Within the estate, keep broad gently patterned grass, a couple broad areas of ploughed earth, soft long tree shadows and old orchard foliage. No internal paths or corridors, no internal gates/obstacles/props, no gameplay clues. High-quality lovingly textured coherent intentional hand-placed pixel clusters at apparent 384x288 game resolution; warm luminous greens, honey and sage contrasting with olive and deep emerald. This is an in-game establishing view, one unified frame, not a poster or UI. No text, labels, map symbols, arrows, gnomes, people, animals, lamps, light sources, vehicles, fences or fountain.
-
-</details>
+The opening uses the playable farm’s ground, paths, hedges and vegetation. The camera and lighting change continuously as the view moves toward the selected entrance.
 
 <details>
 <summary>Morning art credits and ImageGen prompts</summary>

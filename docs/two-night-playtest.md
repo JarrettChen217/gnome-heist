@@ -15,7 +15,7 @@ Use the existing farm for both nights so players can recognize a changed defense
 
 ## Playtest script
 
-1. Start a fresh run and let the player choose an entrance. Let them make their first move before asking where they intend to go and what they expect to find. Record whether they watch or interrupt the entrance shot, their first destination and whether they interpret the farmhouse as a landmark or a goal.
+1. Start a fresh run and let the player choose an entrance. Let them make their first move before asking where they intend to go and what they expect to find. Record whether they watch or interrupt the entrance shot, their first destination and whether they interpret the farmhouse as a landmark or a goal. After they move, ask which features they recognized from the daylight view.
 2. Observe the scroll pickup, the first interaction and the return trip. Record whether they bring a gnome back unaided. If they ask for help or get stuck, record the obstacle and the first hint you give before continuing.
 3. After the morning, ask “Which way will you go tonight, and why?” Record their words, the defense that actually changed and whether they saw it on the farm or read about it in the morning panel.
 

@@ -59,7 +59,7 @@ Each morning the farmer, an AI agent, reads only the traces you left behind and 
 ### 5.2 Entries: dog holes
 
 - You always enter and leave through a dog hole in the outer hedge. Each dog hole is a fixed entry; v1 has three. [Hao]
-- On the first night, a 2D wide shot shows the estate in daylight. The light fades and a farmhouse window glows before the chosen hedge opening rustles. The camera moves in as the player crawls through cap first, then settles with the scroll in view. The sequence lasts about 3.1 seconds. Movement gives the player immediate control. Later nights use a short crawl at the normal zoom. [Hao, on agent proposal]
+- On the first night, a 2D wide shot shows the playable farm in daylight, with the same paths, hedges and bushes at every zoom. The light fades and a farmhouse window glows before the chosen hedge opening rustles. The camera moves in as the player crawls through cap first, then settles with the scroll in view. The sequence lasts about 3.1 seconds. Movement gives the player immediate control. Later nights use a short crawl at the normal zoom. [Hao, on agent proposal]
 - **Entries are safe zones.** The farmer may not place or move anything onto a dog hole or within 2 tiles of it; the validator rejects such a move. Danger can still reach the path beyond those 2 tiles, so being seen soon after you crawl in remains a real risk. [Hao, on agent proposal]
 - Standing in a dog hole and pressing the end-night control ends the night. You cannot be stranded inside with no stamina, because walking is free. [Hao]
 - To keep that promise, a re-lock that would cut you off from every dog hole is refused: the prompt says "You'd lock yourself in" and no stamina is spent. The check uses the route rules in Section 5.11. [Hao, on agent proposal]
@@ -297,3 +297,4 @@ The farmer sees a trace list, his own layout, his remaining stamina and money, a
 | 2026-11-24 | Prototype the first-night scroll pickup and pixel map at all three entrances, then observe orientation and the second-night route choice. | [Hao, on agent proposal] | Decided for the first prototype |
 | 2026-11-24 | Use the dog-hole entry shot to introduce the exit and the first scroll. Shorten it on later nights and let movement interrupt it. | [Hao, on agent proposal] | Decided |
 | 2026-11-24 | Begin the first night with a 2D daylight view of the estate, dusk and a lit farmhouse window. Push toward the chosen hole and join the existing crawl. | [Hao, on agent proposal] | Decided for the prototype |
+| 2026-11-24 | Use the playable map and its vegetation throughout the opening so players can recognize the same paths and hedges after dark. | [Hao] | Decided |

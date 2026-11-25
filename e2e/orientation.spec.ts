@@ -1,5 +1,12 @@
 // AI-use disclosure: Codex wrote these keyboard-driven T20 regression tests under Hao's direction.
+import { readFileSync } from 'node:fs';
+import { loadFarm, tilesOf } from '@gnome-heist/core';
 import { expect, test, type Page } from '@playwright/test';
+import { TILE_PX } from '../game/src/constants.ts';
+
+const farm = loadFarm(JSON.parse(readFileSync(new URL('../maps/farm.tmj', import.meta.url), 'utf8')));
+const grassTiles = new Set(farm.tallGrass.flatMap(tilesOf).map(({ x, y }) => y * farm.width + x));
+const vegetationTotal = farm.bushes.length + grassTiles.size;
 
 interface Tile {
   readonly x: number;
@@ -25,7 +32,19 @@ interface OrientationState {
   readonly movementHint: boolean;
   readonly footprints: number;
   readonly exploredTiles: number;
-  readonly camera: { readonly zoom: number };
+  readonly camera: {
+    readonly zoom: number;
+    readonly worldView: { readonly x: number; readonly y: number; readonly w: number; readonly h: number };
+  };
+  readonly entryVisuals: {
+    readonly terrainVisible: boolean;
+    readonly vegetationVisible: number;
+    readonly vegetationTotal: number;
+    readonly sensitiveVisible: number;
+    readonly sensitiveTotal: number;
+    readonly dangerVisible: boolean;
+    readonly fogAlpha: number;
+  };
   readonly player: Tile;
   readonly playerVisible: boolean;
   readonly fieldMap: FieldMap | null;
@@ -51,11 +70,11 @@ async function waitForControl(page: Page, timeout = 6_000): Promise<void> {
   await expect.poll(async () => (await debug(page))?.entering, { timeout, intervals: [50] }).toBe(false);
 }
 
-async function readEntryBeat(page: Page, beat: NonNullable<OrientationState['entryBeat']>): Promise<OrientationState> {
-  const frame = await page.waitForFunction((beat) => {
+async function readEntryBeat(page: Page, beat: NonNullable<OrientationState['entryBeat']>, minElapsed = 0): Promise<OrientationState> {
+  const frame = await page.waitForFunction(({ beat, minElapsed }) => {
     const state = (window as unknown as { __gnomeDebug?: OrientationState }).__gnomeDebug;
-    return state?.entryBeat === beat ? state : null;
-  }, beat, { timeout: 5_000 });
+    return state?.entryBeat === beat && (state.entryElapsed ?? 0) >= minElapsed ? state : null;
+  }, { beat, minElapsed }, { timeout: 5_000 });
   const state = await frame.jsonValue() as OrientationState;
   await frame.dispose();
   return state;
@@ -101,7 +120,7 @@ const entrances = [
 ] as const;
 
 for (const entrance of entrances) {
-  test(`the ${entrance.name} reveal leaves the scroll on the ground at ${entrance.width}px`, async ({ page }) => {
+  test(`the ${entrance.name} reveal frames the live farm and leaves the scroll on the ground at ${entrance.width}px`, async ({ page }) => {
     await page.setViewportSize({ width: entrance.width, height: entrance.height });
     await page.goto('/');
     await chooseEntrance(page, entrance.digit);
@@ -109,7 +128,7 @@ for (const entrance of entrances) {
     const estate = await readEntryBeat(page, 'estate');
     const dusk = await readEntryBeat(page, 'dusk');
     const push = await readEntryBeat(page, 'push');
-    const crawl = await readEntryBeat(page, 'crawl');
+    const crawl = await readEntryBeat(page, 'crawl', 2_200);
     for (const frame of [estate, dusk, push, crawl]) {
       expect(frame).toMatchObject({
         entering: true, movementHint: false, player: spawn, footprints: 0, exploredTiles: 0, fieldMap: null,
@@ -118,6 +137,26 @@ for (const entrance of entrances) {
     expect(estate.playerVisible).toBe(false);
     expect(dusk.playerVisible).toBe(false);
     expect(crawl.playerVisible).toBe(true);
+    for (const frame of [estate, dusk, push]) {
+      expect(frame.entryVisuals).toMatchObject({
+        terrainVisible: true,
+        vegetationVisible: vegetationTotal,
+        vegetationTotal,
+        sensitiveVisible: 0,
+        dangerVisible: false,
+        fogAlpha: 0,
+      });
+      expect(frame.entryVisuals.sensitiveTotal).toBeGreaterThan(0);
+      expect(frame.scrollVisible).toBe(false);
+    }
+    const wide = estate.camera.worldView;
+    expect(wide.x).toBeLessThanOrEqual(1);
+    expect(wide.y).toBeLessThanOrEqual(1);
+    expect(wide.x + wide.w).toBeGreaterThanOrEqual(farm.width * TILE_PX - 1);
+    expect(wide.y + wide.h).toBeGreaterThanOrEqual(farm.height * TILE_PX - 1);
+    const close = crawl.camera.worldView;
+    expect(Math.abs(close.x + close.w / 2 - spawn.x * TILE_PX)).toBeLessThan(1);
+    expect(Math.abs(close.y + close.h / 2 - spawn.y * TILE_PX)).toBeLessThan(1);
     expect(crawl.camera.zoom).toBeGreaterThan(estate.camera.zoom);
     await waitForControl(page);
     const playable = (await debug(page))!;

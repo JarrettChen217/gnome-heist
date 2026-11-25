@@ -5,13 +5,6 @@ import { TILE_PX } from './constants.ts';
 
 export const ESTATE_TIMING = { dusk: 650, push: 1300, crawl: 2100, end: 3100 } as const;
 
-// Coordinates on the 1448 × 1086 source painting, before alignment with the gameplay camera.
-const PAINTED_HOLES = {
-  west: { x: 184 / 1448, y: 667 / 1086 },
-  east: { x: 1263 / 1448, y: 861 / 1086 },
-  south: { x: 693 / 1448, y: 936 / 1086 },
-};
-
 function smoothstep(value: number): number {
   const t = Phaser.Math.Clamp(value, 0, 1);
   return t * t * (3 - 2 * t);
@@ -19,9 +12,8 @@ function smoothstep(value: number): number {
 
 /** Presentation only: the authoritative player stays on the entrance tile. */
 export class EntryShot {
-  private readonly estateBackdrop: Phaser.GameObjects.Graphics;
-  private readonly estate: Phaser.GameObjects.Image;
-  private readonly estateLight: Phaser.GameObjects.Graphics;
+  private readonly daylight: Phaser.GameObjects.Graphics;
+  private readonly window: Phaser.GameObjects.Graphics;
   private readonly exterior: Phaser.GameObjects.Graphics;
   private readonly leaves: Phaser.GameObjects.Graphics;
   private bounds: Phaser.Geom.Rectangle | null = null;
@@ -30,9 +22,8 @@ export class EntryShot {
   private firstNight = false;
 
   constructor(private readonly scene: Phaser.Scene, private readonly farm: FarmDef) {
-    this.estateBackdrop = scene.add.graphics().setDepth(100001).setVisible(false);
-    this.estate = scene.add.image(0, 0, 'estate-day').setOrigin(0).setDepth(100001).setVisible(false);
-    this.estateLight = scene.add.graphics().setDepth(100001).setVisible(false);
+    this.daylight = scene.add.graphics().setDepth(99990).setBlendMode(Phaser.BlendModes.ADD).setVisible(false);
+    this.window = scene.add.graphics().setDepth(99991).setVisible(false);
     this.exterior = scene.add.graphics().setDepth(-1000).setVisible(false);
     this.leaves = scene.add.graphics().setDepth(100003).setVisible(false);
   }
@@ -83,7 +74,6 @@ export class EntryShot {
 
     // Two small leaf tremors, drawn over the hole and never written to game state.
     const g = this.leaves.clear().setVisible(true);
-    const painted = inward.x > 0 ? PAINTED_HOLES.west : inward.x < 0 ? PAINTED_HOLES.east : PAINTED_HOLES.south;
     const width = this.farm.width * TILE_PX;
     const height = this.farm.height * TILE_PX;
     const push = smoothstep((elapsedMs - ESTATE_TIMING.push) / (ESTATE_TIMING.crawl - ESTATE_TIMING.push));
@@ -91,8 +81,8 @@ export class EntryShot {
     const rustle = this.firstNight ? (elapsedMs - 1110) / 680 : t;
     const pulse = Math.max(0, 1 - Math.abs(rustle - 0.18) / 0.1, 1 - Math.abs(rustle - 0.43) / 0.1);
     if (pulse > 0) {
-      const leafX = this.firstNight ? Phaser.Math.Linear(painted.x * width, cx, push) : cx;
-      const leafY = this.firstNight ? Phaser.Math.Linear(painted.y * height, cy, push) : cy;
+      const leafX = cx;
+      const leafY = cy;
       for (let i = 0; i < 5; i++) {
         const x = leafX + (i - 2) * 4 + Math.sin(elapsedMs / 45 + i) * 2 * pulse;
         const y = leafY - 7 + (i % 2) * 4 - pulse * 3;
@@ -101,9 +91,8 @@ export class EntryShot {
     }
     if (this.firstNight && this.bounds) {
       const settle = smoothstep((elapsedMs - 2600) / 500);
-      const fade = 1 - smoothstep((elapsedMs - 1950) / 180);
       const dusk = smoothstep((elapsedMs - ESTATE_TIMING.dusk) / (ESTATE_TIMING.push - ESTATE_TIMING.dusk));
-      const windowLight = smoothstep((elapsedMs - 1000) / 170) * fade;
+      const windowLight = smoothstep((elapsedMs - 1000) / 170);
       const wideZoom = Math.min(this.scene.scale.width / width, this.scene.scale.height / height) * 0.94;
       const closeZoom = normalZoom * 1.6;
       const zoom = Phaser.Math.Linear(Phaser.Math.Linear(wideZoom, closeZoom, push), normalZoom, settle);
@@ -115,19 +104,20 @@ export class EntryShot {
       const closeX = Phaser.Math.Linear(width / 2, cx, push);
       const closeY = Phaser.Math.Linear(height / 2, cy, push);
       cam.setZoom(zoom).centerOn(Phaser.Math.Linear(closeX, targetX, settle), Phaser.Math.Linear(closeY, targetY, settle));
-      const backdrop = this.estateBackdrop.clear().setVisible(fade > 0);
-      backdrop.fillStyle(0x101a22, fade).fillRect(-1000, -1000, width + 2000, height + 2000);
-      backdrop.fillStyle(0x101520, 0.6 * dusk * fade).fillRect(-1000, -1000, width + 2000, height + 2000);
-      // Register the selected painted opening to its real tile as the camera approaches.
-      const offsetX = (cx - painted.x * width) * push;
-      const offsetY = (cy - painted.y * height) * push;
-      this.estate.setPosition(offsetX, offsetY).setDisplaySize(width, height).setAlpha(fade).setVisible(fade > 0);
-      const illustration = this.estateLight.clear().setVisible(fade > 0);
-      // Cool the illustrated farm toward night, then light the farmhouse window.
-      illustration.fillStyle(0x14213a, 0.67 * dusk * fade).fillRect(offsetX, offsetY, width, height);
-      illustration.fillStyle(0xffd783, windowLight).fillRect(offsetX + width * 792 / 1448, offsetY + height * 264 / 1086, width * 32 / 1448, height * 38 / 1086);
-      illustration.fillStyle(0x725044, windowLight).fillRect(offsetX + width * 806 / 1448, offsetY + height * 264 / 1086, 1, height * 38 / 1086)
-        .fillRect(offsetX + width * 792 / 1448, offsetY + height * 282 / 1086, width * 32 / 1448, 1);
+      // Add a muted green-gold light while retaining the underlying pixel contrast.
+      this.daylight.clear().setVisible(true).fillStyle(0x9aab65, 0.48 * (1 - dusk))
+        .fillRect(0, 0, width, height);
+      // The farmhouse art occupies rows 1–3; make-night-art.mjs puts its pane
+      // at eaves + 2, centered on the windowSight column.
+      const sight = this.farm.windowSight[0];
+      const windowX = sight ? (sight.rect.x + 0.5) * TILE_PX : width / 2;
+      const windowY = 3 * TILE_PX + 5;
+      const pane = this.window.clear().setVisible(true);
+      const overview = 1 - smoothstep((elapsedMs - 1900) / 700);
+      pane.fillStyle(0x222f3b, (1 - windowLight) * overview).fillRect(windowX - 4, windowY, 8, 5);
+      pane.fillStyle(0xe6a963, windowLight * overview).fillRect(windowX - 4, windowY, 8, 5);
+      pane.fillStyle(0xffd98e, windowLight * overview).fillRect(windowX - 3, windowY, 3, 2).fillRect(windowX + 1, windowY + 1, 2, 2);
+      pane.fillStyle(0x55404a, overview).fillRect(windowX, windowY - 1, 1, 7).fillRect(windowX - 4, windowY + 2, 8, 1);
 
     }
   }
@@ -135,9 +125,8 @@ export class EntryShot {
   clear(): void {
     this.leaves.clear().setVisible(false);
     this.exterior.clear().setVisible(false);
-    this.estateBackdrop.clear().setVisible(false);
-    this.estate.setVisible(false);
-    this.estateLight.clear().setVisible(false);
+    this.daylight.clear().setVisible(false);
+    this.window.clear().setVisible(false);
     if (this.player) this.player.setCrop().setScale(1);
     if (this.bounds) {
       this.scene.cameras.main.setZoom(this.zoom).setBounds(this.bounds.x, this.bounds.y, this.bounds.width, this.bounds.height);

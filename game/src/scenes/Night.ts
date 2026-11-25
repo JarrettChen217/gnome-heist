@@ -1,4 +1,4 @@
-// AI-use disclosure: Claude (Claude Code) wrote this file under my direction for M0 (T7) and wired in the T8 night rules. Codex sequenced the farmer’s morning from the committed plan and implemented the first-night estate sequence and entry camera handoff under Hao’s direction.
+// AI-use disclosure: Claude (Claude Code) wrote this file under my direction for M0 (T7) and wired in the T8 night rules. Codex sequenced the farmer’s morning from the committed plan and implemented the first-night estate sequence on the playable map and entry camera handoff under Hao’s direction.
 // Codex fixed rectangular fence placement under Hao's direction after the M0 review.
 // Codex integrated directional player art and walk animation under Hao's direction.
 // Codex implemented tall grass rendering and bush feedback under Hao's direction.
@@ -19,6 +19,7 @@ import type { PromptText } from '../text.ts';
 /** One drawn farm object. `key` gives its texture from the night state; the ghost keeps the last texture seen. */
 interface Prop {
   readonly tiles: readonly Tile[];
+  readonly overview: 'structure' | 'vegetation' | 'sensitive';
   readonly live: Phaser.GameObjects.Image;
   readonly ghost: Phaser.GameObjects.Image;
   readonly tag: Phaser.GameObjects.Text | null;
@@ -102,6 +103,7 @@ export class NightScene extends Phaser.Scene {
   private trampledLeaves!: Phaser.GameObjects.Graphics;
   private printsLayer!: Phaser.GameObjects.Graphics;
   private props: Prop[] = [];
+  private terrain: (Phaser.Tilemaps.TilemapLayer | Phaser.Tilemaps.TilemapGPULayer)[] = [];
   private bushSprites = new Map<string, Phaser.GameObjects.Image>();
   private occupiedBush: FarmObject | undefined;
   private cover: Cover = 'none';
@@ -145,8 +147,10 @@ export class NightScene extends Phaser.Scene {
     const map = this.make.tilemap({ key: 'farm' });
     const tileset = map.addTilesetImage('nightFarm', 'nightFarm');
     if (tileset === null) throw new Error('tileset "nightFarm" missing from the map');
-    map.createLayer('ground', tileset, 0, 0)?.setDepth(0);
-    map.createLayer('decoration', tileset, 0, 0)?.setDepth(1);
+    this.terrain = [
+      map.createLayer('ground', tileset, 0, 0)?.setDepth(0),
+      map.createLayer('decoration', tileset, 0, 0)?.setDepth(1),
+    ].filter((layer) => layer !== undefined);
     this.dangerLayer = this.add.graphics().setDepth(2);
     // Keep the danger border legible over tall leaves, under the fog and the exposed cap.
     // Bent stems are the visible surface of a soft-ground footprint in dense foliage.
@@ -311,7 +315,12 @@ export class NightScene extends Phaser.Scene {
   private addProps(): void {
     const f = this.farm;
     const layout = this.session.farmer.layout;
-    const add = (o: FarmObject, key: (n: NightState) => string | null, { overlay = false, showTag = true } = {}) => {
+    const add = (
+      o: FarmObject,
+      key: (n: NightState) => string | null,
+      overview: Prop['overview'],
+      { overlay = false, showTag = true } = {},
+    ) => {
       // Feet at the bottom edge of the object's tiles.
       const x = (o.rect.x + o.rect.w / 2) * TILE_PX;
       const feetY = (o.rect.y + o.rect.h) * TILE_PX;
@@ -330,14 +339,14 @@ export class NightScene extends Phaser.Scene {
             .setDepth(SEEN_TAG_DEPTH)
             .setVisible(false)
         : null;
-      this.props.push({ tiles: tilesOf(o), live, ghost, tag, key });
+      this.props.push({ tiles: tilesOf(o), overview, live, ghost, tag, key });
       return live;
     };
     const has = (kind: string, slot: string) => layout.some((d) => d.kind === kind && d.slot === slot);
-    f.lampPosts.forEach((o) => add(o, () => (has('lamp', o.id) ? 'lampPost' : 'lampPostDark')));
-    f.doghouseSpots.forEach((o) => add(o, () => (has('doghouse', o.id) ? 'doghouse' : 'doghouseSpot')));
-    f.pedestals.forEach((o) => add(o, (n) => (n.world.gnomes.includes(o.id) ? 'pedestal' : 'pedestalEmpty')));
-    f.bushes.forEach((o) => this.bushSprites.set(o.id, add(o, () => 'bush', { showTag: false })));
+    f.lampPosts.forEach((o) => add(o, () => (has('lamp', o.id) ? 'lampPost' : 'lampPostDark'), 'sensitive'));
+    f.doghouseSpots.forEach((o) => add(o, () => (has('doghouse', o.id) ? 'doghouse' : 'doghouseSpot'), 'sensitive'));
+    f.pedestals.forEach((o) => add(o, (n) => (n.world.gnomes.includes(o.id) ? 'pedestal' : 'pedestalEmpty'), 'sensitive'));
+    f.bushes.forEach((o) => this.bushSprites.set(o.id, add(o, () => 'bush', 'vegetation', { showTag: false })));
     const grassTiles = new Set<number>();
     for (const patch of f.tallGrass) {
       for (const tile of tilesOf(patch)) {
@@ -346,16 +355,16 @@ export class NightScene extends Phaser.Scene {
         grassTiles.add(index);
         const texture = GRASS_TEXTURES[(tile.x + tile.y * 2) % GRASS_TEXTURES.length]!;
         // Each tile sorts and enters fog independently, including tiles in the same patch.
-        add({ id: patch.id, rect: { ...tile, w: 1, h: 1 } }, () => texture, { showTag: false });
+        add({ id: patch.id, rect: { ...tile, w: 1, h: 1 } }, () => texture, 'vegetation', { showTag: false });
       }
     }
     f.gates.forEach((o) => {
       const gate = (n: NightState) => n.world.gates.find((g) => g.id === o.id)!;
-      add(o, (n) => (gate(n).open ? 'gateOpen' : 'gate'));
-      add(o, (n) => (gate(n).padlock === 'none' ? null : gate(n).padlock === 'locked' ? 'padlock' : 'padlockOpen'), { overlay: true });
+      add(o, (n) => (gate(n).open ? 'gateOpen' : 'gate'), 'structure');
+      add(o, (n) => (gate(n).padlock === 'none' ? null : gate(n).padlock === 'locked' ? 'padlock' : 'padlockOpen'), 'sensitive', { overlay: true });
     });
     f.fences.forEach((o) =>
-      fenceSegments(o).forEach((seg) => add(seg, (n) => (n.world.fenceGaps.some((g) => g.x === seg.rect.x && g.y === seg.rect.y) ? 'fenceGap' : 'fence'))),
+      fenceSegments(o).forEach((seg) => add(seg, (n) => (n.world.fenceGaps.some((g) => g.x === seg.rect.x && g.y === seg.rect.y) ? 'fenceGap' : 'fence'), 'structure')),
     );
   }
 
@@ -612,6 +621,15 @@ export class NightScene extends Phaser.Scene {
   private drawFogAndProps(): void {
     const { width: W, height: H } = this.farm;
     const visible = this.phase === 'choose' ? new Array<boolean>(W * H).fill(false) : visibleTiles(this.farm, tileOf(this.night.player));
+    const entry = this.entryCinematic;
+    const reveal = entry && this.night.night === 1
+      ? Phaser.Math.Clamp((entry.elapsed - ESTATE_TIMING.crawl) / 500, 0, 1)
+      : 1;
+    const fogAlpha = reveal * reveal * (3 - 2 * reveal);
+    // Terrain and public props are the actual gameplay objects. Reveal sensitive props only inside spawn sight.
+    const overview = fogAlpha < 1;
+    this.dangerLayer.setVisible(!overview);
+    this.dangerOutline.setVisible(!overview);
     if (!this.entryCinematic) {
       visible.forEach((v, i) => {
         if (v) this.explored[i] = 1;
@@ -619,8 +637,8 @@ export class NightScene extends Phaser.Scene {
     }
     this.scroll.setVisible(this.phase === 'night' && (!this.entryCinematic || this.entryBeat() === 'crawl') &&
       this.scrollTile !== null && visible[this.scrollTile.y * W + this.scrollTile.x] === true);
-    this.fog.clear();
-    for (let i = 0; i < W * H; i++) {
+    this.fog.clear().setAlpha(fogAlpha);
+    for (let i = 0; fogAlpha > 0 && i < W * H; i++) {
       if (visible[i]) continue;
       this.fog.fillStyle(0x05060a, this.explored[i] ? 0.6 : 1).fillRect((i % W) * TILE_PX, Math.floor(i / W) * TILE_PX, TILE_PX, TILE_PX);
     }
@@ -629,10 +647,12 @@ export class NightScene extends Phaser.Scene {
       const seen = prop.tiles.some((t) => visible[t.y * W + t.x]);
       const known = prop.tiles.some((t) => this.explored[t.y * W + t.x]);
       if (key !== null && prop.live.texture.key !== key) prop.live.setTexture(key);
-      prop.live.setVisible(seen && key !== null);
+      const sensitive = prop.overview === 'sensitive';
+      const showLive = sensitive ? seen && fogAlpha > 0 : seen || overview;
+      prop.live.setVisible(showLive && key !== null).setAlpha(sensitive ? fogAlpha : 1);
       if (seen && key !== null && prop.ghost.texture.key !== key) prop.ghost.setTexture(key);
-      prop.ghost.setVisible(!seen && known && key !== null);
-      prop.tag?.setVisible(!seen && known && key !== null);
+      prop.ghost.setVisible(!overview && !seen && known && key !== null);
+      prop.tag?.setVisible(!overview && !seen && known && key !== null);
     }
   }
 
@@ -696,6 +716,8 @@ export class NightScene extends Phaser.Scene {
   /** Read-only snapshot for automated checks in the browser (window.__gnomeDebug). */
   private publishDebug(hud: NightHudState): void {
     const cam = this.cameras.main;
+    const vegetation = this.props.filter((prop) => prop.overview === 'vegetation');
+    const sensitive = this.props.filter((prop) => prop.overview === 'sensitive');
     (window as unknown as { __gnomeDebug: unknown }).__gnomeDebug = {
       mapVersion: this.farm.mapVersion,
       phase: this.phase,
@@ -706,6 +728,15 @@ export class NightScene extends Phaser.Scene {
       entryElapsed: this.entryCinematic?.elapsed ?? null,
       entryBeat: this.entryBeat(),
       exploredTiles: this.explored.reduce((count, tile) => count + tile, 0),
+      entryVisuals: {
+        terrainVisible: this.terrain.length === 2 && this.terrain.every((layer) => layer.visible),
+        vegetationVisible: vegetation.filter((prop) => prop.live.visible).length,
+        vegetationTotal: vegetation.length,
+        sensitiveVisible: sensitive.filter((prop) => prop.live.visible || prop.ghost.visible).length,
+        sensitiveTotal: sensitive.length,
+        dangerVisible: this.dangerLayer.visible || this.dangerOutline.visible,
+        fogAlpha: this.fog.alpha,
+      },
       movementHint: hud.showMovementHint,
       fieldMap: hud.fieldMap ? {
         ...hud.fieldMap,
