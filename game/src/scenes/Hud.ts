@@ -18,7 +18,7 @@ export class HudScene extends Phaser.Scene {
   private status!: Phaser.GameObjects.Text;
   private prompt!: Phaser.GameObjects.Text;
   private fieldMap!: Phaser.GameObjects.Graphics;
-  private mapKey!: Phaser.GameObjects.Text;
+  private mapLabels!: Phaser.GameObjects.Text[];
   private scrollNote!: Phaser.GameObjects.Text;
   private cap!: Phaser.GameObjects.Graphics;
   private letter!: Phaser.GameObjects.Text;
@@ -37,7 +37,9 @@ export class HudScene extends Phaser.Scene {
   create(): void {
     this.status = this.add.text(8, 8, '', style);
     this.fieldMap = this.add.graphics().setDepth(1);
-    this.mapKey = this.add.text(0, 0, 'N ↑     House    Entry    You', { ...style, fontSize: '10px' });
+    this.mapLabels = ['N ↑', 'House', 'Entry', 'You'].map((label, index) =>
+      this.add.text(0, 0, label, { ...style, fontSize: '11px', padding: { left: index === 0 ? 5 : 15, right: 4, top: 3, bottom: 3 } }),
+    );
     this.scrollNote = this.add.text(0, 0, 'Dig up a garden gnome. The farmhouse is north. Escape through a hedge opening.', { ...style, color: '#382a1c', backgroundColor: '#ead6a4', padding: { x: 8, y: 6 }, fontSize: '13px', lineSpacing: 3 });
     this.prompt = this.add.text(0, 0, '', { ...style, fontSize: '14px', align: 'center' }).setOrigin(0.5, 1);
     this.cap = this.add.graphics();
@@ -101,7 +103,7 @@ export class HudScene extends Phaser.Scene {
     const map = s.fieldMap;
     const visible = s.phase === 'night' && !s.paused && !s.showMovementHint;
     this.fieldMap.clear().setVisible(visible && map !== null);
-    this.mapKey.setVisible(visible && map !== null);
+    for (const label of this.mapLabels) label.setVisible(visible && map !== null);
     this.scrollNote.setVisible(visible && s.showScrollNote);
     if (!visible) return;
 
@@ -150,12 +152,14 @@ export class HudScene extends Phaser.Scene {
       entryIcon(Math.round(entry.x), Math.round(entry.y));
       playerIcon(Math.round(player.x), Math.round(player.y));
       bottom = top + mapHeight + 12;
-      this.mapKey.setPosition(left, bottom + 2);
-      const keyY = bottom + 11;
-      houseIcon(left + 30, keyY);
-      entryIcon(left + 84, keyY);
-      playerIcon(left + 138, keyY);
-      bottom += this.mapKey.height + 2;
+      const icons = [undefined, houseIcon, entryIcon, playerIcon];
+      let labelX = left;
+      for (const [index, label] of this.mapLabels.entries()) {
+        label.setPosition(labelX, bottom + 2);
+        icons[index]?.(labelX + 7, label.y + Math.floor(label.height / 2));
+        labelX += label.width;
+      }
+      bottom += this.mapLabels[0]!.height + 2;
     }
     this.scrollNote.setPosition(left, bottom + 5);
   }
