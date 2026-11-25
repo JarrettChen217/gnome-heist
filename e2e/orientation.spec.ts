@@ -20,18 +20,21 @@ interface OrientationState {
   readonly night: number;
   readonly entering: boolean;
   readonly entryElapsed: number | null;
+  readonly entryBeat: 'estate' | 'dusk' | 'push' | 'crawl' | null;
   readonly paused: boolean;
   readonly movementHint: boolean;
   readonly footprints: number;
+  readonly exploredTiles: number;
   readonly camera: { readonly zoom: number };
   readonly player: Tile;
+  readonly playerVisible: boolean;
   readonly fieldMap: FieldMap | null;
   readonly scrollTile: Tile | null;
   readonly scrollVisible: boolean;
   readonly showScrollNote: boolean;
   readonly carrying: string | null;
   readonly interaction: { readonly action: string; readonly target: string } | null;
-  readonly result: { readonly gnomeTaken: string | null } | null;
+  readonly result: { readonly gnomeTaken: string | null; readonly traces: readonly unknown[] } | null;
   readonly world: { readonly gnomes: readonly string[] };
   readonly morningSource: string | null;
   readonly morningBeat: { readonly stage: string; readonly trace: { readonly id: string } | null } | null;
@@ -44,8 +47,18 @@ const debug = (page: Page) =>
 
 const tap = (page: Page, key: string) => page.keyboard.press(key, { delay: 100 });
 
-async function waitForControl(page: Page, timeout = 4_000): Promise<void> {
+async function waitForControl(page: Page, timeout = 6_000): Promise<void> {
   await expect.poll(async () => (await debug(page))?.entering, { timeout, intervals: [50] }).toBe(false);
+}
+
+async function readEntryBeat(page: Page, beat: NonNullable<OrientationState['entryBeat']>): Promise<OrientationState> {
+  const frame = await page.waitForFunction((beat) => {
+    const state = (window as unknown as { __gnomeDebug?: OrientationState }).__gnomeDebug;
+    return state?.entryBeat === beat ? state : null;
+  }, beat, { timeout: 5_000 });
+  const state = await frame.jsonValue() as OrientationState;
+  await frame.dispose();
+  return state;
 }
 
 async function chooseEntrance(page: Page, digit: number): Promise<void> {
@@ -92,21 +105,27 @@ for (const entrance of entrances) {
     await page.setViewportSize({ width: entrance.width, height: entrance.height });
     await page.goto('/');
     await chooseEntrance(page, entrance.digit);
-    const reveal = (await debug(page))!;
     const spawn = { x: entrance.entry.x + 0.5, y: entrance.entry.y + 0.5 };
-    expect(reveal).toMatchObject({ entering: true, movementHint: false, player: spawn, footprints: 0 });
-    const midShot = await page.waitForFunction(() => {
-      const state = (window as unknown as { __gnomeDebug?: OrientationState }).__gnomeDebug;
-      return state?.entering && (state.entryElapsed ?? 0) >= 750 ? state : null;
-    });
-    expect(await midShot.jsonValue()).toMatchObject({ player: spawn, footprints: 0, fieldMap: null });
-    await midShot.dispose();
+    const estate = await readEntryBeat(page, 'estate');
+    const dusk = await readEntryBeat(page, 'dusk');
+    const push = await readEntryBeat(page, 'push');
+    const crawl = await readEntryBeat(page, 'crawl');
+    for (const frame of [estate, dusk, push, crawl]) {
+      expect(frame).toMatchObject({
+        entering: true, movementHint: false, player: spawn, footprints: 0, exploredTiles: 0, fieldMap: null,
+      });
+    }
+    expect(estate.playerVisible).toBe(false);
+    expect(dusk.playerVisible).toBe(false);
+    expect(crawl.playerVisible).toBe(true);
+    expect(crawl.camera.zoom).toBeGreaterThan(estate.camera.zoom);
     await waitForControl(page);
     const playable = (await debug(page))!;
-    expect(reveal.camera.zoom).toBeGreaterThan(playable.camera.zoom);
+    expect(estate.camera.zoom).toBeLessThan(playable.camera.zoom);
     expect(playable).toMatchObject({
       phase: 'night',
       player: spawn,
+      playerVisible: true,
       carrying: null,
       fieldMap: null,
       scrollTile: entrance.scroll,
@@ -125,14 +144,18 @@ for (const entrance of entrances) {
     expect(map.visited).toHaveLength(map.width * map.height);
     expect(map.visited[map.entry.y * map.width + map.entry.x]).toBe(1);
     expect(map.visited[map.player.y * map.width + map.player.x]).toBe(1);
-    expect(map.visited[2 * map.width + 20]).toBe(0);
+    expect(playable.exploredTiles).toBeGreaterThan(0);
+    expect(playable.exploredTiles).toBeLessThan(map.width * map.height);
+    const visited = map.visited.flatMap((seen, index) => seen === 1 ? [{ x: index % map.width, y: Math.floor(index / map.width) }] : []);
+    const between = (value: number, start: number, end: number) => value >= Math.min(start, end) && value <= Math.max(start, end);
+    expect(visited.every((tile) => between(tile.x, entrance.entry.x, entrance.scroll.x) && between(tile.y, entrance.entry.y, entrance.scroll.y))).toBe(true);
   });
 }
 
-test('the first movement key takes over the entry shot and moves the gardener', async ({ page }) => {
+test('the first movement key takes over the estate overview and moves the gardener', async ({ page }) => {
   await page.goto('/');
   await chooseEntrance(page, 1);
-  expect((await debug(page))?.entering).toBe(true);
+  expect((await debug(page))?.entryBeat).toBe('estate');
   await page.keyboard.down('ArrowRight');
   try {
     await page.waitForFunction(() => {
@@ -143,6 +166,16 @@ test('the first movement key takes over the entry shot and moves the gardener', 
     await page.keyboard.up('ArrowRight');
   }
   expect((await debug(page))?.movementHint).toBe(false);
+});
+
+test('interact takes over the push to the entrance and ends a quiet night', async ({ page }) => {
+  await page.goto('/');
+  await chooseEntrance(page, 2);
+  await readEntryBeat(page, 'push');
+  await tap(page, 'KeyE');
+  await expect.poll(() => debug(page)).toMatchObject({
+    phase: 'ended', entering: false, entryBeat: null, result: { gnomeTaken: null, traces: [] },
+  });
 });
 
 test('pausing an entry shot allows a clean restart with a different entrance', async ({ page }) => {
@@ -170,6 +203,7 @@ test('pausing an entry shot allows a clean restart with a different entrance', a
 });
 
 test('restart restores the scroll, then two entrances lead to two banked gnomes and a fresh replay', async ({ page }) => {
+  test.setTimeout(45_000);
   await page.goto('/');
   await chooseEntrance(page, 1);
   await walkTo(page, 'ArrowRight', 'x', 1.5, 1);
@@ -201,7 +235,7 @@ test('restart restores the scroll, then two entrances lead to two banked gnomes 
   await tap(page, 'Enter');
   await chooseEntrance(page, 2);
   const secondReveal = (await debug(page))!;
-  expect(secondReveal).toMatchObject({ entering: true, footprints: 0 });
+  expect(secondReveal).toMatchObject({ entering: true, entryBeat: 'crawl', footprints: 0, exploredTiles: 0 });
   await waitForControl(page, 1_000);
   const second = (await debug(page))!;
   expect(second.camera.zoom).toBe(secondReveal.camera.zoom);

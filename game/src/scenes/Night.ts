@@ -1,4 +1,4 @@
-// AI-use disclosure: Claude (Claude Code) wrote this file under my direction for M0 (T7) and wired in the T8 night rules. Codex sequenced the farmer’s morning from the committed plan and implemented the entry camera handoff under Hao’s direction.
+// AI-use disclosure: Claude (Claude Code) wrote this file under my direction for M0 (T7) and wired in the T8 night rules. Codex sequenced the farmer’s morning from the committed plan and implemented the first-night estate sequence and entry camera handoff under Hao’s direction.
 // Codex fixed rectangular fence placement under Hao's direction after the M0 review.
 // Codex integrated directional player art and walk animation under Hao's direction.
 // Codex implemented tall grass rendering and bush feedback under Hao's direction.
@@ -8,7 +8,7 @@ import * as Phaser from 'phaser';
 import { PLAYER_STAMINA, advanceLocalMorning, bushAt, currentInteraction, endNight, loadFarm, newSession, prepareMorning, startNight, tallGrassAt, tick, tileOf, tilesOf, visibleTiles } from '@gnome-heist/core';
 import type { FarmerContext, FarmDef, FarmObject, Interaction, NightEnd, NightResult, NightState, SessionState, Tile } from '@gnome-heist/core';
 import { MIN_CAMERA_ZOOM, STEP_SECONDS, TILE_PX } from '../constants.ts';
-import { EntryShot } from '../entryShot.ts';
+import { EntryShot, ESTATE_TIMING } from '../entryShot.ts';
 import { fenceSegments } from '../fence.ts';
 import { MorningClient } from '../morningClient.ts';
 import { cueAt, morningCues, MORNING_OPENING_MS, openingBeat } from '../morningSequence.ts';
@@ -81,6 +81,7 @@ const SCROLL_BY_ENTRY: Readonly<Partial<Record<string, Tile>>> = {
 };
 const FARMHOUSE: Tile = { x: 12, y: 2 };
 const SCROLL_NOTE_SECONDS = 7;
+const RETURN_ENTRY_MS = 400;
 
 interface FieldMemory {
   visited: Uint8Array;
@@ -154,7 +155,7 @@ export class NightScene extends Phaser.Scene {
     this.printsLayer = this.add.graphics().setDepth(3);
 
     this.player = this.add.sprite(0, 0, 'player-art', 0).setOrigin(0.5, 1).setVisible(false);
-    this.entryShot = new EntryShot(this);
+    this.entryShot = new EntryShot(this, this.farm);
     this.scroll = this.add.graphics().setVisible(false);
     // A dark outline, rolled ends, parchment and a seal remain legible at integer zoom.
     this.scroll.fillStyle(0x262131).fillRect(-6, -5, 12, 9).fillRect(-5, -6, 10, 11);
@@ -268,7 +269,7 @@ export class NightScene extends Phaser.Scene {
       : x === this.farm.width - 1 ? { x: -1, y: 0 }
       : { x: 0, y: y === 0 ? 1 : -1 };
     this.entryFacing = inward;
-    this.entryCinematic = { inward, duration: this.night.night === 1 ? 1500 : 400, elapsed: 0 };
+    this.entryCinematic = { inward, duration: this.night.night === 1 ? ESTATE_TIMING.end : RETURN_ENTRY_MS, elapsed: 0 };
     // Clear key presses queued while the entrance picker was open.
     for (const key of Object.values(this.keys)) Phaser.Input.Keyboard.JustDown(key);
     this.requireRelease = this.keys['e']!.isDown;
@@ -278,7 +279,6 @@ export class NightScene extends Phaser.Scene {
       const y = (this.scrollTile.y + 0.5) * TILE_PX;
       this.scroll.setPosition(x, y).setDepth(depthOf(y));
     }
-    this.updateFieldMemory();
     this.syncPlayer();
     // The shorter return shot keeps the gameplay zoom and framing.
     this.cameras.main.centerOn(this.player.x, this.player.y);
@@ -288,6 +288,7 @@ export class NightScene extends Phaser.Scene {
     this.entryCinematic = null;
     this.entryShot.clear();
     this.cameras.main.setZoom(this.normalZoom);
+    this.updateFieldMemory();
     this.syncPlayer();
     // Phaser 4: startFollow without the second argument turns roundPixels off.
     this.cameras.main.startFollow(this.player, true);
@@ -611,10 +612,13 @@ export class NightScene extends Phaser.Scene {
   private drawFogAndProps(): void {
     const { width: W, height: H } = this.farm;
     const visible = this.phase === 'choose' ? new Array<boolean>(W * H).fill(false) : visibleTiles(this.farm, tileOf(this.night.player));
-    visible.forEach((v, i) => {
-      if (v) this.explored[i] = 1;
-    });
-    this.scroll.setVisible(this.phase === 'night' && this.scrollTile !== null && visible[this.scrollTile.y * W + this.scrollTile.x] === true);
+    if (!this.entryCinematic) {
+      visible.forEach((v, i) => {
+        if (v) this.explored[i] = 1;
+      });
+    }
+    this.scroll.setVisible(this.phase === 'night' && (!this.entryCinematic || this.entryBeat() === 'crawl') &&
+      this.scrollTile !== null && visible[this.scrollTile.y * W + this.scrollTile.x] === true);
     this.fog.clear();
     for (let i = 0; i < W * H; i++) {
       if (visible[i]) continue;
@@ -650,7 +654,7 @@ export class NightScene extends Phaser.Scene {
       paused: this.paused,
       entering: this.entryCinematic !== null,
       showMovementHint: !this.movementLearned && this.phase === 'night' && !this.paused && !this.entryCinematic,
-      fieldMap: this.phase === 'night' && this.fieldMemory.hasMap ? {
+      fieldMap: this.phase === 'night' && !this.entryCinematic && this.fieldMemory.hasMap ? {
         width: this.farm.width,
         height: this.farm.height,
         visited: this.fieldMemory.visited,
@@ -680,6 +684,15 @@ export class NightScene extends Phaser.Scene {
     };
   }
 
+  private entryBeat(): 'estate' | 'dusk' | 'push' | 'crawl' | null {
+    const shot = this.entryCinematic;
+    if (!shot) return null;
+    if (this.night.night > 1 || shot.elapsed >= ESTATE_TIMING.crawl) return 'crawl';
+    if (shot.elapsed >= ESTATE_TIMING.push) return 'push';
+    if (shot.elapsed >= ESTATE_TIMING.dusk) return 'dusk';
+    return 'estate';
+  }
+
   /** Read-only snapshot for automated checks in the browser (window.__gnomeDebug). */
   private publishDebug(hud: NightHudState): void {
     const cam = this.cameras.main;
@@ -691,6 +704,8 @@ export class NightScene extends Phaser.Scene {
       paused: this.paused,
       entering: hud.entering,
       entryElapsed: this.entryCinematic?.elapsed ?? null,
+      entryBeat: this.entryBeat(),
+      exploredTiles: this.explored.reduce((count, tile) => count + tile, 0),
       movementHint: hud.showMovementHint,
       fieldMap: hud.fieldMap ? {
         ...hud.fieldMap,
