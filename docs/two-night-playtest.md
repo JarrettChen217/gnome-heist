@@ -1,6 +1,8 @@
+AI-use disclosure: Codex drafted this working plan under Hao’s direction.
+
 # Two-night playtest
 
-Codex drafted this working plan under Hao’s direction. Use the existing farm for both nights so players can recognize a changed defense.
+Use the existing farm for both nights so players can recognize a changed defense.
 
 | Work | Owner | Acceptance |
 | --- | --- | --- |
@@ -13,7 +15,11 @@ Codex drafted this working plan under Hao’s direction. Use the existing farm f
 
 ## Playtest script
 
-Start a fresh run and let the player choose an entrance. Observe the first movement and gate interaction without explaining the controls. Ask the player to bring a gnome home. After the morning, ask which route they want to take and why. Record what they actually saw and distinguish it from what the farmer said. The acceptance column also applies to the related Asana tasks.
+1. Start a fresh run and let the player choose an entrance. Let them make their first move before asking where they intend to go and what they expect to find. Record their first destination and whether they interpret the farmhouse as a landmark or a goal.
+2. Observe the scroll pickup, the first interaction and the return trip. Record whether they bring a gnome back unaided. If they ask for help or get stuck, record the obstacle and the first hint you give before continuing.
+3. After the morning, ask “Which way will you go tonight, and why?” Record their words, the defense that actually changed and whether they saw it on the farm or read about it in the morning panel.
+
+For T14, record the build, entrance, viewport, farmer mode, outcome and first point of hesitation. Compare those observations with the decisions below.
 
 ## Next decisions
 

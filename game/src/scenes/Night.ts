@@ -3,6 +3,7 @@
 // Codex integrated directional player art and walk animation under Hao's direction.
 // Codex implemented tall grass rendering and bush feedback under Hao's direction.
 // Codex connected the local Worker morning and offline fallback under Hao's direction.
+// Codex implemented the first-night scroll and remembered path under Hao's direction.
 import * as Phaser from 'phaser';
 import { PLAYER_STAMINA, advanceLocalMorning, bushAt, currentInteraction, endNight, loadFarm, newSession, startNight, tallGrassAt, tick, tileOf, tilesOf, visibleTiles } from '@gnome-heist/core';
 import type { FarmDef, FarmObject, Interaction, NightEnd, NightResult, NightState, SessionState, Tile } from '@gnome-heist/core';
@@ -23,11 +24,21 @@ interface Prop {
 
 export type Phase = 'choose' | 'night' | 'ended';
 type Cover = 'none' | 'tallGrass' | 'bush';
+interface FieldMap {
+  width: number;
+  height: number;
+  visited: Uint8Array;
+  player: Tile;
+  entry: Tile;
+  house: Tile;
+}
 
 export interface NightHudState {
   phase: Phase;
   paused: boolean;
   showMovementHint: boolean;
+  fieldMap: FieldMap | null;
+  showScrollNote: boolean;
   targetScreen: { x: number; y: number } | null;
   feedback: { id: number; action: Interaction['action'] | 'bush' | 'bank' } | null;
   night: number;
@@ -54,6 +65,19 @@ const SEEN_TAG_DEPTH = FOG_DEPTH + 2;
 // In all player frames, rows 10 or 11 through 16 show the top of the beret.
 const GRASS_CROP_HEIGHT = 17;
 const GRASS_TEXTURES = ['tallGrass0', 'tallGrass1', 'tallGrass2'] as const;
+// Orientation landmarks for the prototype farm. Each scroll is on the inward trail.
+const SCROLL_BY_ENTRY: Readonly<Partial<Record<string, Tile>>> = {
+  hole_west: { x: 1, y: 10 },
+  hole_east: { x: 21, y: 15 },
+  hole_south: { x: 11, y: 15 },
+};
+const FARMHOUSE: Tile = { x: 12, y: 2 };
+const SCROLL_NOTE_SECONDS = 7;
+
+interface FieldMemory {
+  visited: Uint8Array;
+  hasMap: boolean;
+}
 
 export class NightScene extends Phaser.Scene {
   private farm!: FarmDef;
@@ -73,6 +97,12 @@ export class NightScene extends Phaser.Scene {
   private occupiedBush: FarmObject | undefined;
   private cover: Cover = 'none';
   private explored!: Uint8Array;
+  private fieldMemory!: FieldMemory;
+  private nightStartMemory!: FieldMemory;
+  private scroll!: Phaser.GameObjects.Graphics;
+  private scrollTile: Tile | null = null;
+  private scrollNoteRemaining = 0;
+  private entryTile!: Tile;
   private keys!: Record<string, Phaser.Input.Keyboard.Key>;
   private acc = 0;
   private message: { text: PromptText; until: number } | null = null;
@@ -108,6 +138,12 @@ export class NightScene extends Phaser.Scene {
     this.printsLayer = this.add.graphics().setDepth(3);
 
     this.player = this.add.sprite(0, 0, 'player-art', 0).setOrigin(0.5, 1).setVisible(false);
+    this.scroll = this.add.graphics().setVisible(false);
+    // A dark outline, rolled ends, parchment and a seal remain legible at integer zoom.
+    this.scroll.fillStyle(0x262131).fillRect(-6, -5, 12, 9).fillRect(-5, -6, 10, 11);
+    this.scroll.fillStyle(0xcfa979).fillRect(-5, -4, 10, 7);
+    this.scroll.fillStyle(0xffe6ad).fillRect(-4, -5, 8, 2).fillRect(-4, -3, 7, 4).fillRect(-3, 2, 8, 2);
+    this.scroll.fillStyle(0x974454).fillRect(0, -1, 3, 2);
     this.fog = this.add.graphics().setDepth(FOG_DEPTH);
 
     const cam = this.cameras.main;
@@ -156,6 +192,7 @@ export class NightScene extends Phaser.Scene {
     const workerMode = location.protocol !== 'file:' && new URLSearchParams(location.search).get('farmer') === 'agent';
     this.morningClient = workerMode && typeof crypto.randomUUID === 'function' ? new MorningClient() : null;
     this.morningSource = null;
+    this.nightStartMemory = { visited: new Uint8Array(this.farm.width * this.farm.height), hasMap: false };
     this.chooseEntry(newSession(this.farm, 1));
   }
 
@@ -170,6 +207,10 @@ export class NightScene extends Phaser.Scene {
     this.night = startNight(this.session, this.farm, this.farm.dogHoles[0]!.id);
     this.phase = 'choose';
     this.result = null;
+    this.fieldMemory = { visited: this.nightStartMemory.visited.slice(), hasMap: this.nightStartMemory.hasMap };
+    this.scrollTile = null;
+    this.scroll.setVisible(false);
+    this.scrollNoteRemaining = 0;
     this.explored = new Uint8Array(this.farm.width * this.farm.height);
     this.printsDrawn = 0;
     this.printsLayer.clear();
@@ -196,6 +237,14 @@ export class NightScene extends Phaser.Scene {
     this.phase = 'night';
     this.acc = 0;
     this.walkDistancePx = 0;
+    this.entryTile = tileOf(this.night.player);
+    this.scrollTile = this.night.night === 1 && !this.fieldMemory.hasMap ? SCROLL_BY_ENTRY[entry] ?? null : null;
+    if (this.scrollTile) {
+      const x = (this.scrollTile.x + 0.5) * TILE_PX;
+      const y = (this.scrollTile.y + 0.5) * TILE_PX;
+      this.scroll.setPosition(x, y).setDepth(depthOf(y));
+    }
+    this.updateFieldMemory();
     this.syncPlayer();
     // Phaser 4: startFollow without the second argument turns the camera's roundPixels off.
     this.cameras.main.startFollow(this.player, true);
@@ -292,8 +341,10 @@ export class NightScene extends Phaser.Scene {
       const hole = pick >= 0 ? this.farm.dogHoles[pick] : undefined;
       if (hole) this.beginNight(hole.id);
     } else if (this.phase === 'ended') {
-      if (enter && this.morning?.plan) this.chooseEntry(this.morning.session);
-      else if (replay) this.newRun();
+      if (enter && this.morning?.plan) {
+        this.nightStartMemory = this.fieldMemory;
+        this.chooseEntry(this.morning.session);
+      } else if (replay) this.newRun();
     } else if (!this.paused) {
       const down = (...names: string[]) => names.some((n) => k[n]?.isDown === true);
       const pressedE = Phaser.Input.Keyboard.JustDown(k['e']!);
@@ -312,6 +363,8 @@ export class NightScene extends Phaser.Scene {
         const previous = this.night.player;
         const r = tick(this.farm, this.night, input, STEP_SECONDS);
         this.night = r.night;
+        this.scrollNoteRemaining = Math.max(0, this.scrollNoteRemaining - STEP_SECONDS);
+        this.updateFieldMemory();
         const distancePx = Math.hypot(r.night.player.x - previous.x, r.night.player.y - previous.y) * TILE_PX;
         this.walkDistancePx = distancePx > 1e-6 ? (this.walkDistancePx + distancePx) % (WALK_FRAMES * WALK_FRAME_PX) : 0;
         this.acc -= STEP_SECONDS;
@@ -325,8 +378,19 @@ export class NightScene extends Phaser.Scene {
     }
     this.drawPrints();
     this.drawFogAndProps();
-    this.registry.set('hud', this.hudState(time));
-    this.publishDebug();
+    const hud = this.hudState(time);
+    this.registry.set('hud', hud);
+    this.publishDebug(hud);
+  }
+
+  private updateFieldMemory(): void {
+    const tile = tileOf(this.night.player);
+    this.fieldMemory.visited[tile.y * this.farm.width + tile.x] = 1;
+    if (this.scrollTile?.x === tile.x && this.scrollTile.y === tile.y) {
+      this.fieldMemory.hasMap = true;
+      this.scrollTile = null;
+      this.scrollNoteRemaining = SCROLL_NOTE_SECONDS;
+    }
   }
 
   private finish(end: NightEnd): void {
@@ -437,6 +501,7 @@ export class NightScene extends Phaser.Scene {
     visible.forEach((v, i) => {
       if (v) this.explored[i] = 1;
     });
+    this.scroll.setVisible(this.phase === 'night' && this.scrollTile !== null && visible[this.scrollTile.y * W + this.scrollTile.x] === true);
     this.fog.clear();
     for (let i = 0; i < W * H; i++) {
       if (visible[i]) continue;
@@ -471,6 +536,15 @@ export class NightScene extends Phaser.Scene {
     return {
       paused: this.paused,
       showMovementHint: !this.movementLearned && this.phase === 'night' && !this.paused,
+      fieldMap: this.phase === 'night' && this.fieldMemory.hasMap ? {
+        width: this.farm.width,
+        height: this.farm.height,
+        visited: this.fieldMemory.visited,
+        player: tileOf(this.night.player),
+        entry: this.entryTile,
+        house: FARMHOUSE,
+      } : null,
+      showScrollNote: this.phase === 'night' && !this.paused && this.scrollNoteRemaining > 0,
       targetScreen: i ? {
         x: ((i.tile.x + 0.5) * TILE_PX - cam.worldView.x) * cam.zoom,
         y: (i.tile.y * TILE_PX - cam.worldView.y) * cam.zoom,
@@ -491,7 +565,7 @@ export class NightScene extends Phaser.Scene {
   }
 
   /** Read-only snapshot for automated checks in the browser (window.__gnomeDebug). */
-  private publishDebug(): void {
+  private publishDebug(hud: NightHudState): void {
     const cam = this.cameras.main;
     (window as unknown as { __gnomeDebug: unknown }).__gnomeDebug = {
       mapVersion: this.farm.mapVersion,
@@ -500,6 +574,15 @@ export class NightScene extends Phaser.Scene {
       night: this.session.night,
       paused: this.paused,
       movementHint: !this.movementLearned,
+      fieldMap: hud.fieldMap ? {
+        ...hud.fieldMap,
+        visited: Array.from(hud.fieldMap.visited),
+        entry: { ...hud.fieldMap.entry },
+        house: { ...hud.fieldMap.house },
+      } : null,
+      showScrollNote: hud.showScrollNote,
+      scrollTile: this.scrollTile ? { ...this.scrollTile } : null,
+      scrollVisible: this.scroll.visible,
       morningPlan: this.morning?.plan ?? null,
       morningSource: this.morningSource,
       layout: this.session.farmer.layout,

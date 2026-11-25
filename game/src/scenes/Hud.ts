@@ -17,6 +17,9 @@ export class HudScene extends Phaser.Scene {
   private choices!: Phaser.GameObjects.Text;
   private status!: Phaser.GameObjects.Text;
   private prompt!: Phaser.GameObjects.Text;
+  private fieldMap!: Phaser.GameObjects.Graphics;
+  private mapKey!: Phaser.GameObjects.Text;
+  private scrollNote!: Phaser.GameObjects.Text;
   private cap!: Phaser.GameObjects.Graphics;
   private letter!: Phaser.GameObjects.Text;
   private panel!: Phaser.GameObjects.Text;
@@ -33,6 +36,9 @@ export class HudScene extends Phaser.Scene {
 
   create(): void {
     this.status = this.add.text(8, 8, '', style);
+    this.fieldMap = this.add.graphics().setDepth(1);
+    this.mapKey = this.add.text(0, 0, 'N ↑     House    Entry    You', { ...style, fontSize: '10px' });
+    this.scrollNote = this.add.text(0, 0, 'Dig up a garden gnome. The farmhouse is north. Escape through a hedge opening.', { ...style, color: '#382a1c', backgroundColor: '#ead6a4', padding: { x: 8, y: 6 }, fontSize: '13px', lineSpacing: 3 });
     this.prompt = this.add.text(0, 0, '', { ...style, fontSize: '14px', align: 'center' }).setOrigin(0.5, 1);
     this.cap = this.add.graphics();
     this.letter = this.add.text(0, 0, 'E', { fontFamily: 'monospace', fontSize: '20px', fontStyle: 'bold', color: CREAM, stroke: '#253039', strokeThickness: 3 }).setOrigin(0.5);
@@ -88,6 +94,70 @@ export class HudScene extends Phaser.Scene {
     this.veil.setSize(width, height);
     this.movementKeys.setPosition(width / 2, Math.min(height - 70, height / 2 + 105));
     this.prompt.setWordWrapWidth(Math.min(440, width - 40), true);
+    this.scrollNote.setWordWrapWidth(Math.max(100, Math.min(245, width - 28)), true);
+  }
+
+  private drawFieldMap(s: NightHudState): void {
+    const map = s.fieldMap;
+    const visible = s.phase === 'night' && !s.paused && !s.showMovementHint;
+    this.fieldMap.clear().setVisible(visible && map !== null);
+    this.mapKey.setVisible(visible && map !== null);
+    this.scrollNote.setVisible(visible && s.showScrollNote);
+    if (!visible) return;
+
+    const left = 8;
+    const top = this.status.y + this.status.height + 6;
+    let bottom = top;
+    if (map) {
+      const cell = Math.max(2, Math.min(5, Math.floor((this.scale.width - 32) / map.width)));
+      const mapWidth = map.width * cell;
+      const mapHeight = map.height * cell;
+      const g = this.fieldMap;
+      g.fillStyle(0x101720, 0.94).fillRect(left, top, mapWidth + 12, mapHeight + 12);
+      g.lineStyle(1, 0x817b65).strokeRect(left, top, mapWidth + 12, mapHeight + 12);
+      for (let y = 0; y < map.height; y++) {
+        for (let x = 0; x < map.width; x++) {
+          if (map.visited[y * map.width + x]) {
+            g.fillStyle(0x50685e).fillRect(left + 6 + x * cell, top + 6 + y * cell, cell, cell);
+          }
+        }
+      }
+      const center = (point: { x: number; y: number }): { x: number; y: number } => ({
+        x: left + 6 + (point.x + 0.5) * cell,
+        y: top + 6 + (point.y + 0.5) * cell,
+      });
+      const house = center(map.house);
+      const entry = center(map.entry);
+      const player = center(map.player);
+      // Reuse the same pixel symbols on the map and its key.
+      const houseIcon = (x: number, y: number): void => {
+        g.fillStyle(0x392c2a).fillRect(x - 5, y - 5, 11, 11);
+        g.fillStyle(0xe3bc7b).fillRect(x - 3, y, 7, 5);
+        g.fillStyle(0xe27b62).fillRect(x - 4, y - 2, 9, 2).fillRect(x - 2, y - 4, 5, 2);
+        g.fillStyle(0x594139).fillRect(x, y + 2, 2, 3);
+      };
+      const entryIcon = (x: number, y: number): void => {
+        g.fillStyle(0x152422).fillRect(x - 5, y - 4, 11, 9);
+        g.fillStyle(0x7bd8a1).fillRect(x - 4, y - 3, 2, 7).fillRect(x + 3, y - 3, 2, 7);
+        g.fillRect(x - 4, y - 3, 9, 2);
+      };
+      const playerIcon = (x: number, y: number): void => {
+        g.fillStyle(0x102b3a).fillRect(x - 4, y - 4, 9, 9);
+        g.fillStyle(0x70dafa).fillRect(x - 2, y - 2, 5, 5);
+        g.fillStyle(0xffffff).fillRect(x, y, 1, 1);
+      };
+      houseIcon(Math.round(house.x), Math.round(house.y));
+      entryIcon(Math.round(entry.x), Math.round(entry.y));
+      playerIcon(Math.round(player.x), Math.round(player.y));
+      bottom = top + mapHeight + 12;
+      this.mapKey.setPosition(left, bottom + 2);
+      const keyY = bottom + 11;
+      houseIcon(left + 30, keyY);
+      entryIcon(left + 84, keyY);
+      playerIcon(left + 138, keyY);
+      bottom += this.mapKey.height + 2;
+    }
+    this.scrollNote.setPosition(left, bottom + 5);
   }
 
   private drawInteraction(s: NightHudState, time: number): void {
@@ -145,6 +215,7 @@ export class HudScene extends Phaser.Scene {
     const status = `Night ${s.night}   Stamina ${pips}${s.carrying ? '   Carrying a gnome' : ''}`;
     this.status.setText(s.inBush && s.phase === 'night' ? `${status}\nBush cover · Dogs can hear you` : status);
 
+    this.drawFieldMap(s);
     this.feedback(s);
     this.drawInteraction(s, time);
     this.tutorial.setVisible(s.phase === 'night' && s.showMovementHint && !s.paused);
