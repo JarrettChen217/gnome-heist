@@ -59,7 +59,7 @@ Owner is always me (accountable). "Delegated to" names the production agent role
 
 Internal checkpoints: the deployed Worker skeleton exists by **Nov 17** (T11a), and a real deployed model call by **Nov 19** (T11b), so deployment problems surface early. By **Nov 21**, one night and one morning are playable with the rule-based farmer and the three checkpoint items work. If the game side slips, I apply the cut list in GDD Section 13; art cuts do not unblock the Worker, so it is not left until the end. *(Superseded: the internal targets were re-dated on 2026-11-19; current dates are in Asana. The Status column for T7 to T11c was brought up to date on 2026-11-22; Asana holds the live status.)*
 
-**T20 · First-night orientation** [Hao, on agent proposal, 2026-11-24]. Build on the T18 two-night slice. The proposed work block begins after Hao authorizes the time. Internal estimates:
+**T20 · First-night orientation** [Hao, on agent proposal, 2026-11-24]. Build on the T18 two-night slice. Hao authorized the work block on Nov 24. Local build `1b40f6f` passed the three-entrance and two-night browser checks. T14 will provide the first fresh-player result. Original internal estimates follow.
 
 | Elapsed | Work and observable result |
 | --- | --- |
