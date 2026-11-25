@@ -36,7 +36,7 @@ Each morning the farmer, an AI agent, reads only the traces you left behind and 
 | Step | What happens |
 | --- | --- |
 | **Act** (night) | You crawl in through a dog hole in the hedge, scout through fog of war, take a gnome, get past gates and fences, and leave traces, some of them on purpose. You end the night back outside the hedge. [Hao] |
-| **Respond** (morning) | The farmer walks to the traces he found, says one line, and spends his stamina and money: he buys a new defense, moves one, or repairs what you broke. You see which traces he inspected and what *kind* of thing he did, but not where. [Hao, on agent proposal] |
+| **Respond** (morning) | The farmer walks to the traces he found, says one line, and spends his stamina and money: he buys a new defense, moves one, or repairs what you broke. You see which traces he inspected and the kind of work he did. For lamps, you also see the actual post and surrounding terrain. [Hao, on agent proposal; lamp location revised by Hao] |
 | **Interpret** | You compare his line and the traces he inspected with your own memory of the night. Your map still shows the defenses where you last saw them. [Hao, on agent proposal] |
 | **Next action** | You re-scout the areas you need, then choose a route, or plant a false trail to pull a defense away. [Hao] |
 
@@ -137,7 +137,7 @@ Each morning the farmer spends a small budget. [Hao]
 1. The camera cuts to a daylight view of the playable farm. The farmer walks up to each trace he chose from that morning’s list. Footprints identify a patch of ground within the reported area. [Hao, on agent proposal]
 2. He says one line, for example, *"Who kicked a hole in my fence?!"* [Hao for the animation; agent proposal for the line]
 3. A short "thinking" beat shows his options with their costs and the one he picks; his stamina and money bars drop. [Hao]
-4. A close-up shows the work he committed to, followed by a sound cue and a caption. When he installs a lamp, his hammer strikes the cobwebbed fixture, a puff clears and the glass gleams. Players discover the installation site during the next night. [Hao, on agent proposal] (See Q5 for how much of step 3 the player should see.)
+4. The camera shows lamp work at the chosen post on the playable farm. The farmer works beside the fixture, a puff clears and the glass gleams. A moved lamp is shown at its new post. Other defense work uses a close-up. The player’s field map records exploration during play. [Hao, on agent proposal; on-site lamp work by Hao] (See Q5 for how much of step 3 the player should see.)
 
 ### 5.9 Being spotted
 
@@ -254,7 +254,7 @@ The farmer sees a trace list, his own layout, his remaining stamina and money, a
 | Q2 | Do the farmer's defenses pile up too fast? Is there a cap per type? | No cap yet; watch night 4 and 5. | M1 self-playtest (T4) |
 | Q3 | Does a false trail need its own action, or is walking on soft ground enough? | Walking is enough; opening a gate is the time-cost version. | M1 self-playtest (T4) |
 | Q4 | When decoy gnomes and traps arrive (after v1), are they visible only within sight, and how does a decoy differ from a real gnome? | Out of v1. | After G3 |
-| Q5 | How much of the farmer's morning should the player see: the inspected traces, the thinking beat with options, the moved category? | Show inspected traces, his line, the thinking beat without positions, and the category. | First external playtest |
+| Q5 | How much of the farmer's morning should the player see: the inspected traces, the thinking beat with options, the moved category? | Show inspected traces, his line, his options and the committed work. Observe whether players recognize a lamp site from its surroundings. | First external playtest |
 | Q6 | Is a 24 × 18 farm large enough to feel like exploring, and small enough to finish by Gold (Dec 5)? | 24 × 18. | Greybox prototype |
 | Q7 | Does night 5 ending without 5 gnomes count as a loss or a partial result? | Partial result with score. | Rule-farmer prototype |
 | Q8 | Is a plain gate's free open and close too easy? | Free, but takes about 1 s in the open. | First external playtest |
@@ -301,3 +301,4 @@ The farmer sees a trace list, his own layout, his remaining stamina and money, a
 | 2026-11-24 | Use the playable map and its vegetation throughout the opening so players can recognize the same paths and hedges after dark. | [Hao] | Decided |
 | 2026-11-24 | Extend the local prototype to one round of four nights on the same farm. Each intervening morning can change defenses, and the round scores the gnomes brought home. The full-game target in Section 5 remains five nights. | [Hao] | Decided for the prototype |
 | 2026-11-24 | Use a gnome cursor to choose a hedge entrance. Open the morning at the farmhouse window, inspect traces on the playable terrain, and show committed work in a close-up that conceals the destination. | [Hao, on agent proposal] | Decided for the prototype |
+| 2026-11-24 | Show lamp installation and relocation at the selected post on the daylight farm so players can recognize the location. | [Hao] | Decided for the prototype |

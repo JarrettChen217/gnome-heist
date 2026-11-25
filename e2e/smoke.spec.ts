@@ -158,13 +158,14 @@ test('the morning waits through a pending reply and presents a legal agent purch
   expect((await debug(page))?.phase).toBe('ended');
   await expect.poll(async () => (await debug(page))?.morningBeat?.stage, { intervals: [50] }).toBe('work');
   expect((await debug(page))?.morningBeat).toMatchObject({
-    work: { type: 'buy', prop: 'lamp' }, site: null, trace: null,
+    work: { type: 'buy', prop: 'lamp' }, site: { x: 4, y: 14 }, trace: null,
   });
   await expect.poll(async () => (await debug(page))?.morningBeat?.stage, { timeout: 12_000 }).toBe('ready');
   expect(await debug(page)).toMatchObject({
     morningSource: 'primary',
     morningPlan: { actions: [action] },
     morningBeat: {
+      site: { x: 4, y: 14 },
       stamina: speaking.stamina - 1,
       money: speaking.money - 1,
       choices: [{ label: 'Buy a lamp', stamina: 1, money: 1 }],

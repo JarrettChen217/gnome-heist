@@ -116,7 +116,7 @@ export function openingBeat(context: FarmerContext, outcome: string): MorningBea
   };
 }
 
-/** Build the public cues from the plan that actually committed, leaving defense destinations out. */
+/** Build the public cues from the plan that actually committed, framing lamp work at the destination post for each action. */
 export function morningCues(
   farm: FarmDef,
   opening: MorningBeat,
@@ -169,20 +169,22 @@ export function morningCues(
     choices: actions.length ? actions.map(({ choice }) => choice) : [WAIT],
   };
   cues.push({ beat: think, duration: 1450 });
-  const spent = { ...think, stamina: farmer.stamina, money: farmer.money };
   let stamina = think.stamina;
   let money = think.money;
   for (const [index, action] of actions.entries()) {
+    // A lamp may move twice in one plan. Frame this step's destination, even if the final layout differs.
+    const slot = plan.actions[index]!.to;
+    const post = action.work.prop === 'lamp' ? farm.lampPosts.find(({ id }) => id === slot) : undefined;
+    const site = post ? { x: post.rect.x, y: post.rect.y } : null;
     stamina -= action.choice.stamina;
     money -= action.choice.money;
     cues.push({
-      beat: { ...think, stamina, money, stage: 'work', index, trace: null, site: null, work: action.work, caption: action.choice.label },
+      beat: { ...think, stamina, money, stage: 'work', index, trace: null, site, work: action.work, caption: action.choice.label },
       duration: MORNING_WORK_MS,
     });
   }
   cues.push({
-    beat: { ...spent, stage: 'ready', index: 0, work: actions.at(-1)?.work ?? null,
-      trace: actions.length ? null : spent.trace, site: actions.length ? null : spent.site,
+    beat: { ...cues.at(-1)!.beat, stage: 'ready', stamina: farmer.stamina, money: farmer.money,
       caption: actions.map(({ caption }) => caption).join(' ') || 'The farmer made no changes.' },
     duration: Infinity,
   });

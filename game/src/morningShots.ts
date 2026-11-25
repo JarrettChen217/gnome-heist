@@ -1,4 +1,4 @@
-// AI-use disclosure: Codex animated the farmhouse window, field inspection and tool close-ups under Hao's direction.
+// AI-use disclosure: Codex animated the farmhouse window, field inspections and on-site lamp work under Hao's direction.
 import type * as Phaser from 'phaser';
 import { loadFarm, tilesOf } from '@gnome-heist/core';
 import type { Tile } from '@gnome-heist/core';
@@ -80,10 +80,11 @@ export class MorningShots {
     if (!beat) { this.lastFrame = ''; return; }
     // Pixel poses change at film cadence; leave the texture resident between poses.
     const pose = beat.stage === 'ready' || beat.stage === 'speak' ? 0 : Math.floor(beat.elapsed / 55);
-    const frame = [beat.stage, beat.index, beat.trace?.id, beat.work?.prop, pose].join('/');
+    const frame = [beat.stage, beat.index, beat.trace?.id, beat.work?.prop, beat.work?.type, beat.site?.x, beat.site?.y, pose].join('/');
     if (frame === this.lastFrame) return;
     this.lastFrame = frame;
-    if (beat.work) this.workshop(beat);
+    if (beat.work?.prop === 'lamp' && beat.site) this.lampWork(beat, beat.site);
+    else if (beat.work) this.workshop(beat);
     else if (beat.site) this.inspection(beat, beat.site);
     else this.window(beat);
     this.sheet.refresh();
@@ -138,11 +139,11 @@ export class MorningShots {
     this.rect(x - 7, y + h + 4, w + 14, 3, '#775447');
   }
 
-  private inspection(beat: MorningBeat, site: Tile): void {
+  private fieldShot(site: Tile, progress: number, standOff: number) {
     const c = this.ctx;
     const px = (site.x + 0.5) * TILE_PX;
     const py = (site.y + 0.5) * TILE_PX;
-    // Find a short clear approach beside the evidence in the authored geometry.
+    // Find a short clear approach beside the target in the authored geometry.
     let direction = { x: -1, y: 0 }, reach = 0;
     for (const step of [{ x: -1, y: 0 }, { x: 1, y: 0 }, { x: 0, y: 1 }, { x: 0, y: -1 }]) {
       let count = 0;
@@ -153,14 +154,20 @@ export class MorningShots {
       }
       if (count > reach) { direction = step; reach = count; }
     }
-    const progress = beat.stage === 'inspect' ? ease(beat.elapsed / 770) : 1;
-    const distance = Math.min(reach * TILE_PX, 12 + (1 - progress) * 36);
+    const distance = Math.min(reach * TILE_PX, standOff + (1 - progress) * 36);
     const ax = px + direction.x * distance, ay = py + direction.y * distance;
     const zoom = 2;
     const cutX = Math.round(clamp((px + ax) / 2 - W / (2 * zoom), 0, this.ground.width - W / zoom));
     const cutY = Math.round(clamp((py + ay) / 2 - H / (2 * zoom) - 3, 0, this.ground.height - H / zoom));
     c.drawImage(this.ground, cutX, cutY, W / zoom, H / zoom, 0, 0, W, H);
     const sx = (px - cutX) * zoom, sy = (py - cutY) * zoom;
+    return { sx, sy, actorX: (ax - cutX) * zoom, actorFeet: (ay - cutY) * zoom + 5, fromRight: direction.x > 0, zoom };
+  }
+
+  private inspection(beat: MorningBeat, site: Tile): void {
+    const c = this.ctx;
+    const progress = beat.stage === 'inspect' ? ease(beat.elapsed / 770) : 1;
+    const { sx, sy, actorX: x, actorFeet: feet, fromRight, zoom } = this.fieldShot(site, progress, 12);
     const kind = beat.trace?.kind;
     if (kind === 'footprints') {
       for (let i = -1; i <= 1; i++) {
@@ -182,15 +189,74 @@ export class MorningShots {
       c.drawImage(object, sx - object.width, sy + TILE_PX - object.height * zoom, object.width * zoom, object.height * zoom);
       if (kind === 'openLock') c.drawImage(this.source('padlockOpen'), sx - 8, sy - 8, 16, 16);
     }
-    const x = (ax - cutX) * zoom, feet = (ay - cutY) * zoom + 5;
     this.rect(x - 9, feet - 4, 18, 4, '#4d5242');
     const walking = progress < 1;
     const pondering = beat.stage === 'think' || (beat.stage === 'inspect' && !walking);
-    this.actor(walking ? 1 + Math.floor(beat.elapsed / 150) % 2 : 0, x, feet, pondering ? 40 : 46, direction.x > 0);
+    this.actor(walking ? 1 + Math.floor(beat.elapsed / 150) % 2 : 0, x, feet, pondering ? 40 : 46, fromRight);
     if (pondering) {
       const wobble = Math.round(Math.sin(beat.elapsed / 220));
-      this.rect(x + (direction.x > 0 ? -12 : 5), feet - 28 + wobble, 7, 4, '#b27949');
-      this.rect(x + (direction.x > 0 ? -11 : 6), feet - 29 + wobble, 5, 3, '#e6a765');
+      this.rect(x + (fromRight ? -12 : 5), feet - 28 + wobble, 7, 4, '#b27949');
+      this.rect(x + (fromRight ? -11 : 6), feet - 29 + wobble, 5, 3, '#e6a765');
+    }
+  }
+
+  private lampWork(beat: MorningBeat, site: Tile): void {
+    const t = beat.stage === 'ready' ? MORNING_WORK_MS : beat.elapsed;
+    const arrival = ease(t / 410);
+    const { sx, sy, actorX, actorFeet, zoom } = this.fieldShot(site, arrival, 10);
+    const left = sx - 8 * zoom;
+    const top = sy + TILE_PX * zoom / 2 - 32 * zoom;
+    const hookX = left + 12 * zoom, hookY = top + 8 * zoom;
+    const mounted = t >= 880;
+    const moving = beat.work?.type === 'move';
+    const c = this.ctx;
+    // Match NightScene.addProps: horizontal center, feet on the bottom edge of the lamp-post tile.
+    const post = this.source(mounted ? 'lampPost' : 'lampPostDark');
+    c.drawImage(post, left, top, post.width * zoom, post.height * zoom);
+    const facing = actorX > hookX ? -1 : 1;
+    const walking = arrival < 1;
+    this.rect(actorX - 10, actorFeet - 4, 20, 4, '#505746');
+    this.actor(walking ? 1 + Math.floor(t / 125) % 2 : 0, actorX, actorFeet, 55, facing < 0);
+    if (!mounted && moving) {
+      // A moved lantern comes in with the farmer, then lifts from his hand to the vacant hook.
+      const lift = ease((t - 410) / 470);
+      const handX = actorX + facing * 12, handY = actorFeet - 23;
+      const x = handX + (hookX - handX) * lift, y = handY + (hookY - handY) * lift;
+      c.drawImage(this.source('lampPost'), 8, 9, 8, 14, Math.round(x - 7), Math.round(y + 1), 8 * zoom, 14 * zoom);
+    }
+    if (!mounted && t >= 410 && !moving) {
+      // The hammer head meets the hook at the bottom of every stroke.
+      const swing = Math.abs(Math.sin(Math.PI * (t - 410) / 145));
+      const headX = hookX - facing * swing * 9;
+      const headY = hookY - swing * 12;
+      const gripX = headX - facing * (8 + 3 * swing), gripY = headY + 12;
+      const shoulderX = actorX + facing * 3, shoulderY = actorFeet - 32;
+      const stroke = (color: string, width: number, ax: number, ay: number, bx: number, by: number) => {
+        c.beginPath(); c.moveTo(Math.round(ax), Math.round(ay)); c.lineTo(Math.round(bx), Math.round(by));
+        c.strokeStyle = color; c.lineWidth = width; c.stroke();
+      };
+      stroke('#795236', 7, shoulderX, shoulderY, gripX, gripY);
+      stroke('#dda55c', 4, shoulderX, shoulderY - 1, gripX, gripY - 1);
+      stroke('#80583b', 3, gripX, gripY, headX, headY);
+      this.rect(gripX - 2, gripY - 2, 5, 5, '#edba76');
+      this.rect(headX - 5, headY - 4, 10, 5, '#61675e');
+      this.rect(headX - 5, headY - 4, 10, 2, '#cdd0b5');
+    }
+    if (!moving && t >= 470 && t < 980) {
+      for (let i = 0; i < 4; i++) {
+        const p = clamp((t - 470 - i * 65) / 330, 0, 1);
+        c.globalAlpha = 0.72 * Math.sin(Math.PI * p);
+        const dx = hookX + (i - 1.5) * (3 + p * 7), dy = hookY + 8 - p * 22;
+        this.rect(dx - 4, dy - 2, 9, 5, '#e9e5cf');
+        this.rect(dx - 2, dy - 4, 5, 9, '#f7efd8');
+      }
+      c.globalAlpha = 1;
+    }
+    if (mounted && t < MORNING_WORK_MS) {
+      const size = Math.round(7 * Math.sin(Math.PI * (t - 880) / (MORNING_WORK_MS - 880)));
+      const x = left + 13 * zoom, y = top + 15 * zoom;
+      this.rect(x - size, y, size * 2 + 1, 1, '#fff6c6');
+      this.rect(x, y - size, 1, size * 2 + 1, '#fff6c6');
     }
   }
 

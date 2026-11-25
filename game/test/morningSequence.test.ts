@@ -1,6 +1,6 @@
 // AI-use disclosure: Codex tested the committed morning shots and captions under Hao's direction.
 import { readFileSync } from 'node:fs';
-import { commitPlan, loadFarm, newSession, prepareMorning, tilesOf } from '@gnome-heist/core';
+import { commitPlan, loadFarm, newSession, prepareMorning, startNight, tilesOf } from '@gnome-heist/core';
 import type { Plan, Trace } from '@gnome-heist/core';
 import { expect, it } from 'vitest';
 import { morningCues, openingBeat } from '../src/morningSequence.ts';
@@ -34,7 +34,7 @@ it('distinguishes selected footprints in plan order and omits uninspected eviden
   expect(cues.some(({ beat }) => beat.stage === 'work')).toBe(false);
 });
 
-it('frames a real pedestal, then shows each committed action without its placement', () => {
+it('frames a real pedestal and each installed lamp in plan order', () => {
   const prepared = prepareMorning(farm, newSession(farm, 1), {
     night: 1, gnomeTaken: 'ped_sw', changes: [{ kind: 'pedestal', id: 'ped_sw', hasGnome: false }],
     traces: [{ id: 't1', kind: 'emptyPedestal', target: 'ped_sw' }], spotted: false,
@@ -49,12 +49,34 @@ it('frames a real pedestal, then shows each committed action without its placeme
   expect(cues[0]!.beat.site).toEqual({ x: 3, y: 12 });
   const work = cues.filter(({ beat }) => beat.stage === 'work').map(({ beat }) => beat);
   expect(work.map(({ index, site, trace, work }) => ({ index, site, trace, work }))).toEqual(
-    [0, 1].map((index) => ({ index, site: null, trace: null, work: { type: 'buy', prop: 'lamp' } })),
+    [{ x: 4, y: 14 }, { x: 19, y: 14 }].map((site, index) => ({ index, site, trace: null, work: { type: 'buy', prop: 'lamp' } })),
   );
   expect(work.map(({ stamina, money }) => [stamina, money])).toEqual([
     [context.stamina - 1, context.money - 1], [farmer.stamina, farmer.money],
   ]);
-  expect(JSON.stringify(cues)).not.toContain('post_sw');
-  expect(JSON.stringify(cues)).not.toContain('post_se');
-  expect(cues.at(-1)?.beat).toMatchObject({ stage: 'ready', stamina: farmer.stamina, money: farmer.money });
+  expect(cues.at(-1)?.beat).toMatchObject({ stage: 'ready', site: { x: 19, y: 14 }, stamina: farmer.stamina, money: farmer.money });
+});
+
+it('frames a moved lamp at its new slot and clears its site for other work', () => {
+  const session = newSession(farm, 1);
+  const lamp = { id: 'lamp_test', kind: 'lamp', slot: 'post_sw' } as const;
+  const prepared = prepareMorning(farm, {
+    ...session, farmer: { ...session.farmer, layout: [...session.farmer.layout, lamp] },
+  }, { night: 1, gnomeTaken: null, changes: [], traces: [], spotted: false });
+  const context = prepared.context!;
+  const plan: Plan = { inspected: [], line: 'I know just the spot.', actions: [
+    { type: 'move', target: lamp.id, to: 'post_se' },
+    { type: 'buy', target: 'doghouse', to: 'spot_ne' },
+  ] };
+  const committed = commitPlan(farm, prepared.session, context, plan);
+  const { farmer } = committed;
+  const cues = morningCues(farm, openingBeat(context, ''), context, plan, farmer);
+  expect(cues.filter(({ beat }) => beat.stage === 'work').map(({ beat }) => [beat.work, beat.site])).toEqual([
+    [{ type: 'move', prop: 'lamp' }, { x: 19, y: 14 }],
+    [{ type: 'buy', prop: 'doghouse' }, null],
+  ]);
+  expect(cues.at(-1)?.beat).toMatchObject({ stage: 'ready', work: { prop: 'doghouse' }, site: null });
+  const nextNight = startNight(committed, farm, 'hole_west');
+  expect(nextNight.danger[14 * farm.width + 19]).toBe('lamp');
+  expect(nextNight.danger[14 * farm.width + 4]).not.toBe('lamp');
 });
