@@ -14,6 +14,8 @@ interface GnomeDebug {
     readonly x: number;
     readonly y: number;
     readonly walking: boolean;
+    readonly facing: 'up' | 'down' | 'left' | 'right';
+    readonly frame: string | number;
     readonly hammerStrikes: number;
     readonly lampMounted: boolean;
     readonly daylight: string;
@@ -152,6 +154,9 @@ test('the morning waits through a pending reply and presents a legal agent purch
   await tap(page, 'KeyE');
   try {
     await expect.poll(async () => (await debug(page))?.morningBeat?.stage).toBe('waiting');
+    const atDoor = (await debug(page))!.morningWorld!;
+    expect(atDoor.facing).toBe('down');
+    expect(Number(atDoor.frame)).toBe(0);
     await expect.poll(() => attempts).toBe(2);
     await tap(page, 'Enter');
     expect(await debug(page)).toMatchObject({ phase: 'ended', night: 1, morningPlan: null });
@@ -174,6 +179,8 @@ test('the morning waits through a pending reply and presents a legal agent purch
   const atPost = (await debug(page))!;
   expect(atPost).toMatchObject({ morningLamp: { id: 'post_sw', texture: 'lampPostDark' } });
   const firstTap = atPost.morningWorld!;
+  expect(firstTap.facing).toBe(firstTap.x < (4 + 0.5) * 16 ? 'right' : 'left');
+  expect(Number(firstTap.frame)).toBe(6);
   expect(firstTap).toMatchObject({ walking: false, lampMounted: false, daylight: approach.daylight });
   expect(Math.hypot(firstTap.x - approach.x, firstTap.y - approach.y)).toBeGreaterThan(4);
   await expect.poll(async () => (await debug(page))?.morningWorld?.hammerStrikes, { intervals: [30] }).toBe(2);

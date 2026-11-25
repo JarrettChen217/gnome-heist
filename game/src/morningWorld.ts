@@ -10,6 +10,9 @@ const DAYLIGHT = [
   { name: 'sage', color: 0xafba83, strength: 0.42 },
   { name: 'gold', color: 0xc5b475, strength: 0.44 },
 ] as const;
+const STRIDE = [1, 0, 2, 0] as const;
+const WALK_ROW = { down: 0, up: 1, right: 2, left: 2 } as const;
+type Facing = keyof typeof WALK_ROW;
 const STRIKES = [395, 795] as const;
 const SPEED = 84; // World pixels per second, independent of the size of the viewport.
 const cardinal = [{ x: 1, y: 0 }, { x: -1, y: 0 }, { x: 0, y: 1 }, { x: 0, y: -1 }] as const;
@@ -30,6 +33,7 @@ export class MorningWorld {
   private lastCue = '';
   private walking = false;
   private distance = 0;
+  private facing: Facing = 'down';
   private lightIndex = -1;
   private mounted = false;
   private hits = 0;
@@ -40,7 +44,7 @@ export class MorningWorld {
     for (const gate of farm.gates) for (const tile of tilesOf(gate)) {
       this.gates.set(tile.y * farm.width + tile.x, gate.id);
     }
-    this.actor = scene.add.sprite(0, 0, 'morning-farmer', 0).setDisplaySize(19, 26).setOrigin(0.5, 0.94).setVisible(false);
+    this.actor = scene.add.sprite(0, 0, 'farmer-walk', 0).setDisplaySize(19, 26).setOrigin(0.5, 0.94).setVisible(false);
     this.effects = scene.add.graphics().setVisible(false);
     this.facade = scene.add.graphics().setDepth(9).setVisible(false);
     this.windowHead = scene.add.sprite(0, 0, 'morning-farmer', 0).setDisplaySize(13, 17)
@@ -91,7 +95,7 @@ export class MorningWorld {
     // Swing the gate open as the farmer approaches its tile and close it after he leaves.
     const next = this.route[0];
     const ahead = next ? this.gates.get(Math.floor(next.y / TILE_PX) * this.farm.width + Math.floor(next.x / TILE_PX)) : undefined;
-    return { x, y, walking: this.walking, site: this.focus, lampMounted: this.mounted, hammerStrikes: this.hits,
+    return { x, y, facing: this.facing, frame: this.actor.frame.name, walking: this.walking, site: this.focus, lampMounted: this.mounted, hammerStrikes: this.hits,
       gate: this.gates.get(i) ?? ahead ?? null, daylight: DAYLIGHT[this.lightIndex]?.name ?? null };
   }
 
@@ -118,10 +122,10 @@ export class MorningWorld {
     this.walking = this.route.length > 0;
     if (this.walking) {
       this.walk(deltaMs);
-      this.actor.setFrame(1 + Math.floor(this.distance / 5) % 2);
+      this.pose(STRIDE[Math.floor(this.distance / 7) % STRIDE.length]!);
     } else if (!opening) {
-      if (this.focus) this.actor.setFlipX(this.actor.x > center(this.focus.x));
-      this.actor.setFrame(0);
+      if (this.focus) this.faceOffset(center(this.focus.x) - this.actor.x, center(this.focus.y) - this.actor.y);
+      this.pose(0);
     }
     this.actor.setDepth(10 + this.actor.y + 0.2);
     this.effects.setDepth(10 + Math.max(this.actor.y + 1, this.focus ? (this.focus.y + 1) * TILE_PX + 1 : 0));
@@ -171,9 +175,10 @@ export class MorningWorld {
     const threshold = door.y + door.height;
     const p = clamp((elapsed - 1810) / 720, 0, 1);
     const y = Phaser.Math.Linear(threshold - 5, yardY, p);
-    const frame = p > 0 && p < 1 ? 1 + Math.floor(p * 6) % 2 : 0;
-    const actor = this.actor.setPosition(door.x + door.width / 2, y).setFrame(frame)
-      .setFlipX(false).setVisible(elapsed >= 1810);
+    const frame = p > 0 && p < 1 ? STRIDE[Math.floor(p * 8) % STRIDE.length]! : 0;
+    this.facing = 'down';
+    this.pose(frame);
+    const actor = this.actor.setPosition(door.x + door.width / 2, y).setVisible(elapsed >= 1810);
     // Keep the opaque sprite occluded by the lintel until he clears the doorway.
     const top = y - actor.displayHeight * actor.originY;
     const clip = clamp(Math.ceil((door.y - top) / actor.scaleY), 0, actor.frame.height - 1);
@@ -227,6 +232,15 @@ export class MorningWorld {
     return path;
   }
 
+  private faceOffset(dx: number, dy: number): void {
+    if (Math.abs(dx) > Math.abs(dy)) this.facing = dx < 0 ? 'left' : 'right';
+    else if (dy !== 0) this.facing = dy < 0 ? 'up' : 'down';
+  }
+
+  private pose(column: number): void {
+    this.actor.setFrame(WALK_ROW[this.facing] * 3 + column).setFlipX(this.facing === 'left');
+  }
+
   private walk(deltaMs: number): void {
     let remaining = SPEED * clamp(deltaMs, 0, 100) / 1000;
     const actor = this.actor;
@@ -237,7 +251,7 @@ export class MorningWorld {
       if (length > 0) {
         actor.x += dx * step / length;
         actor.y += dy * step / length;
-        if (dx !== 0) actor.setFlipX(dx < 0);
+        this.faceOffset(dx, dy);
         this.distance += step;
       }
       remaining -= step;

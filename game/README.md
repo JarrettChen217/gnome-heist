@@ -33,7 +33,7 @@ The opening uses the playable farm’s ground, paths, hedges and vegetation. The
 <details>
 <summary>Morning art credits and ImageGen prompts</summary>
 
-Codex used the built-in ImageGen tool under Hao's direction to create the [dawn backdrop](src/assets/morning-farm.webp) and [farmer pose sheet](src/assets/morning-farmer.webp). The backdrop was used in the earlier cutaway. The current morning animates the poses on the live tilemap.
+Codex used the built-in ImageGen tool under Hao's direction to create the [dawn backdrop](src/assets/morning-farm.webp) and [farmer pose sheet](src/assets/morning-farmer.webp). The backdrop was used in the earlier cutaway. The window uses the original portrait crop. On the live tilemap, the farmer uses a [directional walk sheet](src/assets/farmer-walk.png) drawn by Codex. Front, back and profile steps follow the direction of travel.
 
 **Backdrop prompt**
 
