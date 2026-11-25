@@ -3,9 +3,9 @@
 // Codex integrated directional player art and walk animation under Hao's direction.
 // Codex implemented tall grass rendering and bush feedback under Hao's direction.
 // Codex connected the local Worker morning and offline fallback under Hao's direction.
-// Codex implemented the first-night scroll and remembered path under Hao's direction.
+// Codex implemented the first-night scroll, remembered path, and four-night playtest under Hao's direction.
 import * as Phaser from 'phaser';
-import { PLAYER_STAMINA, advanceLocalMorning, bushAt, currentInteraction, endNight, loadFarm, newSession, prepareMorning, startNight, tallGrassAt, tick, tileOf, tilesOf, visibleTiles } from '@gnome-heist/core';
+import { PLAYER_STAMINA, PLAYTEST_NIGHT_LIMIT, STRIKE_LIMIT, advanceLocalMorning, bushAt, currentInteraction, endNight, loadFarm, newSession, prepareMorning, startNight, tallGrassAt, tick, tileOf, tilesOf, visibleTiles } from '@gnome-heist/core';
 import type { FarmerContext, FarmDef, FarmObject, Interaction, NightEnd, NightResult, NightState, SessionState, Tile } from '@gnome-heist/core';
 import { MIN_CAMERA_ZOOM, STEP_SECONDS, TILE_PX } from '../constants.ts';
 import { EntryShot, ESTATE_TIMING } from '../entryShot.ts';
@@ -49,6 +49,7 @@ export interface NightHudState {
   targetScreen: { x: number; y: number } | null;
   feedback: { id: number; action: Interaction['action'] | 'bush' | 'bank' } | null;
   night: number;
+  strikes: number;
   stamina: number;
   maxStamina: number;
   carrying: boolean;
@@ -215,6 +216,7 @@ export class NightScene extends Phaser.Scene {
     this.morningClient = workerMode && typeof crypto.randomUUID === 'function' ? new MorningClient() : null;
     this.morningSource = null;
     this.banked = 0;
+    this.movementLearned = false;
     this.nightStartMemory = { visited: new Uint8Array(this.farm.width * this.farm.height), hasMap: false };
     this.chooseEntry(newSession(this.farm, 1));
   }
@@ -489,12 +491,15 @@ export class NightScene extends Phaser.Scene {
       this.banked += 1;
       this.signal('bank');
     }
-    const context = this.session.night === 1 ? prepareMorning(this.farm, this.session, this.result).context : null;
+    const { session: resolved, context } = prepareMorning(this.farm, this.session, this.result, PLAYTEST_NIGHT_LIMIT);
     if (context) {
       const opening = openingBeat(context, nightOutcome(end, this.result));
       this.morningBeat = opening;
       void this.resolveMorning(this.result, context, opening);
-    } else this.finishMorningClient();
+    } else {
+      this.session = resolved;
+      this.finishMorningClient();
+    }
     console.info('[gnome-heist] night result', JSON.stringify(this.result));
     if (end.reason === 'spotted') this.cameras.main.shake(250, 0.004);
   }
@@ -504,8 +509,8 @@ export class NightScene extends Phaser.Scene {
     const client = this.morningClient;
     let morning: ReturnType<typeof advanceLocalMorning>;
     if (client === null) {
-      morning = advanceLocalMorning(this.farm, session, result);
-      this.morningSource = 'local-rule';
+      morning = advanceLocalMorning(this.farm, session, result, PLAYTEST_NIGHT_LIMIT);
+      if (this.morningSource !== 'offline-rule') this.morningSource = 'local-rule';
     } else {
       try {
         const remote = await client.advance(this.farm, session, result);
@@ -515,7 +520,7 @@ export class NightScene extends Phaser.Scene {
       } catch {
         if (client !== this.morningClient) return;
         this.finishMorningClient();
-        morning = advanceLocalMorning(this.farm, session, result);
+        morning = advanceLocalMorning(this.farm, session, result, PLAYTEST_NIGHT_LIMIT);
         this.morningSource = 'offline-rule';
         console.info('[gnome-heist] morning mode switched to local rules', { night: session.night });
       }
@@ -666,9 +671,11 @@ export class NightScene extends Phaser.Scene {
     const progress = i && hold && hold.action === i.action && hold.target === i.target && i.holdSeconds > 0 ? hold.seconds / i.holdSeconds : 0;
     if (this.message && time > this.message.until) this.message = null;
     const cam = this.cameras.main;
+    const strikes = this.session.strikes + Number(this.morningBeat !== null && this.result?.spotted === true);
     const result = this.night.ended && this.result && !this.morningBeat ? [
       nightOutcome(this.night.ended, this.result), '',
-      'Two-night playtest complete', `Gnomes banked: ${this.banked} / 2`, 'R  ·  Play again',
+      this.session.world.gnomes.length === 0 ? 'All gnomes brought home' : strikes >= STRIKE_LIMIT ? 'Three strikes · Run over' : 'Four-night playtest complete',
+      `Gnomes banked: ${this.banked} / ${PLAYTEST_NIGHT_LIMIT}`, `Strikes: ${strikes} / ${STRIKE_LIMIT}`, 'R  ·  Play again',
     ] : null;
     return {
       paused: this.paused,
@@ -690,6 +697,7 @@ export class NightScene extends Phaser.Scene {
       feedback: this.feedback,
       phase: this.phase,
       night: this.night.night,
+      strikes,
       stamina: this.night.stamina,
       maxStamina: PLAYER_STAMINA,
       carrying: this.night.carrying !== null,
@@ -723,6 +731,8 @@ export class NightScene extends Phaser.Scene {
       phase: this.phase,
       player: { ...this.night.player },
       night: this.session.night,
+      nightLimit: PLAYTEST_NIGHT_LIMIT,
+      strikes: hud.strikes,
       paused: this.paused,
       entering: hud.entering,
       entryElapsed: this.entryCinematic?.elapsed ?? null,
@@ -750,7 +760,7 @@ export class NightScene extends Phaser.Scene {
       morningBeat: hud.morningBeat,
       banked: this.banked,
       morningPlan: this.morning?.plan ?? null,
-      morningSource: this.morningSource,
+      morningSource: this.morning?.plan ? this.morningSource : null,
       layout: this.session.farmer.layout,
       playerFrame: this.player.frame.name,
       cover: this.cover,
@@ -765,6 +775,7 @@ export class NightScene extends Phaser.Scene {
       world: this.night.world,
       footprints: this.night.footprints.length,
       result: this.result,
+      recap: hud.result,
       camera: {
         zoom: cam.zoom,
         roundPixels: cam.roundPixels,

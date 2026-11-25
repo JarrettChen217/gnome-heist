@@ -298,3 +298,4 @@ The farmer sees a trace list, his own layout, his remaining stamina and money, a
 | 2026-11-24 | Use the dog-hole entry shot to introduce the exit and the first scroll. Shorten it on later nights and let movement interrupt it. | [Hao, on agent proposal] | Decided |
 | 2026-11-24 | Begin the first night with a 2D daylight view of the estate, dusk and a lit farmhouse window. Push toward the chosen hole and join the existing crawl. | [Hao, on agent proposal] | Decided for the prototype |
 | 2026-11-24 | Use the playable map and its vegetation throughout the opening so players can recognize the same paths and hedges after dark. | [Hao] | Decided |
+| 2026-11-24 | Extend the local prototype to one round of four nights on the same farm. Each intervening morning can change defenses, and the round scores the gnomes brought home. The full-game target in Section 5 remains five nights. | [Hao] | Decided for the prototype |

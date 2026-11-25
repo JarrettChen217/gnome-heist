@@ -1,4 +1,4 @@
-// AI-use disclosure: Codex wrote these keyboard-driven T20 regression tests under Hao's direction.
+// AI-use disclosure: Codex wrote these keyboard-driven orientation and four-night regression tests under Hao's direction.
 import { readFileSync } from 'node:fs';
 import { loadFarm, tilesOf } from '@gnome-heist/core';
 import { expect, test, type Page } from '@playwright/test';
@@ -54,11 +54,17 @@ interface OrientationState {
   readonly carrying: string | null;
   readonly interaction: { readonly action: string; readonly target: string } | null;
   readonly result: { readonly gnomeTaken: string | null; readonly traces: readonly unknown[] } | null;
-  readonly world: { readonly gnomes: readonly string[] };
+  readonly world: {
+    readonly gnomes: readonly string[];
+    readonly gates: readonly { readonly id: string; readonly open: boolean }[];
+  };
   readonly morningSource: string | null;
   readonly morningBeat: { readonly stage: string; readonly trace: { readonly id: string } | null } | null;
   readonly morningPlan: { readonly inspected: readonly string[] } | null;
   readonly banked: number;
+  readonly strikes: number;
+  readonly nightLimit: number;
+  readonly recap: readonly string[] | null;
 }
 
 const debug = (page: Page) =>
@@ -96,7 +102,7 @@ async function walkTo(page: Page, key: string, axis: 'x' | 'y', threshold: numbe
         return state !== undefined && (state.player[axis] - threshold) * direction >= 0;
       },
       { axis, threshold, direction },
-      { timeout: 3_000 },
+      { timeout: 5_000 },
     );
   } finally {
     await page.keyboard.up(key);
@@ -241,8 +247,8 @@ test('pausing an entry shot allows a clean restart with a different entrance', a
   });
 });
 
-test('restart restores the scroll, then two entrances lead to two banked gnomes and a fresh replay', async ({ page }) => {
-  test.setTimeout(45_000);
+test('restart restores the scroll, then four heists and three mornings lead to a fresh replay', async ({ page }) => {
+  test.setTimeout(110_000);
   await page.goto('/');
   await chooseEntrance(page, 1);
   await walkTo(page, 'ArrowRight', 'x', 1.5, 1);
@@ -286,23 +292,76 @@ test('restart restores the scroll, then two entrances lead to two banked gnomes 
   expect(second.scrollTile).toBeNull();
   expect(second.showScrollNote).toBe(false);
 
-  await walkTo(page, 'ArrowLeft', 'x', 20.55, -1);
+  await walkTo(page, 'ArrowLeft', 'x', 22.5, -1);
   await walkTo(page, 'ArrowUp', 'y', 10.5, -1);
+  await walkTo(page, 'ArrowLeft', 'x', 20.55, -1);
   await dig(page, 'ped_se');
+  await walkTo(page, 'ArrowRight', 'x', 22.5, 1);
   await walkTo(page, 'ArrowDown', 'y', 15.5, 1);
   await walkTo(page, 'ArrowRight', 'x', 23.5, 1);
   await tap(page, 'KeyE');
-  await expect.poll(async () => (await debug(page))?.phase).toBe('ended');
-  expect(await debug(page)).toMatchObject({ result: { gnomeTaken: 'ped_se' }, banked: 2 });
+  await expect.poll(() => debug(page)).toMatchObject({
+    phase: 'ended', result: { gnomeTaken: 'ped_se' }, banked: 2, morningSource: 'local-rule',
+  });
+  await expect.poll(async () => (await debug(page))?.morningBeat?.stage, { timeout: 12_000 }).toBe('ready');
+
+  await tap(page, 'Enter');
+  await chooseEntrance(page, 3);
+  await waitForControl(page);
+  const third = (await debug(page))!;
+  expect(third).toMatchObject({ night: 3, nightLimit: 4, banked: 2, strikes: 0 });
+  expect(third.world.gnomes).toEqual(expect.arrayContaining(['ped_center', 'ped_ne', 'ped_nw']));
+  expect(third.world.gnomes).toHaveLength(3);
+  await walkTo(page, 'ArrowUp', 'y', 7.5, -1);
+  await dig(page, 'ped_center');
+  await walkTo(page, 'ArrowDown', 'y', 17.5, 1);
+  await tap(page, 'KeyE');
+  await expect.poll(() => debug(page)).toMatchObject({
+    phase: 'ended', result: { gnomeTaken: 'ped_center' }, banked: 3, morningSource: 'local-rule',
+  });
+  await expect.poll(async () => (await debug(page))?.morningBeat?.stage, { timeout: 12_000 }).toBe('ready');
+
+  await tap(page, 'Enter');
+  await chooseEntrance(page, 2);
+  await waitForControl(page);
+  const fourth = (await debug(page))!;
+  expect(fourth).toMatchObject({ night: 4, banked: 3, strikes: 0 });
+  expect(fourth.world.gnomes).toEqual(expect.arrayContaining(['ped_ne', 'ped_nw']));
+  expect(fourth.world.gnomes).toHaveLength(2);
+  await walkTo(page, 'ArrowLeft', 'x', 22.5, -1);
+  await walkTo(page, 'ArrowUp', 'y', 9.5, -1);
+  await walkTo(page, 'ArrowLeft', 'x', 19.5, -1);
+  await walkTo(page, 'ArrowUp', 'y', 8.5, -1);
+  expect((await debug(page))?.interaction).toMatchObject({ action: 'pickLock', target: 'gate_east_beds' });
+  await page.keyboard.down('KeyE');
+  try {
+    await expect.poll(async () => (await debug(page))?.world.gates.find(({ id }) => id === 'gate_east_beds')?.open).toBe(true);
+  } finally {
+    await page.keyboard.up('KeyE');
+  }
+  await walkTo(page, 'ArrowUp', 'y', 2.5, -1);
+  await dig(page, 'ped_ne');
+  await walkTo(page, 'ArrowDown', 'y', 9.5, 1);
+  await walkTo(page, 'ArrowRight', 'x', 22.5, 1);
+  await walkTo(page, 'ArrowDown', 'y', 15.5, 1);
+  await walkTo(page, 'ArrowRight', 'x', 23.5, 1);
+  await tap(page, 'KeyE');
+  await expect.poll(() => debug(page)).toMatchObject({
+    phase: 'ended', night: 4, result: { gnomeTaken: 'ped_ne' }, banked: 4, strikes: 0,
+    morningBeat: null, morningSource: null, morningPlan: null,
+    recap: ['You brought a gnome home!', '', 'Four-night playtest complete', 'Gnomes banked: 4 / 4', 'Strikes: 0 / 3', 'R  ·  Play again'],
+  });
+  await tap(page, 'Enter');
+  expect(await debug(page)).toMatchObject({ phase: 'ended', night: 4, banked: 4 });
 
   await tap(page, 'KeyR');
   await chooseEntrance(page, 1);
   await waitForControl(page);
   const replay = (await debug(page))!;
   expect(replay.night).toBe(1);
-  expect(replay.world.gnomes).toContain('ped_sw');
-  expect(replay.world.gnomes).toContain('ped_se');
+  expect(replay.world.gnomes).toEqual(farm.pedestals.map(({ id }) => id));
   expect(replay.banked).toBe(0);
+  expect(replay.strikes).toBe(0);
   expect(replay.fieldMap).toBeNull();
   expect(replay.scrollVisible).toBe(true);
 });

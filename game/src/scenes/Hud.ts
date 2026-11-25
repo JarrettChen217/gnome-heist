@@ -1,6 +1,7 @@
 // AI-use disclosure: Claude (Claude Code) wrote the original HUD under Hao's direction.
-// Codex illustrated the entry screen and built the contextual controls and feedback under Hao's direction.
+// Codex illustrated the entry screen and built the contextual controls, feedback, and four-night counters under Hao's direction.
 import * as Phaser from 'phaser';
+import { PLAYTEST_NIGHT_LIMIT, STRIKE_LIMIT } from '@gnome-heist/core';
 import { playFeedback } from '../feedbackSound.ts';
 import { PauseMenu } from '../pauseMenu.ts';
 import { MorningVignette } from '../morningVignette.ts';
@@ -202,12 +203,13 @@ export class HudScene extends Phaser.Scene {
   override update(time: number): void {
     const s = this.registry.get('hud') as NightHudState | undefined;
     if (s === undefined) return;
-    this.morning.update(s.morningBeat);
+    this.morning.update(s.morningBeat, s.night + 1);
     this.entry.setVisible(s.phase === 'choose');
     this.status.setVisible(s.phase === 'night' && !s.entering);
     this.corner.setVisible(s.phase === 'night' && !s.entering);
     const pips = '●'.repeat(s.stamina) + '○'.repeat(Math.max(0, s.maxStamina - s.stamina));
-    const status = `Night ${s.night}   Banked ${s.banked}/2   Stamina ${pips}${s.carrying ? '\nCarrying a gnome' : ''}`;
+    const separator = this.scale.width < 520 ? '\n' : '   ';
+    const status = `Night ${s.night}/${PLAYTEST_NIGHT_LIMIT}   Banked ${s.banked}/${PLAYTEST_NIGHT_LIMIT}${separator}Strikes ${s.strikes}/${STRIKE_LIMIT}   Stamina ${pips}${s.carrying ? '\nCarrying a gnome' : ''}`;
     this.status.setText(s.inBush && s.phase === 'night' ? `${status}\nBush cover · Dogs can hear you` : status);
 
     this.drawFieldMap(s);
@@ -217,7 +219,8 @@ export class HudScene extends Phaser.Scene {
     this.pauseMenu.setVisible(s.paused);
     if (s.phase === 'choose') {
       const entrances = s.holes.map((id, i) => `[${i + 1}] ${id.replace(/^hole_/, '').toUpperCase()}`);
-      const invitation = s.night > 1 && s.banked > 0 ? `Night ${s.night} · Return for another gnome` : `Night ${s.night} · Choose your entrance`;
+      const goal = s.night > 1 && s.banked > 0 ? 'Return for another gnome' : 'Choose your entrance';
+      const invitation = `Night ${s.night} of ${PLAYTEST_NIGHT_LIMIT} · ${goal}`;
       this.choices.setText(`${invitation}\n${entrances.join('   ')}`);
       this.panel.setVisible(false);
     } else if (s.phase === 'ended' && s.result) {

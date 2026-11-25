@@ -1,4 +1,4 @@
-// AI-use disclosure: Codex drew and animated this morning vignette under Hao's direction.
+// AI-use disclosure: Codex drew and animated this morning vignette and numbered its transitions under Hao's direction.
 import * as Phaser from 'phaser';
 import type { MorningBeat } from './morningSequence.ts';
 import { playFeedback } from './feedbackSound.ts';
@@ -29,7 +29,7 @@ export class MorningVignette {
     this.footer = scene.add.text(0, 0, '', { ...text, color: '#f2c974', fontSize: '14px' }).setOrigin(0.5).setDepth(11);
   }
 
-  update(beat: MorningBeat | null): void {
+  update(beat: MorningBeat | null, nextNight: number): void {
     const visible = beat !== null;
     this.backdrop.setVisible(visible);
     this.scenery.setVisible(visible);
@@ -85,10 +85,10 @@ export class MorningVignette {
     const frame = stretch ? 3 : walking && progress < 1 ? 1 + Math.floor(beat.elapsed / 170) % 2 : 0;
     this.farmer.setFrame(frame).setPosition(left + this.farmerX * unit, top + y * unit).setDisplaySize(28 * unit, 37 * unit);
     // Keep animating the actor while the caption and its text texture remain stable.
-    const layout = [cue, beat.stamina, beat.money, w, h].join('/');
+    const layout = [cue, beat.stamina, beat.money, nextNight, w, h].join('/');
     if (this.textLayout === layout) return;
     this.textLayout = layout;
-    const stageTitle = beat.stage === 'opening' || beat.stage === 'waiting' ? 'MORNING ON THE FARM' : beat.stage === 'inspect' ? `INSPECTING TRACE ${beat.index + 1}` : beat.stage === 'speak' ? 'THE FARMER SAYS' : beat.stage === 'think' ? 'THE FARMER CONSIDERS' : 'BEFORE NIGHT TWO';
+    const stageTitle = beat.stage === 'opening' || beat.stage === 'waiting' ? 'MORNING ON THE FARM' : beat.stage === 'inspect' ? `INSPECTING TRACE ${beat.index + 1}` : beat.stage === 'speak' ? 'THE FARMER SAYS' : beat.stage === 'think' ? 'THE FARMER CONSIDERS' : `BEFORE NIGHT ${nextNight}`;
     this.heading.setText(stageTitle).setPosition(w / 2, Math.max(22, top - 16));
     const choices = beat.choices.map((choice) => choice.label).join(' + ');
     const words = beat.stage === 'speak' ? `“${beat.line}”`

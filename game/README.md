@@ -20,13 +20,13 @@ npm run test:e2e       # Playwright smoke tests in Chrome against a fresh local 
 
 `npm run dev -w game` runs the client alone on Vite's dev server (no API).
 
-## Two-night playtest
+## Four-night playtest
 
-Choose an entrance with 1, 2 or 3. On night one, the estate darkens, the farmhouse window lights up and the camera follows a rustle to the chosen hedge opening. A movement key gives you control immediately. Night two uses the short crawl. Walk with WASD or the arrow keys. Hold E at a gate, fence or pedestal, or press E inside a dog hole to end the night. Esc opens the pause menu. Restarting the night takes you back to entrance selection with that evening’s starting farm.
+Choose an entrance with 1, 2 or 3. On night one, the estate darkens, the farmhouse window lights up and the camera follows a rustle to the chosen hedge opening. A movement key gives you control immediately. Nights two through four use the short crawl. Walk with WASD or the arrow keys. Hold E at a gate, fence or pedestal, or press E inside a dog hole to end the night. Esc opens the pause menu. Restarting the night takes you back to entrance selection with that evening’s starting farm.
 
 At dawn, the farmer steps outside while the morning plan is being prepared. He checks the traces he selected, speaks, and spends his budget according to the validated plan. The same animation plays when the rule farmer takes over. The closing caption names the change and leaves its location for the player to discover.
 
-Press Enter after the closing caption to choose a second entrance. The previous theft, the route on the scroll and the changed defenses carry over. Dig up a remaining gnome and bring it through a hedge opening. The final screen counts gnomes brought home across both nights. R at the result screen starts a fresh playtest. By default the browser uses the deterministic rule farmer without making a morning API request. See the [two-night playtest plan](../docs/two-night-playtest.md).
+Press Enter after each of the first three mornings to choose an entrance for the next night. The same farm keeps the empty pedestals, routes you explored on the scroll and the farmer’s committed defenses. Bring a different gnome through a hedge opening each night. The fourth night ends the round and shows how many gnomes you brought home. A third strike ends the round early. R at the result screen starts a fresh playtest. By default the browser uses the deterministic rule farmer without making a morning API request. See the [playtest plan](../docs/two-night-playtest.md).
 
 The opening uses the playable farm’s ground, paths, hedges and vegetation. The camera and lighting change continuously as the view moves toward the selected entrance.
 
@@ -47,8 +47,8 @@ Codex used the built-in ImageGen tool under Hao's direction to create the [dawn 
 
 ### Local Worker checkpoint
 
-1. Run `npm run dev` from the repository root and open `http://127.0.0.1:8787/?farmer=agent`. The browser now runs the first morning through the local Worker. With no provider binding, the Worker uses the same rule farmer.
-2. For a paid test, set `FARMER_PROVIDER=anthropic` and `ANTHROPIC_API_KEY` in the gitignored `worker/.dev.vars`, then restart the local Worker. `ANTHROPIC_MODEL` defaults to `claude-sonnet-5-5`. Each fresh two-night run requests the model at most once. Check the Worker log for provider, outcome, elapsed time, and token usage and estimated cost when reported.
+1. Run `npm run dev` from the repository root and open `http://127.0.0.1:8787/?farmer=agent`. The browser now requests each eligible morning from the local Worker. With no provider binding, the Worker uses the same rule farmer.
+2. For a paid test, set `FARMER_PROVIDER=anthropic` and `ANTHROPIC_API_KEY` in the gitignored `worker/.dev.vars`, then restart the local Worker. `ANTHROPIC_MODEL` defaults to `claude-sonnet-5-5`. A full round has up to three morning decisions. Use the project’s approved call budget for live provider checks. Check the Worker log for provider, outcome, elapsed time, and token usage and estimated cost when reported.
 3. For the quiet-night smoke, choose an entrance and press E without leaving the dog hole. To exercise a visible defense change with the rule farmer, take the southwest gnome and return through the west dog hole. The daybreak panel shows progress while the Worker decides. Press Enter after the plan appears to start night two. If the Worker is unreachable or misses the browser deadline, the browser switches that run to the local rule farmer. `window.__gnomeDebug.morningSource` identifies the result.
 4. To reproduce the timeout, retry and isolation checks without provider calls, run `npm test -- --project worker`. The Workers test configuration uses fake providers or explicitly selects the rule farmer.
 

@@ -1,6 +1,6 @@
 // AI-use disclosure: Codex wrote these local-morning regression tests under Hao's direction.
 import { describe, expect, it } from 'vitest';
-import { advanceLocalMorning, endNight, startNight } from '../src/index.ts';
+import { advanceLocalMorning, endNight, PLAYTEST_NIGHT_LIMIT, startNight } from '../src/index.ts';
 import type { NightResult } from '../src/index.ts';
 import { farmFrom, sessionFor } from './helpers.ts';
 
@@ -68,5 +68,17 @@ describe('local morning', () => {
     });
     expect(advanceLocalMorning(farm, { ...s, night: 5 }, { ...quiet, night: 5 }).plan).toBeNull();
     expect(advanceLocalMorning(farm, s, { ...quiet, gnomeTaken: 'ped1', changes: [{ kind: 'pedestal', id: 'ped1', hasGnome: false }] }).plan).toBeNull();
+  });
+
+  it('ends the four-night prototype after resolving night four while preserving the five-night default', () => {
+    const farm = farmFrom(['D..gg']);
+    const session = { ...sessionFor(farm), night: 4 };
+    const result: NightResult = { ...quiet, night: 4, gnomeTaken: 'ped1',
+      changes: [{ kind: 'pedestal', id: 'ped1', hasGnome: false }] };
+    const terminal = advanceLocalMorning(farm, session, result, PLAYTEST_NIGHT_LIMIT);
+    expect(terminal.plan).toBeNull();
+    expect(terminal.session.world.gnomes).toEqual(['ped2']);
+    expect(terminal.session.farmer).toEqual(session.farmer);
+    expect(advanceLocalMorning(farm, session, result).session.night).toBe(5);
   });
 });

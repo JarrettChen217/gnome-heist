@@ -65,34 +65,59 @@ test('holding a movement key walks the gardener', async ({ page }) => {
   expect(Math.hypot(after.x - before.x, after.y - before.y)).toBeGreaterThan(0.5);
 });
 
-test('the first morning completes through the local Worker with the rule farmer', async ({ page }) => {
+test('three mornings advance one Worker session and night four closes it', async ({ page }) => {
+  test.setTimeout(60_000);
+  const mornings = new Set<string>();
+  page.on('request', (request) => {
+    if (request.url().endsWith('/morning')) mornings.add(request.postDataJSON().morningId);
+  });
   await page.goto('/?farmer=agent');
+  let sessionPath = '';
+  for (let night = 1; night <= 3; night++) {
+    await startNightAtWestEntrance(page);
+    expect((await debug(page))?.night).toBe(night);
+    const committed = page.waitForResponse((response) => response.url().endsWith('/morning') && response.status() === 200);
+    await tap(page, 'KeyE');
+    const response = await committed;
+    const path = new URL(response.url()).pathname.replace(/\/morning$/, '');
+    if (night === 1) sessionPath = path;
+    expect(path).toBe(sessionPath);
+    expect(await response.json()).toMatchObject({ morningId: `night-${night}`, revision: night, actedBy: 'rule' });
+    await expect.poll(async () => (await debug(page))?.morningBeat?.stage, { timeout: 12_000 }).toBe('ready');
+    expect((await debug(page))?.morningSource).toBe('rule');
+    await tap(page, 'Enter');
+  }
   await startNightAtWestEntrance(page);
-
-  const morning = page.waitForResponse((r) => /\/session\/[^/]+\/morning$/.test(new URL(r.url()).pathname) && r.status() === 200);
-  // Pressing E inside the dog hole ends a quiet night.
+  expect((await debug(page))?.night).toBe(4);
+  const finished = page.waitForResponse((response) => new URL(response.url()).pathname === `${sessionPath}/finish` && response.ok());
   await tap(page, 'KeyE');
-  await expect.poll(async () => (await debug(page))?.phase).toBe('ended');
-  await morning;
-
-  await expect.poll(async () => (await debug(page))?.morningSource).toBe('rule');
-  expect((await debug(page))?.morningPlan).not.toBeNull();
+  await finished;
+  expect(await debug(page)).toMatchObject({ phase: 'ended', night: 4, morningPlan: null, morningBeat: null });
+  expect([...mornings]).toEqual(['night-1', 'night-2', 'night-3']);
 });
 
-test('an unreachable Worker switches the morning to local rules', async ({ page }) => {
-  await page.route('**/session/*/morning', (route) => route.abort('connectionrefused'));
-  await page.goto('/?farmer=agent');
-  await startNightAtWestEntrance(page);
-
-  await tap(page, 'KeyE');
-  await expect.poll(async () => (await debug(page))?.morningSource).toBe('offline-rule');
-  await expect.poll(async () => (await debug(page))?.morningBeat?.stage, { timeout: 12_000 }).toBe('ready');
-  expect(await debug(page)).toMatchObject({
-    morningPlan: { actions: [] },
-    morningBeat: { choices: [{ label: 'Do nothing', stamina: 0, money: 0 }] },
+test('losing the Worker after one committed morning carries the run through local fallback', async ({ page }) => {
+  test.setTimeout(55_000);
+  const requested = new Set<string>();
+  await page.route('**/session/*/morning', (route) => {
+    const { morningId } = route.request().postDataJSON();
+    requested.add(morningId);
+    return morningId === 'night-1' ? route.continue() : route.abort('connectionrefused');
   });
-  await tap(page, 'Enter');
-  await expect.poll(async () => (await debug(page))?.night).toBe(2);
+  await page.goto('/?farmer=agent');
+  for (const source of ['rule', 'offline-rule', 'offline-rule']) {
+    await startNightAtWestEntrance(page);
+    await tap(page, 'KeyE');
+    await expect.poll(async () => (await debug(page))?.morningSource).toBe(source);
+    await expect.poll(async () => (await debug(page))?.morningBeat?.stage, { timeout: 12_000 }).toBe('ready');
+    expect(await debug(page)).toMatchObject({
+      morningPlan: { actions: [] },
+      morningBeat: { choices: [{ label: 'Do nothing', stamina: 0, money: 0 }] },
+    });
+    await tap(page, 'Enter');
+  }
+  await expect.poll(async () => (await debug(page))?.night).toBe(4);
+  expect([...requested]).toEqual(['night-1', 'night-2']);
 });
 
 test('the morning waits through a pending reply and presents a legal agent purchase before night two', async ({ page }) => {
