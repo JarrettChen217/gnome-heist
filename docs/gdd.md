@@ -59,6 +59,7 @@ Each morning the farmer, an AI agent, reads only the traces you left behind and 
 ### 5.2 Entries: dog holes
 
 - You always enter and leave through a dog hole in the outer hedge. Each dog hole is a fixed entry; v1 has three. [Hao]
+- On the first night, the camera starts close to the chosen hedge opening. The leaves shake, the player crawls through cap first, and the camera pulls up to show the scroll. The shot lasts about 1.5 seconds. Movement gives the player immediate control. Later nights use a short crawl at the normal zoom. [Hao, on agent proposal]
 - **Entries are safe zones.** The farmer may not place or move anything onto a dog hole or within 2 tiles of it; the validator rejects such a move. Danger can still reach the path beyond those 2 tiles, so being seen soon after you crawl in remains a real risk. [Hao, on agent proposal]
 - Standing in a dog hole and pressing the end-night control ends the night. You cannot be stranded inside with no stamina, because walking is free. [Hao]
 - To keep that promise, a re-lock that would cut you off from every dog hole is refused: the prompt says "You'd lock yourself in" and no stamina is spent. The check uses the route rules in Section 5.11. [Hao, on agent proposal]
@@ -294,3 +295,4 @@ The farmer sees a trace list, his own layout, his remaining stamina and money, a
 | 2026-11-13 | He hates broken things: repairing first is his personality in the prompt, not a forced rule | Agent proposal (soft, not forced), accepted by Hao | Decided |
 | 2026-11-13 | Moving a padlock so its destination gate is locked also triggers the existing open-route check; the check uses the layout after the whole plan | Codex proposal, accepted by Hao | Decided |
 | 2026-11-24 | Prototype the first-night scroll pickup and pixel map at all three entrances, then observe orientation and the second-night route choice. | [Hao, on agent proposal] | Decided for the first prototype |
+| 2026-11-24 | Use the dog-hole entry shot to introduce the exit and the first scroll. Shorten it on later nights and let movement interrupt it. | [Hao, on agent proposal] | Decided |

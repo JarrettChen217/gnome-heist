@@ -25,9 +25,7 @@ export class HudScene extends Phaser.Scene {
   private letter!: Phaser.GameObjects.Text;
   private panel!: Phaser.GameObjects.Text;
   private corner!: Phaser.GameObjects.Text;
-  private tutorial!: Phaser.GameObjects.Container;
-  private veil!: Phaser.GameObjects.Rectangle;
-  private movementKeys!: Phaser.GameObjects.Container;
+  private movementCue!: Phaser.GameObjects.Text;
   private pauseMenu!: PauseMenu;
   private morning!: MorningVignette;
   private feedbackId: number | null = null;
@@ -53,19 +51,7 @@ export class HudScene extends Phaser.Scene {
     this.title = this.add.text(0, 0, 'Gnome Heist', { fontFamily: 'Georgia, serif', fontStyle: 'bold italic', fontSize: '44px', color: '#ffe4a0' });
     this.choices = this.add.text(0, 0, '', { fontFamily: 'monospace', fontSize: '16px', color: '#ede6d7', lineSpacing: 6 });
     this.entry = this.add.container(0, 0, [this.cover, this.entryBand, this.title, this.choices]);
-    this.veil = this.add.rectangle(0, 0, 1, 1, 0x0b0e13, 0.58).setOrigin(0);
-    this.movementKeys = this.add.container(0, 0);
-    for (const [i, key] of ['W', 'A', 'S', 'D'].entries()) {
-      const x = i === 0 ? 0 : (i - 2) * 40;
-      const y = i === 0 ? -38 : 0;
-      this.movementKeys.add([
-        this.add.rectangle(x, y + 3, 32, 32, 0x77715e),
-        this.add.rectangle(x, y, 32, 32, 0x283239).setStrokeStyle(2, 0xe3cca1),
-        this.add.text(x, y, key, { fontFamily: 'monospace', fontSize: '18px', color: CREAM }).setOrigin(0.5),
-      ]);
-    }
-    this.movementKeys.add(this.add.text(0, 28, 'WASD or arrow keys to walk', style).setOrigin(0.5, 0));
-    this.tutorial = this.add.container(0, 0, [this.veil, this.movementKeys]).setDepth(8).setVisible(false);
+    this.movementCue = this.add.text(0, 0, 'WASD or arrow keys to walk', { ...style, fontSize: '13px' }).setOrigin(0.5, 1).setDepth(8).setVisible(false);
     this.pauseMenu = new PauseMenu(
       () => this.game.events.emit('hud-resume'),
       () => this.game.events.emit('hud-restart'),
@@ -97,8 +83,7 @@ export class HudScene extends Phaser.Scene {
     this.choices.setWordWrapWidth(stacked ? width - 32 : width - Math.max(330, width * 0.45) - 16, true);
     this.corner.setPosition(width - 8, height - 8);
     this.panel.setPosition(width / 2, height / 2).setWordWrapWidth(Math.min(640, width - 52), true);
-    this.veil.setSize(width, height);
-    this.movementKeys.setPosition(width / 2, Math.min(height - 70, height / 2 + 105));
+    this.movementCue.setPosition(width / 2, height - 36);
     this.prompt.setWordWrapWidth(Math.min(440, width - 40), true);
     this.status.setWordWrapWidth(Math.max(80, width - 28), true);
     this.scrollNote.setWordWrapWidth(Math.max(100, Math.min(245, width - 28)), true);
@@ -106,7 +91,7 @@ export class HudScene extends Phaser.Scene {
 
   private drawFieldMap(s: NightHudState): void {
     const map = s.fieldMap;
-    const visible = s.phase === 'night' && !s.paused && !s.showMovementHint;
+    const visible = s.phase === 'night' && !s.paused && !s.showMovementHint && !s.entering;
     this.fieldMap.clear().setVisible(visible && map !== null);
     for (const label of this.mapLabels) label.setVisible(visible && map !== null);
     this.scrollNote.setVisible(visible && s.showScrollNote);
@@ -173,7 +158,7 @@ export class HudScene extends Phaser.Scene {
     this.cap.clear();
     this.letter.setVisible(false);
     const p = s.message ?? s.prompt;
-    if (!p || s.phase !== 'night' || s.paused || s.showMovementHint) {
+    if (!p || s.phase !== 'night' || s.paused || s.showMovementHint || s.entering) {
       this.prompt.setVisible(false);
       return;
     }
@@ -219,8 +204,8 @@ export class HudScene extends Phaser.Scene {
     if (s === undefined) return;
     this.morning.update(s.morningBeat);
     this.entry.setVisible(s.phase === 'choose');
-    this.status.setVisible(s.phase === 'night');
-    this.corner.setVisible(s.phase === 'night');
+    this.status.setVisible(s.phase === 'night' && !s.entering);
+    this.corner.setVisible(s.phase === 'night' && !s.entering);
     const pips = '●'.repeat(s.stamina) + '○'.repeat(Math.max(0, s.maxStamina - s.stamina));
     const status = `Night ${s.night}   Banked ${s.banked}/2   Stamina ${pips}${s.carrying ? '\nCarrying a gnome' : ''}`;
     this.status.setText(s.inBush && s.phase === 'night' ? `${status}\nBush cover · Dogs can hear you` : status);
@@ -228,7 +213,7 @@ export class HudScene extends Phaser.Scene {
     this.drawFieldMap(s);
     this.feedback(s);
     this.drawInteraction(s, time);
-    this.tutorial.setVisible(s.phase === 'night' && s.showMovementHint && !s.paused);
+    this.movementCue.setVisible(s.phase === 'night' && s.showMovementHint && !s.paused && !s.entering);
     this.pauseMenu.setVisible(s.paused);
     if (s.phase === 'choose') {
       const entrances = s.holes.map((id, i) => `[${i + 1}] ${id.replace(/^hole_/, '').toUpperCase()}`);

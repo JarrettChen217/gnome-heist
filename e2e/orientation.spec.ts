@@ -18,6 +18,12 @@ interface FieldMap {
 interface OrientationState {
   readonly phase: 'choose' | 'night' | 'ended';
   readonly night: number;
+  readonly entering: boolean;
+  readonly entryElapsed: number | null;
+  readonly paused: boolean;
+  readonly movementHint: boolean;
+  readonly footprints: number;
+  readonly camera: { readonly zoom: number };
   readonly player: Tile;
   readonly fieldMap: FieldMap | null;
   readonly scrollTile: Tile | null;
@@ -37,6 +43,10 @@ const debug = (page: Page) =>
   page.evaluate(() => (window as unknown as { __gnomeDebug?: OrientationState }).__gnomeDebug ?? null);
 
 const tap = (page: Page, key: string) => page.keyboard.press(key, { delay: 100 });
+
+async function waitForControl(page: Page, timeout = 4_000): Promise<void> {
+  await expect.poll(async () => (await debug(page))?.entering, { timeout, intervals: [50] }).toBe(false);
+}
 
 async function chooseEntrance(page: Page, digit: number): Promise<void> {
   await expect.poll(async () => (await debug(page))?.phase).toBe('choose');
@@ -78,14 +88,32 @@ const entrances = [
 ] as const;
 
 for (const entrance of entrances) {
-  test(`walking from the ${entrance.name} entrance picks up the scroll at ${entrance.width}px`, async ({ page }) => {
+  test(`the ${entrance.name} reveal leaves the scroll on the ground at ${entrance.width}px`, async ({ page }) => {
     await page.setViewportSize({ width: entrance.width, height: entrance.height });
     await page.goto('/');
     await chooseEntrance(page, entrance.digit);
-    const before = (await debug(page))!;
-    expect(before.fieldMap).toBeNull();
-    expect(before.scrollTile).toEqual(entrance.scroll);
-    expect(before.scrollVisible).toBe(true);
+    const reveal = (await debug(page))!;
+    const spawn = { x: entrance.entry.x + 0.5, y: entrance.entry.y + 0.5 };
+    expect(reveal).toMatchObject({ entering: true, movementHint: false, player: spawn, footprints: 0 });
+    const midShot = await page.waitForFunction(() => {
+      const state = (window as unknown as { __gnomeDebug?: OrientationState }).__gnomeDebug;
+      return state?.entering && (state.entryElapsed ?? 0) >= 750 ? state : null;
+    });
+    expect(await midShot.jsonValue()).toMatchObject({ player: spawn, footprints: 0, fieldMap: null });
+    await midShot.dispose();
+    await waitForControl(page);
+    const playable = (await debug(page))!;
+    expect(reveal.camera.zoom).toBeGreaterThan(playable.camera.zoom);
+    expect(playable).toMatchObject({
+      phase: 'night',
+      player: spawn,
+      carrying: null,
+      fieldMap: null,
+      scrollTile: entrance.scroll,
+      scrollVisible: true,
+      showScrollNote: false,
+      movementHint: true,
+    });
 
     await walkTo(page, entrance.key, entrance.axis, entrance.scroll[entrance.axis] + 0.5, entrance.direction);
     const pickedUp = (await debug(page))!;
@@ -101,6 +129,46 @@ for (const entrance of entrances) {
   });
 }
 
+test('the first movement key takes over the entry shot and moves the gardener', async ({ page }) => {
+  await page.goto('/');
+  await chooseEntrance(page, 1);
+  expect((await debug(page))?.entering).toBe(true);
+  await page.keyboard.down('ArrowRight');
+  try {
+    await page.waitForFunction(() => {
+      const state = (window as unknown as { __gnomeDebug?: OrientationState }).__gnomeDebug;
+      return state?.entering === false && state.player.x >= 1;
+    }, undefined, { timeout: 850 });
+  } finally {
+    await page.keyboard.up('ArrowRight');
+  }
+  expect((await debug(page))?.movementHint).toBe(false);
+});
+
+test('pausing an entry shot allows a clean restart with a different entrance', async ({ page }) => {
+  await page.goto('/');
+  await chooseEntrance(page, 1);
+  expect((await debug(page))?.entering).toBe(true);
+  await tap(page, 'Escape');
+  await expect.poll(async () => (await debug(page))?.paused).toBe(true);
+  const paused = (await debug(page))!;
+  expect(paused).toMatchObject({ entering: true, footprints: 0, fieldMap: null });
+  expect(paused.entryElapsed).not.toBeNull();
+  await page.evaluate(() => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
+  expect((await debug(page))?.entryElapsed).toBe(paused.entryElapsed);
+  await page.getByRole('button', { name: 'Restart this night' }).click();
+  await expect.poll(() => debug(page)).toMatchObject({ phase: 'choose', entering: false, paused: false });
+
+  await chooseEntrance(page, 2);
+  expect((await debug(page))?.entering).toBe(true);
+  await waitForControl(page);
+  expect(await debug(page)).toMatchObject({
+    player: { x: 23.5, y: 15.5 },
+    scrollTile: { x: 21, y: 15 },
+    scrollVisible: true,
+  });
+});
+
 test('restart restores the scroll, then two entrances lead to two banked gnomes and a fresh replay', async ({ page }) => {
   await page.goto('/');
   await chooseEntrance(page, 1);
@@ -110,6 +178,7 @@ test('restart restores the scroll, then two entrances lead to two banked gnomes 
   await tap(page, 'Escape');
   await page.getByRole('button', { name: 'Restart this night' }).click();
   await chooseEntrance(page, 1);
+  await waitForControl(page);
   expect((await debug(page))?.fieldMap).toBeNull();
   expect((await debug(page))?.scrollVisible).toBe(true);
 
@@ -131,8 +200,13 @@ test('restart restores the scroll, then two entrances lead to two banked gnomes 
   await expect.poll(async () => (await debug(page))?.morningBeat?.stage, { timeout: 12_000 }).toBe('ready');
   await tap(page, 'Enter');
   await chooseEntrance(page, 2);
+  const secondReveal = (await debug(page))!;
+  expect(secondReveal).toMatchObject({ entering: true, footprints: 0 });
+  await waitForControl(page, 1_000);
   const second = (await debug(page))!;
+  expect(second.camera.zoom).toBe(secondReveal.camera.zoom);
   expect(second.night).toBe(2);
+  expect(second.player).toEqual({ x: 23.5, y: 15.5 });
   expect(second.world.gnomes).not.toContain('ped_sw');
   expect(second.fieldMap?.entry).toEqual({ x: 23, y: 15 });
   expect(second.fieldMap?.visited[11 * explored.width + 3]).toBe(1);
@@ -150,6 +224,7 @@ test('restart restores the scroll, then two entrances lead to two banked gnomes 
 
   await tap(page, 'KeyR');
   await chooseEntrance(page, 1);
+  await waitForControl(page);
   const replay = (await debug(page))!;
   expect(replay.night).toBe(1);
   expect(replay.world.gnomes).toContain('ped_sw');

@@ -1,4 +1,4 @@
-// AI-use disclosure: Claude (Claude Code) wrote this file under my direction for M0 (T7) and wired in the T8 night rules. Codex sequenced the farmer’s morning from the committed plan under Hao’s direction.
+// AI-use disclosure: Claude (Claude Code) wrote this file under my direction for M0 (T7) and wired in the T8 night rules. Codex sequenced the farmer’s morning from the committed plan and implemented the entry camera handoff under Hao’s direction.
 // Codex fixed rectangular fence placement under Hao's direction after the M0 review.
 // Codex integrated directional player art and walk animation under Hao's direction.
 // Codex implemented tall grass rendering and bush feedback under Hao's direction.
@@ -8,6 +8,7 @@ import * as Phaser from 'phaser';
 import { PLAYER_STAMINA, advanceLocalMorning, bushAt, currentInteraction, endNight, loadFarm, newSession, prepareMorning, startNight, tallGrassAt, tick, tileOf, tilesOf, visibleTiles } from '@gnome-heist/core';
 import type { FarmerContext, FarmDef, FarmObject, Interaction, NightEnd, NightResult, NightState, SessionState, Tile } from '@gnome-heist/core';
 import { MIN_CAMERA_ZOOM, STEP_SECONDS, TILE_PX } from '../constants.ts';
+import { EntryShot } from '../entryShot.ts';
 import { fenceSegments } from '../fence.ts';
 import { MorningClient } from '../morningClient.ts';
 import { cueAt, morningCues, MORNING_OPENING_MS, openingBeat } from '../morningSequence.ts';
@@ -40,6 +41,7 @@ interface FieldMap {
 export interface NightHudState {
   phase: Phase;
   paused: boolean;
+  entering: boolean;
   showMovementHint: boolean;
   fieldMap: FieldMap | null;
   showScrollNote: boolean;
@@ -109,6 +111,10 @@ export class NightScene extends Phaser.Scene {
   private scrollTile: Tile | null = null;
   private scrollNoteRemaining = 0;
   private entryTile!: Tile;
+  private entryShot!: EntryShot;
+  private entryCinematic: { inward: Tile; duration: number; elapsed: number } | null = null;
+  private entryFacing: Tile | null = null;
+  private normalZoom = MIN_CAMERA_ZOOM;
   private keys!: Record<string, Phaser.Input.Keyboard.Key>;
   private acc = 0;
   private message: { text: PromptText; until: number } | null = null;
@@ -148,6 +154,7 @@ export class NightScene extends Phaser.Scene {
     this.printsLayer = this.add.graphics().setDepth(3);
 
     this.player = this.add.sprite(0, 0, 'player-art', 0).setOrigin(0.5, 1).setVisible(false);
+    this.entryShot = new EntryShot(this);
     this.scroll = this.add.graphics().setVisible(false);
     // A dark outline, rolled ends, parchment and a seal remain legible at integer zoom.
     this.scroll.fillStyle(0x262131).fillRect(-6, -5, 12, 9).fillRect(-5, -6, 10, 11);
@@ -208,6 +215,9 @@ export class NightScene extends Phaser.Scene {
   }
 
   private chooseEntry(session: SessionState): void {
+    this.entryCinematic = null;
+    this.entryFacing = null;
+    this.entryShot.clear();
     this.session = session;
     this.morning = null;
     this.morningBeat = null;
@@ -243,6 +253,7 @@ export class NightScene extends Phaser.Scene {
     this.addProps();
     this.drawDanger();
     this.cameras.main.stopFollow();
+    this.cameras.main.setZoom(this.normalZoom);
     this.cameras.main.centerOn((this.farm.width * TILE_PX) / 2, (this.farm.height * TILE_PX) / 2);
   }
 
@@ -252,6 +263,15 @@ export class NightScene extends Phaser.Scene {
     this.acc = 0;
     this.walkDistancePx = 0;
     this.entryTile = tileOf(this.night.player);
+    const { x, y } = this.entryTile;
+    const inward = x === 0 ? { x: 1, y: 0 }
+      : x === this.farm.width - 1 ? { x: -1, y: 0 }
+      : { x: 0, y: y === 0 ? 1 : -1 };
+    this.entryFacing = inward;
+    this.entryCinematic = { inward, duration: this.night.night === 1 ? 1500 : 400, elapsed: 0 };
+    // Clear key presses queued while the entrance picker was open.
+    for (const key of Object.values(this.keys)) Phaser.Input.Keyboard.JustDown(key);
+    this.requireRelease = this.keys['e']!.isDown;
     this.scrollTile = this.night.night === 1 && !this.fieldMemory.hasMap ? SCROLL_BY_ENTRY[entry] ?? null : null;
     if (this.scrollTile) {
       const x = (this.scrollTile.x + 0.5) * TILE_PX;
@@ -260,7 +280,16 @@ export class NightScene extends Phaser.Scene {
     }
     this.updateFieldMemory();
     this.syncPlayer();
-    // Phaser 4: startFollow without the second argument turns the camera's roundPixels off.
+    // The shorter return shot keeps the gameplay zoom and framing.
+    this.cameras.main.centerOn(this.player.x, this.player.y);
+  }
+
+  private completeEntryShot(): void {
+    this.entryCinematic = null;
+    this.entryShot.clear();
+    this.cameras.main.setZoom(this.normalZoom);
+    this.syncPlayer();
+    // Phaser 4: startFollow without the second argument turns roundPixels off.
     this.cameras.main.startFollow(this.player, true);
   }
 
@@ -270,7 +299,12 @@ export class NightScene extends Phaser.Scene {
     const fit = Math.max(width / (this.farm.width * TILE_PX), height / (this.farm.height * TILE_PX));
     // Frame roughly fifteen tiles across on desktop, so the walk and carrying poses read at play size.
     const characterZoom = Math.floor(Math.min(width / (15 * TILE_PX), height / (11 * TILE_PX)));
-    this.cameras.main.setZoom(Math.max(MIN_CAMERA_ZOOM, characterZoom, Math.ceil(fit)));
+    this.normalZoom = Math.max(MIN_CAMERA_ZOOM, characterZoom, Math.ceil(fit));
+    const camera = this.cameras.main;
+    if (!this.entryCinematic) camera.setZoom(this.normalZoom);
+    else if (this.night.night > 1) {
+      camera.setZoom(this.normalZoom).centerOn(this.night.player.x * TILE_PX, this.night.player.y * TILE_PX);
+    }
   }
 
   private addProps(): void {
@@ -361,41 +395,71 @@ export class NightScene extends Phaser.Scene {
         this.chooseEntry(this.morning.session);
       } else this.updateMorning(deltaMs);
     } else if (!this.paused) {
-      const down = (...names: string[]) => names.some((n) => k[n]?.isDown === true);
-      const pressedE = Phaser.Input.Keyboard.JustDown(k['e']!);
-      if (!down('e') && !pressedE) this.requireRelease = false;
-      const input = {
-        moveX: (down('right', 'd') ? 1 : 0) - (down('left', 'a') ? 1 : 0),
-        moveY: (down('down', 's') ? 1 : 0) - (down('up', 'w') ? 1 : 0),
-        // A tap shorter than a frame still counts as a press (ending the night is a press).
-        interact: !this.requireRelease && (down('e') || pressedE),
-      };
-      if (input.moveX || input.moveY) this.movementLearned = true;
-      if (input.moveX === 0 && input.moveY === 0) this.walkDistancePx = 0;
-      // Fixed steps; at most a quarter second per frame so a stalled tab does not jump.
-      this.acc = Math.min(this.acc + deltaMs / 1000, 0.25);
-      while (this.acc >= STEP_SECONDS && this.phase === 'night') {
-        const previous = this.night.player;
-        const r = tick(this.farm, this.night, input, STEP_SECONDS);
-        this.night = r.night;
-        this.scrollNoteRemaining = Math.max(0, this.scrollNoteRemaining - STEP_SECONDS);
-        this.updateFieldMemory();
-        const distancePx = Math.hypot(r.night.player.x - previous.x, r.night.player.y - previous.y) * TILE_PX;
-        this.walkDistancePx = distancePx > 1e-6 ? (this.walkDistancePx + distancePx) % (WALK_FRAMES * WALK_FRAME_PX) : 0;
-        this.acc -= STEP_SECONDS;
-        for (const e of r.events) {
-          if (e.type === 'action' && e.action !== 'endNight') this.signal(e.action);
-          if (e.type === 'refused') this.flash({ text: REFUSAL[e.reason], red: true }, time);
-          if (e.type === 'ended') this.finish(e.end);
-        }
-      }
-      this.syncPlayer();
+      this.updateNight(time, deltaMs);
     }
+    const entry = this.entryCinematic;
+    if (entry) this.entryShot.draw(this.player, this.entryTile, entry.inward, entry.elapsed, entry.duration, this.normalZoom);
     this.drawPrints();
     this.drawFogAndProps();
     const hud = this.hudState(time);
     this.registry.set('hud', hud);
     this.publishDebug(hud);
+  }
+
+  private updateNight(time: number, deltaMs: number): void {
+    const entry = this.entryCinematic;
+    const k = this.keys;
+    const down = (...names: string[]) => {
+      let active = false;
+      for (const name of names) {
+        const key = k[name]!;
+        const fresh = Phaser.Input.Keyboard.JustDown(key);
+        active ||= key.isDown || (entry !== null && fresh);
+      }
+      return active;
+    };
+    const pressedE = Phaser.Input.Keyboard.JustDown(k['e']!);
+    const holdingE = k['e']!.isDown;
+    if (!holdingE && !pressedE) this.requireRelease = false;
+    const right = down('right', 'd');
+    const left = down('left', 'a');
+    const up = down('up', 'w');
+    const downwards = down('down', 's');
+    const input = {
+      moveX: Number(right) - Number(left),
+      moveY: Number(downwards) - Number(up),
+      // A tap shorter than a frame still counts as a press (ending the night is a press).
+      interact: !this.requireRelease && (holdingE || pressedE),
+    };
+    if (entry) {
+      const interrupt = right || left || up || downwards || input.interact;
+      entry.elapsed += deltaMs;
+      if (!interrupt && entry.elapsed < entry.duration) return;
+      this.completeEntryShot();
+      // Preserve a tap and let the first movement input take effect on this frame.
+      deltaMs = interrupt ? Math.max(deltaMs, STEP_SECONDS * 1000) : 0;
+    }
+    if (input.moveX || input.moveY) this.movementLearned = true;
+    else this.walkDistancePx = 0;
+    // Fixed steps; at most a quarter second per frame so a stalled tab does not jump.
+    this.acc = Math.min(this.acc + deltaMs / 1000, 0.25);
+    while (this.acc >= STEP_SECONDS && this.phase === 'night') {
+      const previous = this.night.player;
+      const r = tick(this.farm, this.night, input, STEP_SECONDS);
+      this.night = r.night;
+      this.scrollNoteRemaining = Math.max(0, this.scrollNoteRemaining - STEP_SECONDS);
+      this.updateFieldMemory();
+      const distancePx = Math.hypot(r.night.player.x - previous.x, r.night.player.y - previous.y) * TILE_PX;
+      if (distancePx > 1e-6) this.entryFacing = null;
+      this.walkDistancePx = distancePx > 1e-6 ? (this.walkDistancePx + distancePx) % (WALK_FRAMES * WALK_FRAME_PX) : 0;
+      this.acc -= STEP_SECONDS;
+      for (const e of r.events) {
+        if (e.type === 'action' && e.action !== 'endNight') this.signal(e.action);
+        if (e.type === 'refused') this.flash({ text: REFUSAL[e.reason], red: true }, time);
+        if (e.type === 'ended') this.finish(e.end);
+      }
+    }
+    this.syncPlayer();
   }
 
   private updateFieldMemory(): void {
@@ -484,7 +548,9 @@ export class NightScene extends Phaser.Scene {
     const x = this.night.player.x * TILE_PX;
     const y = this.night.player.y * TILE_PX;
     // Rows run down, left, right, up and repeat with the gnome in the player's arms.
-    const { facing, carrying } = this.night;
+    const { carrying } = this.night;
+    // Keep the shot’s pose until the player moves. Rules still use NightState.facing.
+    const facing = this.entryFacing ?? this.night.facing;
     const directionRow = facing.x < 0 ? 1 : facing.x > 0 ? 2 : facing.y < 0 ? 3 : 0;
     const row = directionRow + (carrying === null ? 0 : 4);
     const column = this.phase === 'night' ? Math.floor(this.walkDistancePx / WALK_FRAME_PX) : 0;
@@ -567,7 +633,7 @@ export class NightScene extends Phaser.Scene {
   }
 
   private interaction(): Interaction | null {
-    return this.phase === 'night' ? currentInteraction(this.farm, this.night) : null;
+    return this.phase === 'night' && !this.entryCinematic ? currentInteraction(this.farm, this.night) : null;
   }
 
   private hudState(time: number): NightHudState {
@@ -582,7 +648,8 @@ export class NightScene extends Phaser.Scene {
     ] : null;
     return {
       paused: this.paused,
-      showMovementHint: !this.movementLearned && this.phase === 'night' && !this.paused,
+      entering: this.entryCinematic !== null,
+      showMovementHint: !this.movementLearned && this.phase === 'night' && !this.paused && !this.entryCinematic,
       fieldMap: this.phase === 'night' && this.fieldMemory.hasMap ? {
         width: this.farm.width,
         height: this.farm.height,
@@ -622,7 +689,9 @@ export class NightScene extends Phaser.Scene {
       player: { ...this.night.player },
       night: this.session.night,
       paused: this.paused,
-      movementHint: !this.movementLearned,
+      entering: hud.entering,
+      entryElapsed: this.entryCinematic?.elapsed ?? null,
+      movementHint: hud.showMovementHint,
       fieldMap: hud.fieldMap ? {
         ...hud.fieldMap,
         visited: Array.from(hud.fieldMap.visited),
@@ -640,7 +709,7 @@ export class NightScene extends Phaser.Scene {
       playerFrame: this.player.frame.name,
       cover: this.cover,
       playerVisible: this.player.visible,
-      playerCropHeight: this.player.isCropped ? GRASS_CROP_HEIGHT : null,
+      playerCropHeight: !hud.entering && this.player.isCropped ? GRASS_CROP_HEIGHT : null,
       tile: tileOf(this.night.player),
       stamina: this.night.stamina,
       carrying: this.night.carrying,
