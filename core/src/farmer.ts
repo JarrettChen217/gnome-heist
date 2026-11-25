@@ -208,7 +208,7 @@ function distance(a: FarmObject, b: FarmObject): number {
   return Math.hypot(a.rect.x + a.rect.w / 2 - b.rect.x - b.rect.w / 2, a.rect.y + a.rect.h / 2 - b.rect.y - b.rect.h / 2);
 }
 
-const areaNames: Readonly<Record<string, string>> = {
+export const FARM_AREA_NAMES: Readonly<Record<string, string>> = {
   area_nw: 'the northwest beds', area_ne: 'the northeast beds', area_sw: 'the southwest beds',
   area_se: 'the southeast beds', area_court: 'the courtyard', area_lawn: 'the lawn',
 };
@@ -252,7 +252,7 @@ export function ruleFarmer(context: FarmerContext, board?: MorningBoard): Plan {
       }
     }
     inspected.push(footprints.id);
-    line = `Muddy boots in ${areaNames[area.id] ?? 'my garden'} again!`;
+    line = `Muddy boots in ${FARM_AREA_NAMES[area.id] ?? 'my garden'} again!`;
   }
   if (inspected.length === 0) {
     const trace = context.tracesToday[0];

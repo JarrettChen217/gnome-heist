@@ -100,6 +100,7 @@ export class HudScene extends Phaser.Scene {
     this.veil.setSize(width, height);
     this.movementKeys.setPosition(width / 2, Math.min(height - 70, height / 2 + 105));
     this.prompt.setWordWrapWidth(Math.min(440, width - 40), true);
+    this.status.setWordWrapWidth(Math.max(80, width - 28), true);
     this.scrollNote.setWordWrapWidth(Math.max(100, Math.min(245, width - 28)), true);
   }
 
@@ -221,7 +222,7 @@ export class HudScene extends Phaser.Scene {
     this.status.setVisible(s.phase === 'night');
     this.corner.setVisible(s.phase === 'night');
     const pips = '●'.repeat(s.stamina) + '○'.repeat(Math.max(0, s.maxStamina - s.stamina));
-    const status = `Night ${s.night}   Banked ${s.banked}/2   Stamina ${pips}${s.carrying ? '   Carrying a gnome' : ''}`;
+    const status = `Night ${s.night}   Banked ${s.banked}/2   Stamina ${pips}${s.carrying ? '\nCarrying a gnome' : ''}`;
     this.status.setText(s.inBush && s.phase === 'night' ? `${status}\nBush cover · Dogs can hear you` : status);
 
     this.drawFieldMap(s);
@@ -231,7 +232,7 @@ export class HudScene extends Phaser.Scene {
     this.pauseMenu.setVisible(s.paused);
     if (s.phase === 'choose') {
       const entrances = s.holes.map((id, i) => `[${i + 1}] ${id.replace(/^hole_/, '').toUpperCase()}`);
-      const invitation = s.night > 1 ? `Night ${s.night} · Return for another gnome` : `Night ${s.night} · Choose your entrance`;
+      const invitation = s.night > 1 && s.banked > 0 ? `Night ${s.night} · Return for another gnome` : `Night ${s.night} · Choose your entrance`;
       this.choices.setText(`${invitation}\n${entrances.join('   ')}`);
       this.panel.setVisible(false);
     } else if (s.phase === 'ended' && s.result) {

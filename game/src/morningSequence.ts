@@ -1,5 +1,6 @@
 // AI-use disclosure: Codex built this presentation of the committed morning plan under Hao's direction.
 
+import { FARM_AREA_NAMES } from '@gnome-heist/core';
 import type { FarmDef, FarmerContext, FarmerState, Plan, Trace } from '@gnome-heist/core';
 
 export interface MorningOption {
@@ -43,6 +44,36 @@ const TRACE_LABEL: Record<Trace['kind'], string> = {
   sighting: 'Checks where someone was spotted',
 };
 
+const TRACE_LANDMARKS: Readonly<Record<string, string>> = {
+  gate_court_west: 'the west courtyard gate',
+  gate_court_east: 'the east courtyard gate',
+  gate_lawn_west: 'the west lawn gate',
+  gate_east_beds: 'the east garden gate',
+  fence_east: 'the east fence',
+};
+
+function inspectionCaption(farm: FarmDef, trace: Trace): string {
+  const description = TRACE_LABEL[trace.kind];
+  const landmark = TRACE_LANDMARKS[trace.target];
+  if (landmark) {
+    if (trace.kind === 'openLock') return `Checks the open padlock at ${landmark}.`;
+    if (trace.kind === 'brokenFence') return `Examines the breach in ${landmark}.`;
+    return `Checks ${landmark}.`;
+  }
+
+  let areaName = FARM_AREA_NAMES[trace.target];
+  if (!areaName) {
+    const pedestal = farm.pedestals.find((item) => item.id === trace.target);
+    const sighting = /^tile_(\d+)_(\d+)$/.exec(trace.target);
+    const tile = pedestal?.rect ?? (sighting ? { x: Number(sighting[1]), y: Number(sighting[2]) } : null);
+    if (tile) {
+      const area = farm.areas.find(({ rect }) => tile.x >= rect.x && tile.x < rect.x + rect.w && tile.y >= rect.y && tile.y < rect.y + rect.h);
+      if (area) areaName = FARM_AREA_NAMES[area.id];
+    }
+  }
+  return areaName ? `${description} in ${areaName}.` : `${description}.`;
+}
+
 export function openingBeat(context: FarmerContext, outcome: string): MorningBeat {
   return {
     stage: 'opening',
@@ -71,8 +102,8 @@ export function morningCues(
     const trace = context.tracesToday.find((entry) => entry.id === id);
     if (trace) {
       cues.push({
-        beat: { ...opening, stage: 'inspect', index, trace, caption: TRACE_LABEL[trace.kind] },
-        duration: 750,
+        beat: { ...opening, stage: 'inspect', index, trace, caption: inspectionCaption(farm, trace) },
+        duration: 1100,
       });
     }
   }
