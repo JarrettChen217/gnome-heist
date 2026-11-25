@@ -148,7 +148,7 @@ export class MorningShots {
     for (const step of [{ x: -1, y: 0 }, { x: 1, y: 0 }, { x: 0, y: 1 }, { x: 0, y: -1 }]) {
       let count = 0;
       for (let i = 1; i <= 3; i++) {
-        const x = site.x + step.x * i, y = site.y + step.y * i;
+        const x = Math.floor(px / TILE_PX) + step.x * i, y = Math.floor(py / TILE_PX) + step.y * i;
         if (x < 0 || y < 0 || x >= this.farm.width || y >= this.farm.height || this.farm.ground[y * this.farm.width + x] === 'blocked') break;
         count++;
       }

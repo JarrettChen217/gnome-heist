@@ -79,4 +79,9 @@ it('frames a moved lamp at its new slot and clears its site for other work', () 
   const nextNight = startNight(committed, farm, 'hole_west');
   expect(nextNight.danger[14 * farm.width + 19]).toBe('lamp');
   expect(nextNight.danger[14 * farm.width + 4]).not.toBe('lamp');
+
+  const widePlot = { ...farm, lampPosts: farm.lampPosts.map(post => post.id === 'post_se'
+    ? { ...post, rect: { ...post.rect, w: 2, h: 2 } } : post) };
+  const wideCues = morningCues(widePlot, openingBeat(context, ''), context, plan, farmer);
+  expect(wideCues.find(({ beat }) => beat.stage === 'work')?.beat.site).toEqual({ x: 19.5, y: 15 });
 });

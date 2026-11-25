@@ -175,7 +175,8 @@ export function morningCues(
     // A lamp may move twice in one plan. Frame this step's destination, even if the final layout differs.
     const slot = plan.actions[index]!.to;
     const post = action.work.prop === 'lamp' ? farm.lampPosts.find(({ id }) => id === slot) : undefined;
-    const site = post ? { x: post.rect.x, y: post.rect.y } : null;
+    // Night props are centered along the bottom edge of their Tiled rectangle.
+    const site = post ? { x: post.rect.x + (post.rect.w - 1) / 2, y: post.rect.y + post.rect.h - 1 } : null;
     stamina -= action.choice.stamina;
     money -= action.choice.money;
     cues.push({
