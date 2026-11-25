@@ -4,11 +4,11 @@ AI-use disclosure: Claude (Claude Code) and Codex maintain this handoff under Ha
 
 Keep this file short: replace the snapshot each time, and update only your own row in Active work. Durable detail belongs in commits, PRs, and the docs.
 
-## Snapshot (2026-11-24, Codex, lamp work on the farm)
+## Snapshot (2026-11-25, Codex, live daylight farm)
 
-- Local `codex/onboarding-backlog` at `bc8e51f` stages each lamp installation or move at the post selected by that action. The morning camera shows the same road and vegetation the player will see at night. Other defense work keeps the existing close-up.
-- Captured the farmer installing a lamp at the southwest post after a theft. Tests cover ordered lamp destinations, retained closing shots and the next night's layout. Strict typecheck, 216 unit and Worker tests, the production build, Worker dry-run and the focused Chrome lamp check passed at `bc8e51f`. All 15 Chrome checks passed at `90ad4bb` before the rectangular-post alignment fix. Independent review cleared the change. Asana T10 records the result.
-- T14 still needs a first-time player. The local build includes the entrance selector and four-night loop. D1 keeps the build local. The Nov 23 checkpoint outcome remains unrecorded. G2/G3 recording and post are on Nov 28.
+- Local `codex/onboarding-backlog` at `e786e9a` uses the playable Phaser scene for dawn. Daylight varies between mornings. The farmer walks from the farmhouse to the selected evidence, pauses, then follows the yard paths to the chosen lamp and taps twice. The night and morning reuse the same post textures.
+- Chrome captured a southwest theft and the live walk to the lamp. Typecheck, 216 unit and Worker tests, production build, Worker dry-run and 15 Chrome checks passed. Independent review cleared the change. Asana T10 records the local evidence.
+- T14 still needs a first-time player. The four-night round, player memory and validated farmer plan remain the basis for playtesting. D1 keeps the build local. The Nov 23 checkpoint outcome remains unrecorded. G2/G3 recording and post are on Nov 28.
 
 ## Active work
 
@@ -19,7 +19,7 @@ Keep this file short: replace the snapshot each time, and update only your own r
 | M0, T8, art pass, two-night slice and morning checkpoint (T7, T11a, T8, T17, T18, T10, T11b, T11c) | Claude and Codex, for Hao | `codex/night-farm-art-v1` (PR 5) | `core/`, `game/`, `worker/`, `maps/`, docs | Checked locally; merged in PR 5; not deployed |
 | Playwright smoke suite and engine note | Claude, for Hao | `codex/night-farm-art-v1` (PR 5) | `e2e/`, `playwright.config.ts`, `README.md`, `docs/architecture.md` | 4 tests pass locally; reviewed by `gnome-reviewer`, nothing blocking; not run in CI |
 | First-night orientation (T20) | Codex, for Hao | `codex/onboarding-backlog` | `game/src/scenes/`, `e2e/orientation.spec.ts`, playtest plan | Entrance menu, playable-map opening and scroll verified locally at `a7b047b`; T14 pending |
-| Dawn animation and second gnome (T10/T18) | Codex, for Hao | `codex/onboarding-backlog` | `game/`, `e2e/`, `core/src/`, playtest plan | Two-night slice verified at `060e408`; four-night collection verified at `33bdf59`, on-site lamp animation at `bc8e51f` |
+| Dawn animation and second gnome (T10/T18) | Codex, for Hao | `codex/onboarding-backlog` | `game/`, `e2e/`, `core/src/`, playtest plan | Two-night slice verified at `060e408`; four-night collection verified at `33bdf59`, live daylight walk and lamp work at `e786e9a` |
 
 ## Open items
 
@@ -34,4 +34,4 @@ Keep this file short: replace the snapshot each time, and update only your own r
 
 ## Next action
 
-Run [T14](https://app.asana.com/1/1219142319278837/project/1220727551768593/task/1220727682763412) on local build `bc8e51f` with a first-time player using the [four-night observation script](two-night-playtest.md). Record their first destination, whether they get a gnome home unaided, and how earlier thefts or defenses affect their routes on nights three and four. Use that evidence when selecting the [doghouse encounter](https://github.com/JarrettChen217/gnome-heist/issues/7) or the [second layout](https://github.com/JarrettChen217/gnome-heist/issues/8).
+Run [T14](https://app.asana.com/1/1219142319278837/project/1220727551768593/task/1220727682763412) on local build `e786e9a` with a first-time player using the [four-night observation script](two-night-playtest.md). Record their first destination, whether they get a gnome home unaided, and how earlier thefts or defenses affect their routes on nights three and four. Use that evidence when selecting the [doghouse encounter](https://github.com/JarrettChen217/gnome-heist/issues/7) or the [second layout](https://github.com/JarrettChen217/gnome-heist/issues/8).
