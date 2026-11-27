@@ -8,7 +8,7 @@ Keep this file short: replace the snapshot each time, and update only your own r
 
 - Local recording build `35b546f` supports optional JSON run traces. Typecheck, 216 unit/integration tests, build and all 15 Chrome checks passed with one browser worker. The four-night check downloaded and inspected the trace.
 - Hao reported West, West, West, East. His account and the visual onboarding proposal are in the [Initial Playtest Log](initial-playtest-log.md). External participants: zero. Exact lamp actions and farmer mode for that run were not recorded.
-- OneDrive G2-G3 recording notes include the shot list, English narration and discussion draft. CourseWorks post due Nov 28 at 11:59 p.m. New York time, per the Nov 23 check. Scope approval, tracker posting, final repository access and video link are pending.
+- The [recording guide](g2-g3-recording.md) includes the shot list, English narration and discussion draft. The Chinese design reflection and the office hour email draft are in Hao’s OneDrive G2-G3 folder. CourseWorks post due Nov 28 at 11:59 p.m. New York time, per the Nov 23 check. Scope approval, tracker posting, final repository access and video link are pending.
 
 ## Active work
 
