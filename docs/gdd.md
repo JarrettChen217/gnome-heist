@@ -9,7 +9,13 @@ AI-use disclosure: Claude (Claude Code) drafted this document from my design not
 | Accountable owner | Hao, as Design Lead, with Creative Director approval |
 | Companion documents | [Configuration Document](configuration.md) · [Technical plan](architecture.md) · [Systems diagram](systems-diagram.md) · [Project Plan and Risk Register](project-plan.md) |
 
-**Status of this document.** Nothing here is implemented or verified yet. Every rule is a paper design. Each item carries one label:
+## Changes since G1 (November 26, 2026)
+
+[Hao, on agent proposal] The local prototype runs four nights on one farm, with three mornings between them. Players select an entrance, retrieve gnomes and return home. An empty pedestal or a changed defense can influence a later route. The five-night game described below remains the longer-term design. See the [four-night observation script](two-night-playtest.md).
+
+[Open] Does the player recognize the defense the farmer changed and use that information when choosing the next route? Hao will assess this in a developer self-playtest. First-time player comprehension remains unmeasured.
+
+**Reading the design.** The dated update above describes the playable scope. The sections below preserve the G1 design and its decision labels:
 
 - **[Hao]**: my own design decision.
 - **[Hao, on agent proposal]**: proposed by my agent and accepted by me (decision log in Section 17).

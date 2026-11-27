@@ -29,6 +29,14 @@ Dates are America/New_York. **Course dates** come from the syllabus and the G1 d
 | G5 Retrospective / Closure | Mon Dec 14 | Final game and AAR; Playtest Log | Syllabus |
 | Finals | Dec 17 to 23 (slot not yet assigned) | Retrospective, 8 to 10 minute walkthrough, live presentation | Syllabus |
 
+## G2/G3 scope and evidence update (November 26)
+
+- **Recording scope.** The current local build supports four nights on one farm. Capture one continuous night, morning and return to the same landmark. Identify the farmer mode used.
+- **T14 and R4.** Hao will run the developer self-playtest. No external participant is scheduled for this gate. The external-playtest requirement remains outstanding. Record Hao’s observations in the Initial Playtest Log and keep first-time comprehension open.
+- **T15 and T16.** GDD and Configuration updates and recording notes are drafted. The final playtest finding and its production decision depend on Hao’s account.
+- **Scope-lock proposal for Hao.** Use this build for the recording. Limit gameplay changes to a reproducible issue that prevents the demonstration. Defer the doghouse encounter and second layout until the next scope decision.
+- **R2 evidence.** Label footage with its actual farmer mode. The live quiet-night sample establishes a legal response for that input. Whether players can distinguish model and rule behavior remains open.
+
 ## 2. First tasks through G2
 
 Owner is always me (accountable). "Delegated to" names the production agent role from the [Configuration Document](configuration.md), Part B. Milestone names (M0 to M4) refer to the [Technical plan](architecture.md), Section 8. On 2026-11-13 I dropped the scripted mock-up demo and moved the build forward, so T7 to T12 start right after the G1 post.
