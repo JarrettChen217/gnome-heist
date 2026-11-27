@@ -4,11 +4,11 @@ AI-use disclosure: Claude (Claude Code) and Codex maintain this handoff under Ha
 
 Keep this file short: replace the snapshot each time, and update only your own row in Active work. Durable detail belongs in commits, PRs, and the docs.
 
-## Snapshot (2026-11-26, Codex, G2/G3 preparation)
+## Snapshot (2026-11-26, Codex, developer playtest and recording)
 
-- Local build at `929462a`: typecheck, 216 tests and build passed. Parallel Chrome passed 12/15. All three failures passed in a single-worker retry.
-- Hao will provide developer self-playtest feedback and plans to record November 27. External playtest evidence remains outstanding. English recording notes and the self-playtest log draft are in the OneDrive G2-G3 Prototype Review folder.
-- Changes since G1 and scope/risk notes are drafted. Independent review found no blocking documentation issues. The scope-lock proposal awaits Hao’s assessment.
+- Local recording build `35b546f` supports optional JSON run traces. Typecheck, 216 unit/integration tests, build and all 15 Chrome checks passed with one browser worker. The four-night check downloaded and inspected the trace.
+- Hao reported West, West, West, East. His account and the visual onboarding proposal are in the [Initial Playtest Log](initial-playtest-log.md). External participants: zero. Exact lamp actions and farmer mode for that run were not recorded.
+- OneDrive G2-G3 recording notes include the shot list, English narration and discussion draft. CourseWorks post due Nov 28 at 11:59 p.m. New York time, per the Nov 23 check. Scope approval, tracker posting, final repository access and video link are pending.
 
 ## Active work
 
@@ -20,7 +20,7 @@ Keep this file short: replace the snapshot each time, and update only your own r
 | Playwright smoke suite and engine note | Claude, for Hao | `codex/night-farm-art-v1` (PR 5) | `e2e/`, `playwright.config.ts`, `README.md`, `docs/architecture.md` | 4 tests pass locally; reviewed by `gnome-reviewer`, nothing blocking; not run in CI |
 | First-night orientation (T20) | Codex, for Hao | `codex/onboarding-backlog` | `game/src/scenes/`, `e2e/orientation.spec.ts`, playtest plan | Entrance menu, playable-map opening and scroll verified locally at `a7b047b`; T14 pending |
 | Dawn animation and second gnome (T10/T18) | Codex, for Hao | `codex/onboarding-backlog` | `game/`, `e2e/`, `core/src/`, playtest plan | Two-night slice verified at `060e408`; four-night collection verified at `33bdf59`, live daylight walk and lamp work at `e786e9a`, farmhouse departure at `5008846`, directional farmer at `163dca8` |
-| G2/G3 preparation | Codex and Hao | `codex/onboarding-backlog` | GDD, Configuration, project plan and OneDrive notes | Awaiting Hao’s self-playtest account and recording decision |
+| G2/G3 preparation | Codex and Hao | `codex/onboarding-backlog` | GDD, Configuration, project plan and OneDrive notes | Self-playtest documented. Recording guide and tracker text drafted |
 
 ## Open items
 
@@ -35,4 +35,4 @@ Keep this file short: replace the snapshot each time, and update only your own r
 
 ## Next action
 
-Record Hao’s account of one night, the morning response and the next route in the OneDrive self-playtest log. Confirm the recording scope with Hao and prepare the November 27 capture. T14 external playtest remains open.
+Hao records the western theft, morning and second west entrance on November 27. Save the trace before replay. Confirm the visual goal cue, current farmer mode and submission links before posting.
