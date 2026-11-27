@@ -64,3 +64,7 @@ From the west entrance (1), walk east along the worn trail. Tall grass shows onl
 ## Deploying (ask Hao first)
 
 `npm run deploy` builds and runs `wrangler deploy` with `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` loaded from the gitignored root `.env` (see `.env.example`). There is no `wrangler login`. Worker secrets go in with `wrangler secret put`; locally, in `worker/.dev.vars`.
+
+## Save a playtest trace
+
+Open the local game with `?trace=1` (or append `&trace=1` to an existing farmer-mode query). Play normally. Click **Save playtest trace** at the end, before pressing R or refreshing. You can also download an in-progress snapshot. Each JSON file identifies the map version and start time. Events are ordered: entrance and night, tile transitions, footprints, completed actions, sightings, night results, and each morning’s committed plan, farmer source and resulting layout. A restarted night is marked as a new attempt. A fresh run clears the in-memory log. This optional client-side recording adds no player route data to farmer requests.

@@ -274,7 +274,7 @@ test('restart restores the scroll, then four heists and three mornings lead to a
   test.setTimeout(145_000);
   // A morning can include walks to multiple inspected traces and two defense sites.
   const morningTimeout = 25_000;
-  await page.goto('/');
+  await page.goto('/?trace=1');
   await chooseEntrance(page, 1);
   await walkTo(page, 'ArrowRight', 'x', 1.5, 1);
   expect((await debug(page))?.fieldMap).not.toBeNull();
@@ -378,6 +378,15 @@ test('restart restores the scroll, then four heists and three mornings lead to a
   });
   await tap(page, 'Enter');
   expect(await debug(page)).toMatchObject({ phase: 'ended', night: 4, banked: 4 });
+
+  const downloadEvent = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Save playtest trace' }).click();
+  const tracePath = await (await downloadEvent).path();
+  const log = JSON.parse(readFileSync(tracePath!, 'utf8')) as { events: { type: string; night?: number }[] };
+  expect(log.events.filter(e => e.type === 'enter').map(e => e.night)).toEqual([1, 1, 2, 3, 4]);
+  expect(log.events.filter(e => e.type === 'morning').map(e => e.night)).toEqual([1, 2, 3]);
+  expect(log.events.filter(e => e.type === 'night-result')).toHaveLength(4);
+  for (const type of ['restart-night', 'tile', 'footprint', 'action']) expect(log.events.some(e => e.type === type)).toBe(true);
 
   await tap(page, 'KeyR');
   await chooseEntrance(page, 1);

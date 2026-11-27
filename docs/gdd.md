@@ -13,7 +13,7 @@ AI-use disclosure: Claude (Claude Code) drafted this document from my design not
 
 [Hao, on agent proposal] The local prototype runs four nights on one farm, with three mornings between them. Players select an entrance, retrieve gnomes and return home. An empty pedestal or a changed defense can influence a later route. The five-night game described below remains the longer-term design. See the [four-night observation script](two-night-playtest.md).
 
-[Open] Does the player recognize the defense the farmer changed and use that information when choosing the next route? Hao will assess this in a developer self-playtest. First-time player comprehension remains unmeasured.
+[Open] Does the player recognize the defense the farmer changed and use that information when choosing the next route? Hao reused the western approach and reported a tighter eastern approach in his [developer self-playtest](initial-playtest-log.md). He identified communicating the retrieval objective as the first onboarding priority. First-time player comprehension remains unmeasured.
 
 **Reading the design.** The dated update above describes the playable scope. The sections below preserve the G1 design and its decision labels:
 

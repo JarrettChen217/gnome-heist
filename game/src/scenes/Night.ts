@@ -4,6 +4,7 @@
 // Codex implemented tall grass rendering and bush feedback under Hao's direction.
 // Codex connected the local Worker morning and offline fallback under Hao's direction.
 // Codex implemented the first-night scroll, four-night playtest, and live morning farm under Hao's direction.
+import { PlaytestTrace } from '../playtestTrace.ts';
 import * as Phaser from 'phaser';
 import { PLAYER_STAMINA, PLAYTEST_NIGHT_LIMIT, STRIKE_LIMIT, advanceLocalMorning, bushAt, currentInteraction, endNight, loadFarm, newSession, prepareMorning, startNight, tallGrassAt, tick, tileOf, tilesOf, visibleTiles } from '@gnome-heist/core';
 import type { FarmerContext, FarmDef, FarmObject, Interaction, NightEnd, NightResult, NightState, SessionState, Tile } from '@gnome-heist/core';
@@ -94,6 +95,7 @@ interface FieldMemory {
 
 export class NightScene extends Phaser.Scene {
   private farm!: FarmDef;
+  private playtestTrace?: PlaytestTrace;
   private session!: SessionState;
   private night!: NightState;
   private phase: Phase = 'choose';
@@ -148,6 +150,7 @@ export class NightScene extends Phaser.Scene {
   create(): void {
     // The same .tmj the rules read: Phaser renders it, core/loadFarm validates it.
     this.farm = loadFarm(this.cache.tilemap.get('farm').data as unknown);
+    if (new URLSearchParams(location.search).get('trace') === '1') this.playtestTrace = new PlaytestTrace(this.farm.mapVersion);
     console.info(`[gnome-heist] map version ${this.farm.mapVersion}`);
 
     const map = this.make.tilemap({ key: 'farm' });
@@ -194,6 +197,7 @@ export class NightScene extends Phaser.Scene {
     this.game.events.on('hud-resume', this.resumeNight, this);
     this.game.events.on('hud-restart', this.restartNight, this);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      this.playtestTrace?.destroy();
       this.game.events.off('hud-enter', this.selectEntrance, this);
       this.game.events.off('hud-resume', this.resumeNight, this);
       this.game.events.off('hud-restart', this.restartNight, this);
@@ -210,7 +214,9 @@ export class NightScene extends Phaser.Scene {
   }
 
   private restartNight(): void {
-    if (this.paused) this.chooseEntry(this.session);
+    if (!this.paused) return;
+    this.playtestTrace?.record({ type: 'restart-night', night: this.session.night });
+    this.chooseEntry(this.session);
   }
 
   private finishMorningClient(): void {
@@ -219,6 +225,7 @@ export class NightScene extends Phaser.Scene {
   }
 
   private newRun(): void {
+    this.playtestTrace?.reset();
     this.finishMorningClient();
     const workerMode = location.protocol !== 'file:' && new URLSearchParams(location.search).get('farmer') === 'agent';
     this.morningClient = workerMode && typeof crypto.randomUUID === 'function' ? new MorningClient() : null;
@@ -288,6 +295,7 @@ export class NightScene extends Phaser.Scene {
     this.acc = 0;
     this.walkDistancePx = 0;
     this.entryTile = tileOf(this.night.player);
+    this.playtestTrace?.enter(this.session.night, entry, this.entryTile);
     const { x, y } = this.entryTile;
     const inward = x === 0 ? { x: 1, y: 0 }
       : x === this.farm.width - 1 ? { x: -1, y: 0 }
@@ -481,6 +489,7 @@ export class NightScene extends Phaser.Scene {
       const previous = this.night.player;
       const r = tick(this.farm, this.night, input, STEP_SECONDS);
       this.night = r.night;
+      this.playtestTrace?.move(tileOf(r.night.player));
       this.scrollNoteRemaining = Math.max(0, this.scrollNoteRemaining - STEP_SECONDS);
       this.updateFieldMemory();
       const distancePx = Math.hypot(r.night.player.x - previous.x, r.night.player.y - previous.y) * TILE_PX;
@@ -488,6 +497,7 @@ export class NightScene extends Phaser.Scene {
       this.walkDistancePx = distancePx > 1e-6 ? (this.walkDistancePx + distancePx) % (WALK_FRAMES * WALK_FRAME_PX) : 0;
       this.acc -= STEP_SECONDS;
       for (const e of r.events) {
+        this.playtestTrace?.observe(e);
         if (e.type === 'action' && e.action !== 'endNight') this.signal(e.action);
         if (e.type === 'refused') this.flash({ text: REFUSAL[e.reason], red: true }, time);
         if (e.type === 'ended') this.finish(e.end);
@@ -509,6 +519,7 @@ export class NightScene extends Phaser.Scene {
   private finish(end: NightEnd): void {
     this.phase = 'ended';
     this.result = endNight(this.farm, this.night);
+    this.playtestTrace?.record({ type: 'night-result', end, result: this.result });
     if (this.result.gnomeTaken) {
       this.banked += 1;
       this.signal('bank');
@@ -557,6 +568,7 @@ export class NightScene extends Phaser.Scene {
     }
     this.morning = morning;
     if (morning.plan) {
+      this.playtestTrace?.record({ type: 'morning', night: session.night, source: this.morningSource, plan: morning.plan, layout: morning.session.farmer.layout });
       this.morningCues = morningCues(this.farm, opening, context, morning.plan, morning.session.farmer);
       // Committing preserves existing defense order and appends purchases in action order.
       const purchases = morning.session.farmer.layout.slice(context.layout.length).values();
