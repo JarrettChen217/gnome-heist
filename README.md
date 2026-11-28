@@ -6,7 +6,7 @@ A short single-player stealth game: sneak onto the farm next door at night to st
 
 Final project for *AI in Practice: Game Design and Development* (Fall 2026). Current stage: **G1 Concept**. The M0 skeleton (greybox farm in Phaser 4, the shared rules package `core/`, and the Worker skeleton) is on branch `feat/m0-skeleton`; how to run it is in [game/README.md](game/README.md). The build plan and milestones are in the technical plan.
 
-The local two-night playable on the night-farm branch has [controls](game/README.md) and a [playtest plan](docs/two-night-playtest.md).
+The four-night prototype on the local `codex/onboarding-backlog` branch has [controls](game/README.md) and a [playtest plan](docs/two-night-playtest.md).
 
 | Document | Version |
 | --- | --- |

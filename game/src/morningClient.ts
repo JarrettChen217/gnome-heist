@@ -1,5 +1,5 @@
-// AI-use disclosure: Codex wrote the client morning protocol under Hao's direction.
-import { commitPlan, prepareMorning, validatePlan } from '@gnome-heist/core';
+// AI-use disclosure: Codex wrote the client morning protocol and applied the playtest night limit under Hao's direction.
+import { PLAYTEST_NIGHT_LIMIT, commitPlan, prepareMorning, validatePlan } from '@gnome-heist/core';
 import type { FarmDef, NightResult, Plan, SessionState } from '@gnome-heist/core';
 
 type ActedBy = 'primary' | 'secondary' | 'rule';
@@ -21,7 +21,7 @@ export class MorningClient {
   private started = false;
 
   async advance(farm: FarmDef, session: SessionState, nightResult: NightResult): Promise<RemoteMorning> {
-    const prepared = prepareMorning(farm, session, nightResult);
+    const prepared = prepareMorning(farm, session, nightResult, PLAYTEST_NIGHT_LIMIT);
     if (prepared.context === null) {
       this.finish();
       return { session: prepared.session, plan: null, actedBy: 'rule' };

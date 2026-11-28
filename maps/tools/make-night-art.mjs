@@ -16,6 +16,7 @@ const mapUrl = new URL('../farm.tmj', import.meta.url);
 const propsUrl = new URL('../../game/src/assets/environment/', import.meta.url);
 const mapFile = readFileSync(mapUrl, 'utf8');
 const map = JSON.parse(mapFile);
+const facade = JSON.parse(readFileSync(new URL('../farmhouse-facade.json', import.meta.url), 'utf8'));
 const ground = map.layers.find((layer) => layer.name === 'ground').data;
 const decoration = map.layers.find((layer) => layer.name === 'decoration');
 const { width, height } = map;
@@ -295,9 +296,9 @@ function paintHouse(image) {
   const w = (right - left + 1) * tileSize;
   const h = (bottom - top + 1) * tileSize;
   const house = new Pixels(w, h);
-  const eaves = h - 13;
+  const eaves = h - 26;
   const sill = h - 3;
-  const roofStart = 8;
+  const roofStart = 5;
 
   house.rect(3, eaves - 6, w - 6, sill - eaves + 7, ink);
   house.rect(5, eaves, w - 10, sill - eaves, wood);
@@ -310,16 +311,6 @@ function paintHouse(image) {
   house.rect(10, eaves + 4, 5, 4, '#3d414e');
   house.rect(w - 16, eaves + 3, 7, 6, ink);
   house.rect(w - 15, eaves + 4, 5, 4, '#3d414e');
-  const windowSlot = map.layers.find((layer) => layer.name === 'windowSight').objects[0];
-  const window = windowSlot ? windowSlot.x - left * tileSize + tileSize / 2 : Math.floor(w / 2);
-  house.rect(window - 6, eaves, 12, 10, ink);
-  house.rect(window - 5, eaves + 1, 10, 7, '#a67b62');
-  house.rect(window - 4, eaves + 2, 8, 5, '#caa176');
-  house.line(window - 3, eaves + 2, window + 3, eaves + 2, '#deb784');
-  house.line(window, eaves + 1, window, eaves + 8, '#55404a');
-  house.line(window - 5, eaves + 4, window + 4, eaves + 4, '#55404a');
-  house.line(window - 7, eaves + 9, window + 6, eaves + 9, '#a98368');
-
   house.polygon([[0, eaves - 3], [9, roofStart], [w - 10, roofStart - 1], [w - 1, eaves - 4],
     [w - 2, eaves + 1], [1, eaves + 2]], ink);
   house.polygon([[2, eaves - 4], [10, roofStart + 1], [w - 11, roofStart], [w - 3, eaves - 4]], '#444458');
@@ -344,6 +335,36 @@ function paintHouse(image) {
   house.rect(w - 21, 5, 6, 10, '#624a55');
   house.line(w - 23, 2, w - 13, 3, '#8d6966');
   for (const y of [7, 10, 13]) house.line(w - 21, y, w - 16, y, '#3b3546');
+
+  const sight = map.layers.find((layer) => layer.name === 'windowSight').objects[0];
+  const anchorX = sight ? sight.x - left * tileSize + tileSize / 2 : Math.floor(w / 2);
+  const anchorY = sight ? sight.y - top * tileSize : h;
+  const window = facade.window;
+  const wx = anchorX + window.x;
+  const wy = anchorY + window.y;
+  house.rect(wx - 2, wy - 2, window.width + 4, window.height + 3, ink);
+  house.rect(wx - 1, wy - 1, window.width + 2, window.height + 2, '#a67b62');
+  house.rect(wx, wy, window.width, window.height, '#caa176');
+  house.line(wx, wy, wx + window.width - 1, wy, '#deb784');
+  house.rect(wx + window.width / 2, wy, 1, window.height, '#55404a');
+  house.rect(wx, wy + window.height / 2, window.width, 1, '#55404a');
+  house.rect(wx - 3, wy + window.height, window.width + 6, 2, '#a98368');
+
+  const door = facade.door;
+  const dx = anchorX + door.x;
+  const dy = anchorY + door.y;
+  const threshold = dy + door.height;
+  house.rect(dx - 2, dy - 2, door.width + 4, door.height + 2, ink);
+  house.rect(dx - 1, dy - 1, door.width + 2, door.height + 1, '#876753');
+  house.rect(dx, dy, door.width, door.height, '#51383a');
+  house.rect(dx + 1, dy + 1, door.width - 2, door.height - 2, '#694b44');
+  for (let x = dx + 4; x < dx + door.width - 1; x += 4) {
+    house.line(x, dy + 1, x, threshold - 2, '#51383a');
+  }
+  house.rect(dx + 1, dy + 4, door.width - 2, 1, '#805b47');
+  house.rect(dx + door.width - 4, dy + 12, 2, 2, '#c0a26e');
+  house.rect(dx - 2, threshold, door.width + 4, 1, '#4a4548');
+  house.rect(dx - 3, threshold + 1, door.width + 6, 2, '#696159');
 
   for (const cell of cells) {
     image.paste(house.crop((cell.x - left) * tileSize, (cell.y - top) * tileSize, tileSize, tileSize),
@@ -417,23 +438,35 @@ function drawPedestal(gnome) {
 
 function drawLamp(lit) {
   const p = new Pixels(16, 32);
-  p.ellipse(8, 30, 5, 1, '#18212b');
-  p.rect(5, 28, 6, 3, ink);
-  p.rect(6, 28, 4, 2, '#53525d');
-  p.rect(6, 10, 4, 19, ink);
-  p.rect(7, 11, 2, 17, '#5b555e');
-  p.line(7, 13, 7, 21, '#908077');
-  p.dot(8, 25, '#3d394a');
-  p.polygon([[1, 5], [3, 3], [5, 2], [7, 0], [9, 0], [10, 2], [13, 3], [15, 5], [13, 7], [12, 12],
-    [10, 14], [6, 14], [4, 12], [3, 7]], ink);
-  p.line(3, 4, 7, 2, lit ? gold : '#6f6570');
-  p.line(8, 2, 12, 4, '#685460');
-  p.line(3, 5, 13, 5, '#84645a');
-  p.polygon([[4, 6], [12, 6], [11, 11], [10, 12], [6, 12], [5, 11]], lit ? gold : '#3d4757');
-  p.line(6, 6, 6, 10, lit ? '#bd774e' : '#545763');
-  p.line(10, 6, 10, 10, lit ? '#986348' : '#232938');
-  if (lit) p.rect(7, 7, 3, 3, parchment);
-  p.line(6, 12, 10, 12, lit ? '#ac7151' : '#6a5a62');
+  p.ellipse(6, 30, 5, 1, '#18212b');
+  p.rect(3, 28, 6, 3, ink);
+  p.rect(4, 28, 4, 2, '#53525d');
+  p.rect(4, 3, 4, 26, ink);
+  p.rect(5, 3, 2, 25, '#615660');
+  p.line(5, 14, 5, 25, '#938077');
+  p.rect(3, 2, 5, 2, ink);
+  p.line(4, 2, 6, 2, '#a69081');
+  p.rect(7, 4, 7, 3, ink);
+  p.line(7, 4, 13, 4, copper);
+  p.line(7, 10, 11, 6, '#71616a');
+  p.rect(11, 6, 2, 3, '#574e5b');
+  p.dot(13, 8, copper);
+  // The housing and hook stay in place as the closed glass warms and the silk clears.
+  p.polygon([[7, 12], [10, 10], [11, 9], [13, 9], [15, 12], [15, 14], [14, 20],
+    [12, 22], [9, 21], [8, 19]], ink);
+  p.line(8, 12, 11, 10, '#9b8473');
+  p.rect(8, 13, 7, 1, '#8a7161');
+  p.rect(9, 14, 5, 5, lit ? '#ba945e' : '#44494c');
+  p.line(9, 16, 9, 18, lit ? '#a38059' : '#3e4246');
+  p.rect(11, 14, 2, 4, lit ? '#d9b77a' : '#53595b');
+  p.dot(10, 15, lit ? '#e4cb94' : '#64676a');
+  p.line(10, 20, 13, 20, '#8d715e');
+  if (!lit) {
+    // Fine threads collect in the upper corner between the iron bracket and the cap.
+    p.line(13, 6, 10, 10, '#7b8284');
+    p.line(9, 7, 11, 9, '#666f76');
+    p.line(9, 9, 10, 10, '#8e9290');
+  }
   return p;
 }
 

@@ -35,7 +35,7 @@ flowchart LR
 
   TX -- "morning starts" --> BEAT["Opening beat (about 3 s)<br/>farmer leaves the house;<br/>runs while the request is in flight"]
   BEAT --> MORN
-  APPLY --> MORN["Feedback: morning sequence<br/>(after the beat and the plan are both ready)<br/>farmer walks to inspected traces, says his line,<br/>thinking beat with costs, caption names the kind of change<br/>(new positions NOT shown)"]
+  APPLY --> MORN["Feedback: morning sequence<br/>(after the beat and the plan are both ready)<br/>farmer walks to inspected traces, says his line,<br/>thinking beat with costs, caption names the kind of change<br/>(lamp work shown at the chosen post)"]
   MORN --> PV
 ```
 

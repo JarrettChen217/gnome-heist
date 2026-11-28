@@ -1,19 +1,19 @@
 // AI-use disclosure: Codex implemented the shared morning flow under Hao's direction.
 import { buildFarmerContext, ruleFarmer, validatePlan } from './farmer.ts';
 import type { MorningBoard } from './farmer.ts';
-import { FARMER_STAMINA, NIGHTS_PER_SESSION } from './rules.ts';
+import { FARMER_STAMINA, NIGHTS_PER_SESSION, STRIKE_LIMIT } from './rules.ts';
 import { commitPlan, resolveNight } from './session.ts';
 import type { FarmDef, FarmerContext, NightResult, Plan, SessionState } from './types.ts';
 
 /** Resolve the night, then refill only when the session has a morning to play. */
-export function prepareMorning(farm: FarmDef, session: SessionState, result: NightResult): {
+export function prepareMorning(farm: FarmDef, session: SessionState, result: NightResult, nightLimit = NIGHTS_PER_SESSION): {
   session: SessionState;
   context: FarmerContext | null;
   board: MorningBoard;
 } {
   const resolved = resolveNight(session, result);
   const board = { farm, world: resolved.world };
-  if (resolved.world.gnomes.length === 0 || resolved.strikes >= 3 || resolved.night >= NIGHTS_PER_SESSION) {
+  if (resolved.world.gnomes.length === 0 || resolved.strikes >= STRIKE_LIMIT || resolved.night >= nightLimit) {
     return { session: resolved, context: null, board };
   }
 
@@ -23,8 +23,8 @@ export function prepareMorning(farm: FarmDef, session: SessionState, result: Nig
 }
 
 /** Run the rule-based farmer locally using the same morning as the Worker. */
-export function advanceLocalMorning(farm: FarmDef, session: SessionState, result: NightResult): { session: SessionState; plan: Plan | null } {
-  const prepared = prepareMorning(farm, session, result);
+export function advanceLocalMorning(farm: FarmDef, session: SessionState, result: NightResult, nightLimit = NIGHTS_PER_SESSION): { session: SessionState; plan: Plan | null } {
+  const prepared = prepareMorning(farm, session, result, nightLimit);
   if (prepared.context === null) return { session: prepared.session, plan: null };
 
   const plan = ruleFarmer(prepared.context, prepared.board);

@@ -8,6 +8,10 @@ export const FARMER_STAMINA = 2;
 export const FARMER_START_MONEY = 1;
 /** Nights in a session (GDD 5.10). */
 export const NIGHTS_PER_SESSION = 5;
+/** Shorter session used by the four-night prototype. */
+export const PLAYTEST_NIGHT_LIMIT = 4;
+/** Sightings that end a session (GDD 5.10). */
+export const STRIKE_LIMIT = 3;
 /** Longest farmer line (Configuration Document A3). */
 export const MAX_LINE_LENGTH = 80;
 

@@ -20,16 +20,35 @@ npm run test:e2e       # Playwright smoke tests in Chrome against a fresh local 
 
 `npm run dev -w game` runs the client alone on Vite's dev server (no API).
 
-## Two-night playtest
+## Four-night playtest
 
-Choose an entrance with 1, 2 or 3. Walk with WASD or the arrow keys. Hold E at a gate, fence or pedestal, or press E inside a dog hole to end the night. Esc opens the pause menu. Restarting the night takes you back to entrance selection with that evening’s starting farm.
+Click or tap a hedge entrance, or move the red-capped cursor with ↑ and ↓ and confirm with Enter. Keys 1, 2 and 3 also select an entrance. On night one, the estate darkens, the farmhouse window lights up and the camera follows a rustle to the chosen hedge opening. A movement key gives you control immediately. Nights two through four use the short crawl. Walk with WASD or the arrow keys. Hold E at a gate, fence or pedestal, or press E inside a dog hole to end the night. Esc opens the pause menu. Restarting the night takes you back to entrance selection with that evening’s starting farm.
 
-After the first night, read the farmer’s morning response and press Enter to choose an entrance for night two. Taken gnomes, changes to the farm and the farmer’s response carry over. R at the result screen starts a fresh playtest. By default the browser uses the deterministic rule farmer without making a morning API request. See the [two-night playtest plan](../docs/two-night-playtest.md).
+At dawn the farmer opens his window while the morning plan is being prepared. The live farm fills the screen and each dawn has its own light. Follow him from the house to the traces he selected and watch him pause before acting on his plan. For lamp work, the camera follows the farmer to the selected post. Look for the same path and bushes when you return at night. Two taps warm the glass in the same lantern housing you saw at night. Other defenses use a close-up. The same sequence plays when the rule farmer takes over.
+
+Press Enter after each of the first three mornings to choose an entrance for the next night. The same farm keeps the empty pedestals, routes you explored on the scroll and the farmer’s committed defenses. Bring a different gnome through a hedge opening each night. The fourth night ends the round and shows how many gnomes you brought home. A third strike ends the round early. R at the result screen starts a fresh playtest. By default the browser uses the deterministic rule farmer without making a morning API request. See the [playtest plan](../docs/two-night-playtest.md).
+
+The opening uses the playable farm’s ground, paths, hedges and vegetation. The camera and lighting change continuously as the view moves toward the selected entrance.
+
+<details>
+<summary>Morning art credits and ImageGen prompts</summary>
+
+Codex used the built-in ImageGen tool under Hao's direction to create the [dawn backdrop](src/assets/morning-farm.webp) and [farmer pose sheet](src/assets/morning-farmer.webp). The backdrop was used in the earlier cutaway. The window uses the original portrait crop. On the live tilemap, the farmer uses a [directional walk sheet](src/assets/farmer-walk.png) drawn by Codex. Front, back and profile steps follow the direction of travel.
+
+**Backdrop prompt**
+
+> Pixel-art background plate for a 16-bit stealth gardening game's morning cutscene. Landscape 3:2. Rural farmhouse at dawn, timber clapboard facade, shingled roof, glowing window, door at x=32% of frame with threshold at y=77%. Soft peach sunrise grading into dusty lavender, cool mature green orchard in the background to the right, hedgerows, a small chimney. Storybook handcrafted crisp pixel clusters, restrained dither, game art designed at 320x225. Keep the full lower fifth across the frame as an unobstructed horizontal earth footpath for animated sprites to walk on. Side-on stage view. Entirely empty of characters, animals, gnomes, footprints, lamps, foreground fences or UI. No signs, words, logos, typography, borders.
+
+**Farmer prompt**
+
+> Create a game-ready sprite sheet on fully transparent background: four nonoverlapping full-body sprites of the SAME middle-aged grumpy friendly orchard farmer, facing screen right in 3/4 side profile, warm straw hat with dark band, faded teal overalls over ochre rolled-sleeve shirt, brown boots, big grey mustache. Charming finely crafted pixel art, 16-bit farm adventure game, strong silhouette, clean chunky square pixels, no soft outline, balanced and elegant stylized proportions. Canvas landscape, exactly one horizontal row of 4 equally spaced sprites, centered at 12.5%, 37.5%, 62.5%, and 87.5% of sheet, feet aligned, equal scale, visible from hat to soles. First stands relaxed and looks to right; second right-foot-forward walking; third left-foot-forward walking; fourth stretches with bent arms raised above head. Each stands alone with plenty of transparent gutters. No floor, no cast shadows, no scenery, no text, no props, no other poses or accessories.
+
+</details>
 
 ### Local Worker checkpoint
 
-1. Run `npm run dev` from the repository root and open `http://127.0.0.1:8787/?farmer=agent`. The browser now runs the first morning through the local Worker. With no provider binding, the Worker uses the same rule farmer.
-2. For a paid test, set `FARMER_PROVIDER=anthropic` and `ANTHROPIC_API_KEY` in the gitignored `worker/.dev.vars`, then restart the local Worker. `ANTHROPIC_MODEL` defaults to `claude-sonnet-5-5`. Each fresh two-night run requests the model at most once. Check the Worker log for provider, outcome, elapsed time, and token usage and estimated cost when reported.
+1. Run `npm run dev` from the repository root and open `http://127.0.0.1:8787/?farmer=agent`. The browser now requests each eligible morning from the local Worker. With no provider binding, the Worker uses the same rule farmer.
+2. For a paid test, set `FARMER_PROVIDER=anthropic` and `ANTHROPIC_API_KEY` in the gitignored `worker/.dev.vars`, then restart the local Worker. `ANTHROPIC_MODEL` defaults to `claude-sonnet-5-5`. A full round has up to three morning decisions. Use the project’s approved call budget for live provider checks. Check the Worker log for provider, outcome, elapsed time, and token usage and estimated cost when reported.
 3. For the quiet-night smoke, choose an entrance and press E without leaving the dog hole. To exercise a visible defense change with the rule farmer, take the southwest gnome and return through the west dog hole. The daybreak panel shows progress while the Worker decides. Press Enter after the plan appears to start night two. If the Worker is unreachable or misses the browser deadline, the browser switches that run to the local rule farmer. `window.__gnomeDebug.morningSource` identifies the result.
 4. To reproduce the timeout, retry and isolation checks without provider calls, run `npm test -- --project worker`. The Workers test configuration uses fake providers or explicitly selects the rule farmer.
 
@@ -45,3 +64,7 @@ From the west entrance (1), walk east along the worn trail. Tall grass shows onl
 ## Deploying (ask Hao first)
 
 `npm run deploy` builds and runs `wrangler deploy` with `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` loaded from the gitignored root `.env` (see `.env.example`). There is no `wrangler login`. Worker secrets go in with `wrangler secret put`; locally, in `worker/.dev.vars`.
+
+## Save a playtest trace
+
+Open the local game with `?trace=1` (or append `&trace=1` to an existing farmer-mode query). Play normally. Click **Save playtest trace** at the end, before pressing R or refreshing. You can also download an in-progress snapshot. Each JSON file identifies the map version and start time. Events are ordered: entrance and night, tile transitions, footprints, completed actions, sightings, night results, and each morning’s committed plan, farmer source and resulting layout. A restarted night is marked as a new attempt. A fresh run clears the in-memory log. This optional client-side recording adds no player route data to farmer requests.

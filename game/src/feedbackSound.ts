@@ -2,7 +2,7 @@
 import * as Phaser from 'phaser';
 import type { ActionKind } from '@gnome-heist/core';
 
-export function playFeedback(sound: Phaser.Sound.BaseSoundManager, action: ActionKind | 'bush' | 'bank'): void {
+export function playFeedback(sound: Phaser.Sound.BaseSoundManager, action: ActionKind | 'bush' | 'bank' | 'morning'): void {
   if (!(sound instanceof Phaser.Sound.WebAudioSoundManager) || sound.context.state !== 'running' || !sound.volume) return;
   const ctx = sound.context;
   const now = ctx.currentTime;
@@ -37,6 +37,10 @@ export function playFeedback(sound: Phaser.Sound.BaseSoundManager, action: Actio
       leaves.start();
       break;
     }
+    case 'morning':
+      tone(523, 494, 0.18, 'sine');
+      tone(659, 622, 0.26, 'sine', 0.12);
+      break;
     case 'bank':
       tone(392, 440, 0.14, 'sine');
       tone(587, 660, 0.22, 'sine', 0.09);

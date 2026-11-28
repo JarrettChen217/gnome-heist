@@ -9,7 +9,13 @@ AI-use disclosure: Claude (Claude Code) drafted this document from my decisions 
 | Accountable owner | Hao, as Tech Lead, with Creative Director approval |
 | Companion documents | [GDD](gdd.md) · [Systems diagram](systems-diagram.md) · [Project Plan and Risk Register](project-plan.md) |
 
-**Status.** Everything below is **planned**, except the latency and cost measurement, which was run on 2026-11-12 with the earlier two-move contract ([spike](../spike/README.md)). No game, Worker, test suite, or workflow exists yet. Labels follow the GDD: **[Hao]**, **[Hao, on agent proposal]**, **[Proposed]**, **[Open]**.
+## Changes since G1 (November 26, 2026)
+
+[Hao, on agent proposal] The local four-night client defaults to the rule farmer. Local Worker mode is opt-in. The farmhouse opening is scripted. After the opening, the animation presents the committed plan's inspected evidence and actions. A local Anthropic quiet-night check returned a legal no-action plan. The footprint-heavy check used the rule farmer. See the [checkpoint instructions](../game/README.md#local-worker-checkpoint).
+
+The [G2/G3 coverage map](../agent-team/coverage-map.md) links the working implementation and independent reviewer roles and their handoff.
+
+[Open] The budgeted multi-scenario model-versus-rule evaluation remains pending. The earlier [model measurements](../spike/README.md) used a different contract. The G1 sections below describe the intended configuration. Labels follow the GDD: **[Hao]**, **[Hao, on agent proposal]**, **[Proposed]**, **[Open]**.
 
 Two kinds of agent appear here and stay separate:
 
