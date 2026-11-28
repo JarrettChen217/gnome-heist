@@ -4,11 +4,12 @@ AI-use disclosure: Claude (Claude Code) and Codex maintain this handoff under Ha
 
 Keep this file short: replace the snapshot each time, and update only your own row in Active work. Durable detail belongs in commits, PRs, and the docs.
 
-## Snapshot (2026-11-26, Codex, developer playtest and recording)
+## Snapshot (2026-11-28, G2/G3 submission preparation)
 
-- Local recording build `35b546f` supports optional JSON run traces. Typecheck, 216 unit/integration tests, build and all 15 Chrome checks passed with one browser worker. The four-night check downloaded and inspected the trace.
-- Hao reported West, West, West, East. His account and the visual onboarding proposal are in the [Initial Playtest Log](initial-playtest-log.md). External participants: zero. Exact lamp actions and farmer mode for that run were not recorded.
-- The [recording guide](g2-g3-recording.md) includes the shot list, English narration and discussion draft. The Chinese design reflection and the office hour email draft are in Hao’s OneDrive G2-G3 folder. CourseWorks post due Nov 28 at 11:59 p.m. New York time, per the Nov 23 check. Scope approval, tracker posting, final repository access and video link are pending.
+- The four-night recording build and local run-trace export were verified at `35b546f`. The published first-playable video runs 3:11 and uses the rule farmer.
+- One anonymous external player recognized a gnome and asked where to deliver it. Hao confirmed prior consent for anonymous feedback in coursework. See the [Initial Playtest Log](initial-playtest-log.md).
+- The November 28 Asana status is posted. T14 is complete and T16 links the video. The private project lists only Hao as a member.
+- On November 28 the official course repository main was still at starter commit `6e2db4d`. The local submission package is separate from the course repository and Canvas post.
 
 ## Active work
 
@@ -18,9 +19,9 @@ Keep this file short: replace the snapshot each time, and update only your own r
 | Asana setup and PR links (T6) | Claude, for Hao | `docs/asana-setup` → merged | `docs/asana.md`, `docs/project-plan.md`, `.github/` | Merged in PR 2 (`f3691e5`) on 2026-11-20 after a `gnome-reviewer` pass; PPP not yet posted |
 | M0, T8, art pass, two-night slice and morning checkpoint (T7, T11a, T8, T17, T18, T10, T11b, T11c) | Claude and Codex, for Hao | `codex/night-farm-art-v1` (PR 5) | `core/`, `game/`, `worker/`, `maps/`, docs | Checked locally; merged in PR 5; not deployed |
 | Playwright smoke suite and engine note | Claude, for Hao | `codex/night-farm-art-v1` (PR 5) | `e2e/`, `playwright.config.ts`, `README.md`, `docs/architecture.md` | 4 tests pass locally; reviewed by `gnome-reviewer`, nothing blocking; not run in CI |
-| First-night orientation (T20) | Codex, for Hao | `codex/onboarding-backlog` | `game/src/scenes/`, `e2e/orientation.spec.ts`, playtest plan | Entrance menu, playable-map opening and scroll verified locally at `a7b047b`; T14 pending |
+| First-night orientation (T20) | Codex, for Hao | `codex/onboarding-backlog` | `game/src/scenes/`, `e2e/orientation.spec.ts`, playtest plan | Entrance menu, playable-map opening and scroll verified locally at `a7b047b`; T14 completed November 28 |
 | Dawn animation and second gnome (T10/T18) | Codex, for Hao | `codex/onboarding-backlog` | `game/`, `e2e/`, `core/src/`, playtest plan | Two-night slice verified at `060e408`; four-night collection verified at `33bdf59`, live daylight walk and lamp work at `e786e9a`, farmhouse departure at `5008846`, directional farmer at `163dca8` |
-| G2/G3 preparation | Codex and Hao | `codex/onboarding-backlog` | GDD, Configuration, project plan and OneDrive notes | Self-playtest documented. Recording guide and tracker text drafted |
+| G2/G3 preparation | Codex and Hao | `codex/onboarding-backlog` | GDD, Configuration, project plan and OneDrive notes | External playtest and consent documented. Canvas package prepared |
 
 ## Open items
 
@@ -35,4 +36,4 @@ Keep this file short: replace the snapshot each time, and update only your own r
 
 ## Next action
 
-Hao records the western theft, morning and second west entrance on November 27. Save the trace before replay. Confirm the visual goal cue, current farmer mode and submission links before posting.
+Confirm migration of the playable build into the course repository. Verify instructor tracker access and submit the prepared Canvas post by November 28 at 11:59 p.m. New York time.

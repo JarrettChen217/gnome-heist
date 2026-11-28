@@ -8,4 +8,4 @@ AI-use disclosure: Codex assembled this coverage map from project instructions, 
 | Independent reviewer | Checks game rules, evidence boundaries, farmer validation, budget and fallback. Returns findings to the implementer and Hao. | [Reviewer definition](../.codex/agents/gnome-reviewer.toml), [review and producer decision](handoffs/g2-recording.md) |
 | Executive Producer and Creative Director | Hao sets the gate scope, plays the build, decides design changes and owns the submission. | [Developer playtest](../docs/initial-playtest-log.md), [project plan](../docs/project-plan.md) |
 
-External playtesting and comparative live model evaluation remain open. Automated checks cover software behavior. The self-playtest provides one designer’s interpretation of that behavior.
+One facilitated external playtest is documented in the [Initial Playtest Log](../docs/initial-playtest-log.md). Comparative live model evaluation remains open. Automated checks cover software behavior. The self-playtest provides one designer’s interpretation of that behavior.
